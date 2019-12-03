@@ -1,5 +1,5 @@
 # First, specify the types that will be used
-enum SmallInt {
+enum Chars {
   "i", "s", "t", "1", "0", "8", "3", "2"
 }
 
@@ -11,5 +11,6 @@ value Empty;
 program Toy(Regex) -> Bool;
 
 # Finally, specify the production rules
-func Kleene: Regex-> Regex
+func Eval: Bool -> Regex;
+func Kleene: Regex -> Regex;
 func empty: Empty -> Empty;

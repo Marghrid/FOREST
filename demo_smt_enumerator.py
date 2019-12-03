@@ -13,14 +13,14 @@ class ToyInterpreter(PostOrderInterpreter):
     def eval_Regex(self, v):
         return int(v)
 
-    def eval_Bool(self, node, args):
-        return args[0]
+    def eval_Bool(self, v):
+        return int(v)
 
     def eval_Kleene(self, node, args):
         return args[0]
 
-    def apply_is_positive(self, val):
-        return val > 0
+    def eval_Eval(self, node, args):
+        return args[0]
 
 
 def main():
@@ -37,10 +37,7 @@ def main():
             examples=[
                 # we want to synthesize the program (x-y)*y (depth=3, loc=2)
                 # which is also equivalent to x*y-y*y (depth=3, loc=3)
-                Example(input=[4, 3], output=3),
-                Example(input=[6, 3], output=9),
-                Example(input=[1, 2], output=-2),
-                Example(input=[1, 1], output=0),
+                Example(input=[3], output=3),
             ]
         )
     )
