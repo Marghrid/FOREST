@@ -49,7 +49,7 @@ class Synthesizer(ABC):
                     prog = self._enumerator.next()
             except InterpreterError as e:
                 info = self._decider.analyze_interpreter_error(e)
-                logger.debug('Interpreter failed. Reason: {}'.format(info))
+                logger.debug('Interpreter {} failed. Exception: {}. Reason: {}'.format(self._decider._interpreter.__class__.__name__, e.__class__.__name__, info))
                 self._enumerator.update(info)
                 prog = self._enumerator.next()
         logger.debug(

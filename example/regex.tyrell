@@ -1,6 +1,6 @@
 # First, specify the types that will be used
 enum Chars {
-  "i", "s", "t", "1", "0", "8", "3", "2"
+  "i", "s", "t"#, "1", "0", "8", "3", "2"
 }
 
 value Regex;
@@ -11,6 +11,6 @@ value Empty;
 program Toy(Regex) -> Bool;
 
 # Finally, specify the production rules
-func Eval: Bool -> Regex;
-func Kleene: Regex -> Regex;
+func Match: Bool -> Regex;
+func Kleene: Regex -> Chars,Regex;
 func empty: Empty -> Empty;
