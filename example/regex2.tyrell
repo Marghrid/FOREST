@@ -1,0 +1,20 @@
+# First, specify the types that will be used
+enum myChar {
+  "Dani", "e", "l"
+}
+
+value Regex;
+value String;
+value Bool;
+value Empty;
+
+# Next, specify the input/output of the synthesized program
+program Toy(String) -> Bool;
+
+# Finally, specify the production rules
+func MkRegex: Regex -> myChar;
+func Match: Bool -> Regex, String;
+func Kleene: Regex -> Regex;
+func Union: Regex -> Regex, Regex;
+func Concat: Regex -> Regex, Regex;
+func empty: Empty -> Empty;
