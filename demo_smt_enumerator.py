@@ -7,6 +7,8 @@ from tyrell.decider import Example, ExampleConstraintDecider
 from tyrell.synthesizer import Synthesizer
 from tyrell.logger import get_logger
 
+import re
+
 logger = get_logger('tyrell')
 
 class ToyInterpreter(PostOrderInterpreter):
@@ -16,12 +18,30 @@ class ToyInterpreter(PostOrderInterpreter):
 	def eval_Bool(self, v):
 		return int(v)
 
+	def eval_MkRegex(self, node, args):
+		return args[0]
+
 	def eval_Kleene(self, node, args):
-		# args[0] is a char, arg[1] is a string.
-		ret_string = args[1]
-		while(len(ret_string) > 0 and ret_string[-1] == args[0]):
-			ret_string = ret_string[:-1]
-		return ret_string
+		'''
+		Returns the string args[1] without the first match with regex (args[0])*
+		'''
+		regex = fr'(({args[0]})*)'                    # to feed the python function
+		matchings = re.match(regex, args[1]).groups() # all matchings
+		if len(matchings) == 0: return args[1]        # there is no matching
+		print('kleene', regex, args[1], '->', args[1].replace(matchings[0], '', 1))
+		return args[1].replace(matchings[0], '', 1)
+
+
+	def eval_Concat(self, node, args):
+		'''
+		Returns the string args[2] without the first match with
+		regex (args[0])(args[1])
+		'''
+		regex = fr'(({args[0]})({args[1]}))'          # to feed the python function
+		matchings = re.match(regex, args[1]).groups() # all matchings
+		if len(matchings) == 0: return args[1]        # there is no matching
+		print('concat', regex, args[1], '->', args[1].replace(matchings[0], '', 1))
+		return args[1].replace(matchings[0], '', 1)
 
 	def eval_Match(self, node, args):
 		return len(args[0]) == 0
@@ -34,15 +54,15 @@ def main():
 
 	logger.info('Building synthesizer...')
 	synthesizer = Synthesizer(
-		enumerator=SmtEnumerator(spec, depth=3, loc=2),
+		enumerator=SmtEnumerator(spec, depth=6, loc=6),
 		decider=ExampleConstraintDecider(
 			spec=spec,
 			interpreter=ToyInterpreter(),
 			examples=[
-				Example(input='iii', output=True),
-				Example(input='i', output=True),
+				Example(input=['is'], output=True),
 				#Example(input='', output=True),
-				Example(input='s', output=False),
+				Example(input=['si'], output=False),
+				Example(input=['t'], output=False),
 			]
 		)
 	)

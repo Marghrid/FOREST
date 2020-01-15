@@ -1,16 +1,20 @@
 # First, specify the types that will be used
-enum Chars {
+enum myChar {
   "i", "s", "t"#, "1", "0", "8", "3", "2"
 }
 
 value Regex;
+value String;
 value Bool;
 value Empty;
 
 # Next, specify the input/output of the synthesized program
-program Toy(Regex) -> Bool;
+program Toy(String) -> Bool;
 
 # Finally, specify the production rules
-func Match: Bool -> Regex;
-func Kleene: Regex -> Chars,Regex;
+func MkRegex: Regex -> myChar;
+func Match: Bool -> String;
+# func Kleene: String -> Regex, String;
+# func Union: String -> Regex, Regex, String;
+func Concat: String -> Regex, Regex, String;
 func empty: Empty -> Empty;

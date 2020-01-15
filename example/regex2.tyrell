@@ -1,6 +1,6 @@
 # First, specify the types that will be used
 enum myChar {
-  "Dani", "e", "l"
+  "ist", "[0-9]"
 }
 
 value Regex;
