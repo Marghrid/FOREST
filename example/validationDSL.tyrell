@@ -1,10 +1,9 @@
 # First, specify the types that will be used
 enum MyNum {
-  "0", "1", "2", "3", "4", "5", "6"
+  "1", "5"
 }
 
 value Input {
-  is_string: bool;
   is_number: bool;
 }
 value String;
@@ -18,20 +17,12 @@ program Validate(Input) -> Bool;
 # Finally, specify the production rules
 func conj: Bool -> Bool, Bool;
 
-func is_int: Bool -> Input;
-func int: Number -> Input i {
-  is_number(i);
-}
+func is_int: Bool -> Input i;
+func is_real: Bool -> Input i;
+func number: Number -> Input i;
 
-func is_real: Bool -> Input;
-func real: Number -> Input i {
-  is_number(i);
-}
-
-func is_string: Bool -> Input;
-func string: String -> Input i {
-    is_string(i);
-}
+func is_string: Bool -> Input i;
+func string: String -> Input i;
 
 func len: Number -> String;
 
