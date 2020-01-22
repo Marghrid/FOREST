@@ -5,16 +5,17 @@ enum myChar {
 
 value Regex;
 value String;
+value Number;
 value Bool;
 value Empty;
 
 # Next, specify the input/output of the synthesized program
-program Toy(String) -> Bool;
+program Validate(String) -> Bool;
 
 # Finally, specify the production rules
-func MkRegex: Regex -> myChar;
-func Match: Bool -> Regex, String;
-func Kleene: Regex -> Regex;
-func Union: Regex -> Regex, Regex;
-func Concat: Regex -> Regex, Regex;
+func re: Regex -> myChar;
+func kleene: Regex -> Regex;
+func union: Regex -> Regex, Regex;
+func concat: Regex -> Regex, Regex;
+func match: Bool -> Regex, String;
 func empty: Empty -> Empty;
