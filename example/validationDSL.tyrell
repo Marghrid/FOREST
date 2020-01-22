@@ -1,0 +1,42 @@
+# First, specify the types that will be used
+enum MyNum {
+  "0", "1", "2", "3", "4", "5", "6"
+}
+
+value Input {
+  is_string: bool;
+  is_number: bool;
+}
+value String;
+value Number;
+value Bool;
+value Empty;
+
+# Next, specify the input/output of the synthesized program
+program Validate(Input) -> Bool;
+
+# Finally, specify the production rules
+func conj: Bool -> Bool, Bool;
+
+func is_int: Bool -> Input;
+func int: Number -> Input i {
+  is_number(i);
+}
+
+func is_real: Bool -> Input;
+func real: Number -> Input i {
+  is_number(i);
+}
+
+func is_string: Bool -> Input;
+func string: String -> Input i {
+    is_string(i);
+}
+
+func len: Number -> String;
+
+func le: Bool -> Number, MyNum;
+func ge: Bool -> Number, MyNum;
+
+func empty: Empty -> Empty;
+

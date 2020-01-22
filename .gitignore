@@ -61,6 +61,7 @@ target/
 .venv
 env/
 venv/
+venvPC/
 ENV/
 env.bak/
 venv.bak/
@@ -78,3 +79,4 @@ _build/
 
 # Miscellaneous
 .DS_Store
+.idea
