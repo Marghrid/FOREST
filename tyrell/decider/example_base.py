@@ -11,12 +11,10 @@ Example = NamedTuple('Example', [
 class ExampleDecider(Decider):
     _interpreter: Interpreter
     _examples: List[Example]
-    _equal_output: Callable[[Any, Any], bool]
+    _equal_output: Callable[[Any, Any, Any], bool]
 
-    def __init__(self,
-                 interpreter: Interpreter,
-                 examples: List[Example],
-                 equal_output: Callable[[Any, Any], bool] = lambda x, y: x == y):
+    def __init__(self, interpreter: Interpreter, examples: List[Example],
+                 equal_output: Callable[[Any, Any, Any], bool]):
         self._interpreter = interpreter
         if len(examples) == 0:
             raise ValueError(
@@ -41,9 +39,12 @@ class ExampleDecider(Decider):
         Test the program on all examples provided.
         Return a list of failed examples.
         '''
+        print("failed examples", list(filter(
+            lambda x: not self._equal_output(prog, x.input, x.output),
+            self._examples
+        )))
         return list(filter(
-            lambda x: not self._equal_output(
-                self.interpreter.eval(prog, x.input), x.output),
+            lambda x: not self._equal_output(prog, x.input, x.output),
             self._examples
         ))
 
@@ -52,8 +53,7 @@ class ExampleDecider(Decider):
         Test whether the given program would fail on any of the examples provided.
         '''
         return any(
-            not self._equal_output(
-                self.interpreter.eval(prog, x.input), x.output)
+            not self._equal_output(prog, x.input, x.output)
             for x in self._examples
         )
 

@@ -8,11 +8,9 @@ from ..logger import get_logger
 
 logger = get_logger('tyrell.enumerator.smt')
 
-
 class AST:
     def __init__(self):
         self.head = None
-
 
 class ASTNode:
     def __init__(self, nb=None, depth=None, children=None):
@@ -213,6 +211,7 @@ class SmtEnumerator(Enumerator):
                     self._resolve_not_occurs_predicate(pred)
                 elif pred.name == 'is_not_parent':
                     self._resolve_is_not_parent_predicate(pred)
+
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
         except (KeyError, ValueError) as e:
@@ -240,7 +239,7 @@ class SmtEnumerator(Enumerator):
         self.initLeafProductions()
         self.createVariables(self.z3_solver)
         self.createOutputConstraints(self.z3_solver)
-        self.createLocConstraints(self.z3_solver)
+        # self.createLocConstraints(self.z3_solver)
         self.createInputConstraints(self.z3_solver)
         self.createFunctionConstraints(self.z3_solver)
         self.createLeafConstraints(self.z3_solver)
@@ -250,7 +249,7 @@ class SmtEnumerator(Enumerator):
         self.resolve_predicates()
 
     def blockModel(self):
-        assert(self.model is not None)
+        assert (self.model is not None)
         # m = self.z3_solver.model()
         block = []
         # block the model using only the variables that correspond to productions
@@ -268,7 +267,7 @@ class SmtEnumerator(Enumerator):
                 for constraint in core:
                     if ctr is None:
                         ctr = self.variables[self.program2tree[constraint[0]
-                                                               ].id - 1] != constraint[1].id
+                                             ].id - 1] != constraint[1].id
                     else:
                         ctr = Or(
                             ctr, self.variables[self.program2tree[constraint[0]].id - 1] != constraint[1].id)
@@ -306,7 +305,7 @@ class SmtEnumerator(Enumerator):
                 builder_nodes[y] = builder.make_node(n, children)
                 self.program2tree[builder_nodes[y]] = self.nodes[y]
 
-        assert(builder_nodes[0] is not None)
+        assert (builder_nodes[0] is not None)
         return builder_nodes[0]
 
     def next(self):
