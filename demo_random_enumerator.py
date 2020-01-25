@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from sys import argv
+import re, sys
 import tyrell.spec as S
 from tyrell.interpreter import PostOrderInterpreter
 from tyrell.enumerator import RandomEnumerator
@@ -10,36 +10,35 @@ from tyrell.logger import get_logger
 
 logger = get_logger('tyrell')
 
-toy_spec_str = '''
-enum SmallInt {
-  "0", "1", "2", "3"
-}
-value Int;
-value Empty;
-
-program Toy(Int, Int) -> Int;
-func const: Int -> SmallInt;
-func plus: Int -> Int, Int;
-func minus: Int -> Int, Int;
-func mult: Int -> Int, Int;
-'''
-
-
 class ToyInterpreter(PostOrderInterpreter):
-    def eval_SmallInt(self, v):
+    def eval_Regex(self, v):
         return int(v)
 
-    def eval_const(self, node, args):
-        return args[0]
+    def eval_Bool(self, v):
+        return int(v)
 
-    def eval_plus(self, node, args):
-        return args[0] + args[1]
+    def eval_MkRegex(self, node, args):
+        return fr'{args[0]}'
 
-    def eval_minus(self, node, args):
-        return args[0] - args[1]
+    def eval_Kleene(self, node, args):
+        if len(args[0]) == 1: return fr'{args[0]}*'
+        return fr'({args[0]})*'
 
-    def eval_mult(self, node, args):
-        return args[0] * args[1]
+    def eval_Concat(self, node, args):
+        return fr'{args[0]}{args[1]}'
+
+    def eval_Union(self, node, args):
+        if len(args[0]) == 1: h0 = fr'{args[0]}'
+        else: h0 = fr'({args[0]})'
+        if len(args[1]) == 1: h1 = fr'{args[1]}'
+        else: h1 = fr'({args[1]})'
+        return h0 + '|' + h1
+
+    def eval_Match(self, node, args):
+        match = re.fullmatch(args[0], args[1])
+        # print('match', args[0], args[1], match is not None)
+        if match is not None: print(args[0], 'accepts', args[1], file=sys.stderr)
+        return match is not None
 
 
 def execute(interpreter, prog, args):
@@ -55,22 +54,36 @@ def test_all(interpreter, prog, inputs, outputs):
 
 def main(seed=None):
     logger.info('Parsing Spec...')
-    spec = S.parse(toy_spec_str)
+    spec = S.parse_file('DSLs/regex2.tyrell')
     logger.info('Parsing succeeded')
 
     logger.info('Building synthesizer...')
     synthesizer = Synthesizer(
-        enumerator=RandomEnumerator(
-            spec, max_depth=4, seed=seed),
+        enumerator=RandomEnumerator( spec, max_depth=6, seed=seed),
         decider=ExampleDecider(
             interpreter=ToyInterpreter(),
             examples=[
-                # we want to synthesize the program (x-y)*y (depth=3, loc=2)
-                # which is also equivalent to x*y-y*y (depth=3, loc=3)
-                Example(input=[4, 3], output=3),
-                Example(input=[6, 3], output=9),
-                Example(input=[1, 2], output=-2),
-                Example(input=[1, 1], output=0),
+                Example(input=['ist193985'], output=True),
+                Example(input=['ist425891'], output=True),
+                Example(input=['ist187769'], output=True),
+                Example(input=['ist194149'], output=True),
+                Example(input=['ist181361'], output=True),
+                Example(input=['ist426036'], output=True),
+                Example(input=['ist178742'], output=True),
+                Example(input=['ist191063'], output=True),
+                Example(input=['ist181338'], output=True),
+                Example(input=['ist178022'], output=True),
+                Example(input=['ist425904'], output=True),
+                Example(input=['ist426008'], output=True),
+
+                Example(input=['193985'],    output=False),
+                Example(input=['ost425891'], output=False),
+                Example(input=['ist187'],    output=False),
+                Example(input=['426036'],    output=False),
+                Example(input=['st181361'],  output=False),
+                Example(input=['is426036'],  output=False),
+                Example(input=['iat178742'], output=False),
+                Example(input=['ist19106'],  output=False)
             ]
         )
     )
@@ -86,9 +99,9 @@ def main(seed=None):
 if __name__ == '__main__':
     logger.setLevel('DEBUG')
     seed = None
-    if len(argv) > 1:
+    if len(sys.argv) > 1:
         try:
-            seed = int(argv[1])
+            seed = int(sys.argv[1])
         except ValueError:
             pass
     main(seed)

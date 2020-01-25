@@ -48,14 +48,14 @@ class RegexInterpreter(PostOrderInterpreter):
 
     def eval_match(self, node, args):
         match = re.fullmatch(args[0], args[1])
-        # print('match', args[0], args[1], match is not None)
-        if match is not None: print(args[0], 'accepts', args[1], file=sys.stderr)
+        if match is not None:
+            print(args[0], 'accepts', args[1], file=sys.stderr)
         return match is not None
 
 
 def main():
     logger.info('Parsing Spec...')
-    spec = S.parse_file('example/regex2.tyrell')
+    spec = S.parse_file('DSLs/regex2.tyrell')
     logger.info('Parsing succeeded')
 
     logger.info('Building synthesizer...')

@@ -3,11 +3,8 @@ enum MyNum {
   "1", "5"
 }
 
-value Input {
-  is_number: bool;
-}
-value String;
-value Number;
+value Input { is_number: bool; }
+value Number; # internally a float
 value Bool;
 value Empty;
 
@@ -17,14 +14,13 @@ program Validate(Input) -> Bool;
 # Finally, specify the production rules
 func conj: Bool -> Bool, Bool;
 
-func is_int: Bool -> Input i;
-func is_real: Bool -> Input i;
-func number: Number -> Input i;
+func is_int: Bool -> Input i { is_number(i); }
+func is_real: Bool -> Input i { is_number(i); }
+func number: Number -> Input i {
+    is_number(i);
+}
 
-func is_string: Bool -> Input i;
-func string: String -> Input i;
-
-func len: Number -> String;
+# func len: Number -> Input;
 
 func le: Bool -> Number, MyNum;
 func ge: Bool -> Number, MyNum;

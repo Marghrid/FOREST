@@ -61,7 +61,7 @@ class UnexpectedInput(LarkError):
     def match_examples(self, parse_fn, examples):
         """ Given a parser instance and a dictionary mapping some label with
             some malformed syntax examples, it'll return the label for the
-            example that bests matches the current error.
+            DSLs that bests matches the current error.
         """
         assert self.state is not None, "Not supported for this exception"
 

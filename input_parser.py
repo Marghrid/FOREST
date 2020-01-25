@@ -1,3 +1,6 @@
+from tyrell.decider import Example
+
+
 def parse_file(filename):
 	valid_exs = []
 	invalid_exs = []
@@ -10,17 +13,21 @@ def parse_file(filename):
 		while next_line and not next_line.startswith("--"):
 			next_line = next_line.rstrip()
 			if len(next_line) > 0:
-				valid_exs.append(next_line)
+				valid_exs.append([i.strip() for i in next_line.split(',')])
 			next_line = in_file.readline()
 
 		next_line = in_file.readline() # skip line with "--"
 		while next_line:
 			next_line = next_line.rstrip()
 			if len(next_line) > 0:
-				invalid_exs.append(next_line)
+				invalid_exs.append([i.strip() for i in next_line.split(',')])
 			next_line = in_file.readline()
 
-	return (valid_exs, invalid_exs)
+	print(valid_exs)
 
-print(parse_file("instances/age2.txt"))
+	examples = [Example(x, True) for x in valid_exs]
+	examples += [Example(x, False) for x in invalid_exs]
+
+	return examples
+
 

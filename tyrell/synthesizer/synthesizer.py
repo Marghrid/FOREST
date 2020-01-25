@@ -14,9 +14,11 @@ class Synthesizer(ABC):
     _enumerator: Enumerator
     _decider: Decider
 
-    def __init__(self, enumerator: Enumerator, decider: Decider):
+    def __init__(self, enumerator: Enumerator, decider: Decider, printer=None):
         self._enumerator = enumerator
         self._decider = decider
+
+        self.printer = printer
 
     @property
     def enumerator(self):
@@ -35,7 +37,10 @@ class Synthesizer(ABC):
         prog = self._enumerator.next()
         while prog is not None:
             num_attempts += 1
-            logger.debug('Enumerator generated: {}'.format(prog))
+            if self.printer is not None:
+                logger.debug('Enumerator generated: ' + self.printer.eval(prog, ["IN"]))
+            else:
+                logger.debug(f'Enumerator generated: {prog}')
             try:
                 res = self._decider.analyze(prog)
                 if res.is_ok():
@@ -49,7 +54,7 @@ class Synthesizer(ABC):
                     prog = self._enumerator.next()
             except InterpreterError as e:
                 info = self._decider.analyze_interpreter_error(e)
-                logger.debug('Interpreter {} failed. Exception: {}. Reason: {}'.format(self._decider._interpreter.__class__.__name__, e.__class__.__name__, info))
+                logger.debug('Interpreter {} failed. Exception: {}. Reason: {}'.format(self._decider.interpreter().__class__.__name__, e.__class__.__name__, info))
                 self._enumerator.update(info)
                 prog = self._enumerator.next()
         logger.debug(

@@ -9,18 +9,21 @@ class Decider(ABC):
 
     @abstractmethod
     def __init__(self):
-        pass
+        self._interpreter = None
 
     @abstractmethod
     def analyze(self, ast: Node) -> Result:
-        '''
+        """
         The main API of this class.
         It is expected to analyze the given AST and check if it is valid. If not, optionally returns why, which is used to update the enumerator.
-        '''
+        """
         raise NotImplementedError
 
     def analyze_interpreter_error(self, error: InterpreterError) -> Any:
-        '''
+        """
         Take an interpreter error and return a data structure that can be used to update the enumerator.
-        '''
+        """
         return None
+
+    def interpreter(self):
+        return self._interpreter

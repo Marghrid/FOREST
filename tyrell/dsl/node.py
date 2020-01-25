@@ -160,7 +160,7 @@ class ParamNode(LeafNode):
 
 
 class ApplyNode(Node):
-    '''Internal AST node that represent function application'''
+    """Internal AST node that represent function application"""
     _args: List[Node]
 
     def __init__(self, prod: Production, args: List[Node]):

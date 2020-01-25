@@ -1,0 +1,21 @@
+# First, specify the types that will be used
+enum myChar {
+  "ist", "[0-9]"
+}
+
+value Regex;
+value String;
+value Number;
+value Bool;
+value Empty;
+
+# Next, specify the input/output of the synthesized program
+program Validate(String) -> Bool;
+
+# Finally, specify the production rules
+func re: Regex -> myChar;
+func kleene: Regex -> Regex;
+func union: Regex -> Regex, Regex;
+func concat: Regex -> Regex, Regex;
+func match: Bool -> Regex, String;
+func empty: Empty -> Empty;
