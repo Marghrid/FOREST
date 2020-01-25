@@ -36,12 +36,21 @@ def check_type(examples: List[Example]) -> (List[str], List[Example]):
     invalid = list(filter(lambda x: x.output == False, examples))
 
     # discard outputs
-    transposed_valid = list(map(list, zip(*valid)))[0]
-    transposed_invalid = list(map(list, zip(*invalid)))[0]
+    if len(valid) > 0:
+        # separate by field 
+        transposed_valid = list(map(list, zip(*valid)))[0]
+        transposed_valid = list(map(list, zip(*transposed_valid)))
+    else:
+        transposed_valid = [[]]
+
+    if len(invalid) > 0:
+        transposed_invalid = list(map(list, zip(*invalid)))[0]
+        transposed_invalid = list(map(list, zip(*transposed_invalid)))
+    else:
+        transposed_invalid = [[]]
+
 
     # separate by field
-    transposed_valid = list(map(list, zip(*transposed_valid)))
-    transposed_invalid = list(map(list, zip(*transposed_invalid)))
 
     for field_idx in range(num_fields):
         for validation in possible_types_validations:

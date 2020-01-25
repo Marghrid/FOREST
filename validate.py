@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-import re
 
 import tyrell.spec as S
+from build_dsl import build_dsl
 from input_parser import parse_file
 from type_checker import check_type
 from tyrell.enumerator import SmtEnumerator
-from tyrell.decider import Example, ExampleConstraintDecider
+from tyrell.decider import ExampleConstraintDecider
 from tyrell.synthesizer import Synthesizer
 from tyrell.logger import get_logger
 from validation_interpreter import ValidationInterpreter
@@ -23,22 +23,13 @@ def my_equal_output(program, input, desired_output):
         return False == desired_output
 
 
-def pick_dsl(type_validation):
-    type_validation = type_validation[0]
-    return "DSLs/" + re.sub('^is_', '', type_validation) + "DSL.tyrell"
-
-
 def main():
-    logger.info('Parsing Spec...')
-    logger.info('Parsing succeeded')
-    logger.info('Building synthesizer...')
-
+    logger.info("Parsing examples")
     examples = parse_file("instances/age1.txt")
-    print(examples)
 
     type_validation, examples = check_type(examples)
 
-    dsl_file = pick_dsl(type_validation)
+    dsl_file = build_dsl(type_validation)
     spec = S.parse_file(dsl_file)
 
     printer = ValidationPrinter()
