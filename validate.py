@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 
 import tyrell.spec as S
 from build_dsl import build_dsl
@@ -19,7 +20,8 @@ def my_equal_output(program, input, desired_output):
     try:
         output = interpreter.eval(program, input)
         return output == desired_output
-    except:
+    except Exception as e:
+        print("exception", e, file=sys.stderr)
         return False == desired_output
 
 
@@ -29,8 +31,9 @@ def main():
 
     type_validation, examples = check_type(examples)
 
-    dsl_file = build_dsl(type_validation)
-    spec = S.parse_file(dsl_file)
+    logger.debug("type: " + type_validation[0])
+    spec = build_dsl(type_validation, examples)
+    spec = S.parse(spec)
 
     printer = ValidationPrinter()
     dep = 4
@@ -47,14 +50,14 @@ def main():
     )
     logger.info(f'Synthesizing programs of depth {dep}')
 
-    prog = synthesizer.synthesize()
-    if prog is not None:
-        logger.info('Solution found: ' + type_validation[0] + "(IN) /\\ " + printer.eval(prog, ["IN"]))
+    program = synthesizer.synthesize()
+    if program is not None:
+        logger.info('Solution found: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]))
         logger.info(f'depth: {dep}')
         return
     logger.info('Solution not found!')
 
 
 if __name__ == '__main__':
-    logger.setLevel('INFO')
+    logger.setLevel('DEBUG')
     main()

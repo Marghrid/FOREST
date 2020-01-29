@@ -13,9 +13,7 @@ def is_integer(arg: str):
 
 
 def is_real(arg: str):
-    if is_integer(arg): return False
     try:
-        float(arg)
         return True
     except:
         return False
@@ -37,7 +35,7 @@ def check_type(examples: List[Example]) -> (List[str], List[Example]):
 
     # discard outputs
     if len(valid) > 0:
-        # separate by field 
+        # separate by field
         transposed_valid = list(map(list, zip(*valid)))[0]
         transposed_valid = list(map(list, zip(*transposed_valid)))
     else:
@@ -64,7 +62,7 @@ def check_type(examples: List[Example]) -> (List[str], List[Example]):
                     types.append(validation.__name__)
                 else:
                     types.append(validation.__name__)
-                    print("type validation might be too restrict")
+                    print("type validation might be too restrict. No invalid examples are removed.")
                     # #TODO: Query user!
                 break
 

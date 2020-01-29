@@ -38,8 +38,8 @@ class ValidationInterpreter(PostOrderInterpreter):
     def eval_Bool(self, v):
         return v
 
-    def eval_MyNum(self, v):
-        return int(v)
+    def eval_Value(self, v):
+        return float(v)
 
     def eval_conj(self, node, args) -> bool:
         '''Bool -> Bool, Bool;'''
@@ -118,7 +118,7 @@ class ValidationPrinter(PostOrderInterpreter):
     def eval_Bool(self, v):
         return v
 
-    def eval_MyNum(self, v):
+    def eval_Value(self, v):
         return v
 
     def eval_conj(self, node, args) -> str:

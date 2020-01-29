@@ -1,9 +1,4 @@
 # First, specify the types that will be used
-enum MyNum {
-  "1", "5"
-}
-
-# First, specify the types that will be used
 value Input { is_number: bool; }
 value Number; # internally a float
 value Bool;
@@ -19,8 +14,8 @@ func number: Number -> Input i {
     is_number(i);
 }
 
-func le: Bool -> Number, MyNum;
-func ge: Bool -> Number, MyNum;
+func le: Bool -> Number, Value;
+func ge: Bool -> Number, Value;
 
 func empty: Empty -> Empty;
 
