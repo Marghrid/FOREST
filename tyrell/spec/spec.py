@@ -396,3 +396,6 @@ class TyrellSpec:
     def num_predicates(self) -> int:
         '''Return the number of predicates'''
         return self._pred_spec.num_predicates()
+
+    def add_predicate(self, name: str, args: List[Any]):
+        self._pred_spec.add_predicate(name, args)

@@ -10,37 +10,6 @@ from tyrell.logger import get_logger
 
 logger = get_logger('tyrell')
 
-class ToyInterpreter(PostOrderInterpreter):
-    def eval_Regex(self, v):
-        return int(v)
-
-    def eval_Bool(self, v):
-        return int(v)
-
-    def eval_MkRegex(self, node, args):
-        return fr'{args[0]}'
-
-    def eval_Kleene(self, node, args):
-        if len(args[0]) == 1: return fr'{args[0]}*'
-        return fr'({args[0]})*'
-
-    def eval_Concat(self, node, args):
-        return fr'{args[0]}{args[1]}'
-
-    def eval_Union(self, node, args):
-        if len(args[0]) == 1: h0 = fr'{args[0]}'
-        else: h0 = fr'({args[0]})'
-        if len(args[1]) == 1: h1 = fr'{args[1]}'
-        else: h1 = fr'({args[1]})'
-        return h0 + '|' + h1
-
-    def eval_Match(self, node, args):
-        match = re.fullmatch(args[0], args[1])
-        # print('match', args[0], args[1], match is not None)
-        # if match is not None: print(args[0], 'accepts', args[1], file=sys.stderr)
-        return match is not None
-
-
 def execute(interpreter, prog, args):
     return interpreter.eval(prog, args)
 

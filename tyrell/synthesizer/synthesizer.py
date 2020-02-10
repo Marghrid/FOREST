@@ -35,10 +35,8 @@ class Synthesizer(ABC):
         program = self._enumerator.next()
         while program is not None:
             num_attempts += 1
-            if self._printer is not None:
-                logger.debug('Enumerator generated: ' + self._printer.eval(program, ["IN"]))
-            else:
-                logger.debug(f'Enumerator generated: {program}')
+
+
             try:
                 res = self._decider.analyze(program)
                 if res.is_ok():

@@ -1,3 +1,4 @@
+import re
 from typing import (
     cast,
     Tuple,
@@ -119,7 +120,6 @@ class Z3Encoder(GenericVisitor):
             unsat_dict[node].append(node.production.constraints[cidx])
         return unsat_dict
 
-
 class BlameFinder:
     _interp: Interpreter
     _imply_map: ImplyMap
@@ -156,10 +156,9 @@ class BlameFinder:
     def process_examples(self, failed_examples: List[Example]):
         for example in failed_examples:
             self.process_example(example)
-        #TODO: HERE maybe add HERE blames?
-        # self.traverse(self._prog)
-        pass
+        # TODO: Traverse should add something to blames, which should be interpreted here?
 
+        pass
 
     def process_example(self, example: Example):
         z3_encoder = Z3Encoder(self._interp, self._indexer, example)
@@ -176,9 +175,30 @@ class BlameFinder:
                 frozenset([(n, n.production) for n in base_nodes])
             )
 
+    def traverse(self, node, failed_examples: List[Example]):
+        # print("node prod", node.production)
+        # print("spec prod", self._spec.get_function_production("concat"))
+        if node.production.id == self._spec.get_function_production("concat").id:
+            # print("########## found concat ###########")
+            #  print(node.children)
+            if all([child.production.id == self._spec.get_function_production("re").id for child in node.children]):
+                # print("simple concat: between two atoms")
+                strings = [child.children[0].data for child in node.children]
+                regex = ''.join(strings)
 
+                # if none of valid examples have this pattern, then it is not feasible
+                valid_exs = list(filter(lambda ex: ex.output == True, failed_examples))
+                matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
+                no_match = not any(matches)
 
+                if no_match:
+                    # TODO: block all models containing this concat
+                    #print(f"block concat({strings})")
+                    self._spec.add_predicate("not_concat", strings)
 
+        if node.children is not None:
+            for child in node.children:
+                self.traverse(child, failed_examples)
 
 class ExampleConstraintDecider(ExampleDecider):
     _imply_map: ImplyMap
@@ -237,14 +257,39 @@ class ExampleConstraintDecider(ExampleDecider):
         if len(failed_examples) == 0:
             return ok()
         else:
-            #TODO: blame finder is not doing anything!
-            blame_finder = BlameFinder(self.interpreter, self._imply_map, program, self._spec)
-            blame_finder.process_examples(failed_examples)
-            blames = blame_finder.get_blames()
-            if len(blames) == 0:
-                return bad()
-            else:
-                return bad(why=blames)
+            self.traverse(program, self._examples)
+            # blame_finder = BlameFinder(self.interpreter, self._imply_map, program, self._spec)
+            # blame_finder.process_examples(failed_examples)
+            # blames = blame_finder.get_blames()
+            #if len(blames) == 0:
+            return bad()
+            #else:
+            #    return bad(why=blames)
 
     def analyze_interpreter_error(self, error: InterpreterError):
         return self._assert_handler.handle_interpreter_error(error)
+
+    def traverse(self, node, examples: List[Example]):
+        # print("node prod", node.production)
+        # print("spec prod", self._spec.get_function_production("concat"))
+        if node.production.id == self._spec.get_function_production("concat").id:
+            # print("########## found concat ###########")
+            #  print(node.children)
+            if all([child.production.id == self._spec.get_function_production("re").id for child in node.children]):
+                # print("simple concat: between two atoms")
+                strings = [child.children[0].data for child in node.children]
+                regex = ''.join(strings)
+
+                # if none of valid examples have this pattern, then it is not feasible
+                valid_exs = list(filter(lambda ex: ex.output == True, examples))
+                matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
+                no_match = not any(matches)
+
+                if no_match:
+                    # TODO: block all models containing this concat
+                    print(f"block concat({strings})")
+                    self._spec.add_predicate("not_concat", strings)
+
+        if node.children is not None:
+            for child in node.children:
+                self.traverse(child, examples)

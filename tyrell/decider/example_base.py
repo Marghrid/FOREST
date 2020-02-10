@@ -38,11 +38,6 @@ class ExampleDecider(Decider):
         '''
         Test the program on all examples provided.
         Return a list of failed examples.
-
-        print("failed examples", list(filter(
-            lambda x: not self._equal_output(prog, x.input, x.output),
-            self._examples
-        )))
         '''
         return list(filter(
             lambda x: not self._equal_output(prog, x.input, x.output),

@@ -5,9 +5,9 @@ from .optimizer import Optimizer
 
 from .. import dsl as D
 from ..logger import get_logger
+from ..spec import TyrellSpec
 
 logger = get_logger('tyrell.enumerator.smt')
-
 
 class AST:
     def __init__(self):
@@ -21,12 +21,11 @@ class ASTNode:
         self.children = children
         self.production = None
 
-
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class SmtEnumerator(Enumerator):
     # z3 solver
-    # z3_solver = z3.Solver()
-    z3_solver = z3.SolverFor("QF_FD")
+    z3_solver = z3.Solver()
+    #z3_solver = z3.SolverFor("QF_FD")
     # productions that are leaf
     leaf_productions = []
 
@@ -197,9 +196,9 @@ class SmtEnumerator(Enumerator):
         weight = pred.args[2]
         self.optimizer.mk_is_parent(prod0, prod1, weight)
 
-    def resolve_predicates(self):
+    def resolve_predicates(self, predicates):
         try:
-            for pred in self.spec.predicates():
+            for pred in predicates:
                 if pred.name == 'occurs':
                     self._resolve_occurs_predicate(pred)
                 elif pred.name == 'is_parent':
@@ -215,7 +214,7 @@ class SmtEnumerator(Enumerator):
             msg = 'Failed to resolve predicates. {}'.format(e)
             raise RuntimeError(msg) from None
 
-    def __init__(self, spec, depth=None, loc=None):
+    def __init__(self, spec: TyrellSpec, depth=None, loc=None):
         self.z3_solver = z3.Solver()
         self.leaf_productions = []
         self.variables = []
@@ -243,7 +242,7 @@ class SmtEnumerator(Enumerator):
         self.createChildrenConstraints(self.z3_solver)
         self.optimizer = Optimizer(
             self.z3_solver, spec, self.variables, self.nodes)
-        self.resolve_predicates()
+        self.resolve_predicates(self.spec.predicates())
 
     def blockModel(self):
         assert (self.model is not None)
@@ -321,7 +320,12 @@ class SmtEnumerator(Enumerator):
         return builder_nodes[0]
 
     def next(self):
-        self.model = self.optimizer.optimize(self.z3_solver)
+        # self.model = self.optimizer.optimize(self.z3_solver)
+        res = self.z3_solver.check()
+        if res == z3.sat:
+            self.model = self.z3_solver.model()
+        else:
+            self.model = None
         if self.model is not None:
             new_prog = self.buildProgram()
             return new_prog

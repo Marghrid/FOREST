@@ -2,12 +2,17 @@ import glob
 import subprocess
 import os
 
-txtfiles = []
+instances = []
 for file in glob.glob("instances/*.txt"):
-    txtfiles.append(file)
+    instances.append(file)
+commands = [["python3", "validate.py", "-f", instance] for instance in instances]
+
 processes = []
 
-for instance in txtfiles:
+while len(commands) > 0:
+    command = commands.pop()
+
+for instance in instances:
     process = subprocess.Popen(["python3", "validate.py", "-f", instance],
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     processes.append((process, instance))

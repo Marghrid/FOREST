@@ -1,5 +1,6 @@
 from z3 import *
 from .. import dsl as D
+from ..spec import Production
 
 
 class Optimizer:
@@ -48,7 +49,7 @@ class Optimizer:
                 self.solver.add(
                     Implies(self.var_occurs[x] == 0, self.variables[y] != x))
 
-    def mk_is_not_parent(self, parent, child, weight=100):
+    def mk_is_not_parent(self, parent: Production, child: Production, weight=100):
         child_pos = []
         # find positions that type-check between parent and child
         for x in range(0, len(parent.rhs)):
@@ -217,52 +218,8 @@ class Optimizer:
 
     def optimize(self, solver):
         model = None
-        cost = 0
-        res = sat
-        nb_sat = 0
-        nb_unsat = 0
-        # no optimization is defined
-        if len(self.objective) == 0:
-            res = solver.check()
-            if res == sat:
-                model = solver.model()
-
-        # optimization using the LSU algorithm
-        else:
-            solver.set(unsat_core=True)
-            solver.push()
-            ctr = Sum(self.objective) <= self.bound
-            solver.assert_and_track(ctr, 'obj')
-
-            while model == None and res == sat:
-                res = solver.check()
-                if res == sat:
-                    nb_sat += 1
-                    model = solver.model()
-                    cost = self.computeCost(model)
-                    assert (cost == self.bound)
-                    solver.pop()
-                else:
-                    nb_unsat += 1
-                    solver.pop()
-                    core = solver.unsat_core()
-                    if len(core) != 0:
-                        self.bound += 1
-                        while(not self.isSubsetSum(self.weights, len(self.weights), self.bound) and self.bound <= self.ub):
-                            self.bound += 1
-                        solver.push()
-                        ctr = Sum(self.objective) <= self.bound
-                        solver.assert_and_track(ctr, 'obj')
-                        res = sat
-
+        res = solver.check()
+        if res == sat:
+            model = solver.model()
         assert(solver.num_scopes() == 0)
-        self.bound = cost
         return model
-
-    def computeCost(self, model):
-        cost = 0
-        for v in self.relax_vars:
-            if model[v] == 1:
-                cost = cost + self.cost_relax_vars[v]
-
-        return cost

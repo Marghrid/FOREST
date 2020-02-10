@@ -103,10 +103,8 @@ class ValidationInterpreter(PostOrderInterpreter):
 
     def eval_match(self, node, args):
         match = re.fullmatch(args[0], args[1])
-        #if match is not None:
-        #    print(args[0], 'accepts', args[1], file=sys.stderr)
         return match is not None
 
-    def apply_partial(self, val):
-        return re.search(val)
-
+    def eval_partial_match(self, node, args):
+        match = re.match(args[0], args[1])
+        return match is not None

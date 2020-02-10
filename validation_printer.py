@@ -87,3 +87,6 @@ class ValidationPrinter(PostOrderInterpreter):
 
     def eval_match(self, node, args):
         return f"match({args[0]}, {args[1]})"
+
+    def eval_partial_match(self, node, args):
+        return f"partial_match({args[0]}, {args[1]})"

@@ -21,8 +21,6 @@ func interr: Regex s -> Regex r;
 
 func match: Bool -> Regex, String;
 
-
-
 # predicate is_commutative(union);
 
 predicate is_not_parent(kleene, kleene, 100);
