@@ -1,5 +1,5 @@
 # First, specify the types that will be used
-value Input { is_number: bool; }
+value Input;
 value Number; # internally a float
 value Bool;
 value Empty;
@@ -10,9 +10,7 @@ program Validate(Input) -> Bool;
 # Finally, specify the production rules
 func conj: Bool -> Bool, Bool;
 
-func number: Number -> Input i {
-    is_number(i);
-}
+func number: Number -> Input i;
 
 func le: Bool -> Number, Value;
 func ge: Bool -> Number, Value;
