@@ -1,0 +1,23 @@
+PostcodesUK
+[A-Z]+[0-9]+[A-Z]? [0-9][A-Z][A-Z]
+[A-Z][A-Z]?[0-9][0-9]?[A-Z]? [0-9][A-Z][A-Z]
+
+++
+EC1A 1BB
+W1A 0AX
+M1 1AE
+B33 8TH
+CR2 6XH
+DN55 1PT
+M4 1PD
+LS1 3AD
+HU8 7A1
+
+--
+1 1AE
+HUT 7A1
+HU8 BA1
+HU8 7AG
+33 8TH
+33A 8TH
+M1 BAE
