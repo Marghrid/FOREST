@@ -18,40 +18,6 @@ def my_equal_output(prog, input, desired_output):
     except:
         return False
 
-class RegexInterpreter(PostOrderInterpreter):
-    def eval_Regex(self, v):
-        return int(v)
-
-    def eval_Bool(self, v):
-        return int(v)
-
-    def eval_re(self, node, args):
-        return fr'{args[0]}'
-
-    def eval_kleene(self, node, args):
-        if len(args[0]) == 1: return fr'{args[0]}*'
-        return fr'({args[0]})*'
-
-    def eval_concat(self, node, args):
-        return fr'{args[0]}{args[1]}'
-
-    def eval_union(self, node, args):
-        if len(args[0]) == 1:
-            h0 = fr'{args[0]}'
-        else:
-            h0 = fr'({args[0]})'
-        if len(args[1]) == 1:
-            h1 = fr'{args[1]}'
-        else:
-            h1 = fr'({args[1]})'
-        return h0 + '|' + h1
-
-    def eval_match(self, node, args):
-        match = re.fullmatch(args[0], args[1])
-        if match is not None:
-            print(args[0], 'accepts', args[1], file=sys.stderr)
-        return match is not None
-
 
 def main():
     logger.info('Parsing Spec...')

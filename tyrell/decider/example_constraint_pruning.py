@@ -60,9 +60,9 @@ class Z3Encoder(GenericVisitor):
                 expected = self.get_z3_var(node, pname + '_sym', pty)
             self._solver.add(actual == expected)
 
-    def encode_output_alignment(self, prog: Node):
-        out_ty = cast(ValueType, prog.type)
-        self.encode_param_alignment(prog, out_ty, 0)
+    def encode_output_alignment(self, program: Node):
+        out_type = cast(ValueType, program.type)
+        self.encode_param_alignment(program, out_type, 0)
 
     def visit_param_node(self, param_node: ParamNode):
         param_ty = cast(ValueType, param_node.type)
@@ -229,6 +229,7 @@ class BlameFinder:
         return [list(x) for x in self._blames_collection]
 
     def _get_blames(self) -> List[List[Blame]]:
+        # TODO: insert here the commutative functions property check?
         return [list(x) for x in self._blames_collection]
 
     def process_examples(self, examples: List[Example], equal_output: Callable[[Any, Any], bool]):
@@ -254,7 +255,7 @@ class BlameFinder:
                     blame_nodes.add(node)
             return bad([[Blame(node, node.production) for node in blame_nodes]])
 
-    def process_example(self, example: Example, equal_output: Callable[[Any, Any], bool]):
+    def process_example(self, example: Example, equal_output: Callable[[Any, Any, Any], bool]):
         z3_encoder = Z3Encoder(self._interp, self._indexer, example)
         z3_encoder.encode_output_alignment(self._prog)
         z3_encoder.visit(self._prog)
@@ -272,7 +273,12 @@ class BlameFinder:
             # If abstract semantics is satisfiable, start interpretation
             constraint_interpreter = ConstraintInterpreter(self._interp, example.input, z3_encoder)
             interpreter_output = constraint_interpreter.visit(self._prog)
-            return equal_output(interpreter_output, example.output)
+            # TODO: I think this is where I should
+            # return equal_output(interpreter_output, example.output)
+            # the next 2 lines are a sanity check
+            check = interpreter_output == example.output
+            assert check == equal_output(self._prog, example.input, example.output)
+            return equal_output(self._prog, example.input, example.output)
 
 
 class ExampleConstraintPruningDecider(ExampleDecider):

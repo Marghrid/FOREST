@@ -94,6 +94,7 @@ class Z3Encoder(GenericVisitor):
             pname = prop_expr.name
             pty = prop_expr.type
             return self.get_z3_var(node, pname, pty)
+
         constraint_visitor = ConstraintEncoder(encode_property)
         for index, constraint in enumerate(apply_node.production.constraints):
             cname = self._get_constraint_var(apply_node, index)
@@ -106,6 +107,7 @@ class Z3Encoder(GenericVisitor):
     def get_blame_nodes(self):
         if self._solver.check() != z3.unsat:
             # Abstract semantics is satisfiable or unknown. Cannot learn anything.
+            # TODO: It always comes here. I think it only checks if enumerated program is consistent with DSL
             return None
         unsat_core = self._solver.unsat_core()
         if len(unsat_core) == 0:
@@ -125,12 +127,13 @@ class BlameFinder:
     _indexer: NodeIndexer
     _blames_collection: Set[FrozenSet[Blame]]
 
-    def __init__(self, interp: Interpreter, imply_map: ImplyMap, prog: Node):
+    def __init__(self, interp: Interpreter, imply_map: ImplyMap, prog: Node, spec: TyrellSpec):
         self._interp = interp
         self._imply_map = imply_map
         self._prog = prog
         self._indexer = NodeIndexer(prog)
         self._blames_collection = set()
+        self._spec = spec
 
     def _get_raw_blames(self) -> List[List[Blame]]:
         return [list(x) for x in self._blames_collection]
@@ -141,6 +144,7 @@ class BlameFinder:
                 [Blame(node=n, production=(prod if n is node else n.production))
                  for n in base_nodes]
             )
+
         for expr in exprs:
             keys = list(self._imply_map.keys())
             for other_prod in self._imply_map.get((node.production, expr), []):
@@ -149,15 +153,20 @@ class BlameFinder:
     def get_blames(self) -> List[List[Blame]]:
         return [list(x) for x in self._blames_collection]
 
-    def process_examples(self, examples: List[Example]):
-        for example in examples:
+    def process_examples(self, failed_examples: List[Example]):
+        for example in failed_examples:
             self.process_example(example)
+        #TODO: HERE maybe add HERE blames?
+        # self.traverse(self._prog)
+        pass
+
 
     def process_example(self, example: Example):
         z3_encoder = Z3Encoder(self._interp, self._indexer, example)
         z3_encoder.encode_output_alignment(self._prog)
         z3_encoder.visit(self._prog)
         blame_nodes = z3_encoder.get_blame_nodes()
+        # FIXME: blame_nodes is always none
         if blame_nodes is not None:
             base_nodes = list(blame_nodes.keys())
             for node, exprs in blame_nodes.items():
@@ -168,6 +177,9 @@ class BlameFinder:
             )
 
 
+
+
+
 class ExampleConstraintDecider(ExampleDecider):
     _imply_map: ImplyMap
     _assert_handler: AssertionViolationHandler
@@ -176,10 +188,11 @@ class ExampleConstraintDecider(ExampleDecider):
                  spec: TyrellSpec,
                  interpreter: Interpreter,
                  examples: List[Example],
-                 equal_output: Callable[[Any, Any], bool]=lambda x, y: x == y):
+                 equal_output: Callable[[Any, Any], bool] = lambda x, y: x == y):
         super().__init__(interpreter, examples, equal_output)
         self._imply_map = self._build_imply_map(spec)
         self._assert_handler = AssertionViolationHandler(spec, interpreter)
+        self._spec = spec
 
     def _check_implies(self, pre, post) -> bool:
         def encode_property(prop_expr: PropertyExpr):
@@ -192,6 +205,7 @@ class ExampleConstraintDecider(ExampleDecider):
                 return z3.Bool(var_name)
             else:
                 raise RuntimeError('Unrecognized ExprType: {}'.format(ptype))
+
         constraint_visitor = ConstraintEncoder(encode_property)
 
         z3_solver = z3.Solver()
@@ -215,15 +229,16 @@ class ExampleConstraintDecider(ExampleDecider):
                         break
         return ret
 
-    def analyze(self, prog):
+    def analyze(self, program):
         '''
         This version of analyze() tries to analyze the reason why a synthesized program fails, if it does not pass all the tests.
         '''
-        failed_examples = self.get_failed_examples(prog)
+        failed_examples = self.get_failed_examples(program)
         if len(failed_examples) == 0:
             return ok()
         else:
-            blame_finder = BlameFinder(self.interpreter, self._imply_map, prog)
+            #TODO: blame finder is not doing anything!
+            blame_finder = BlameFinder(self.interpreter, self._imply_map, program, self._spec)
             blame_finder.process_examples(failed_examples)
             blames = blame_finder.get_blames()
             if len(blames) == 0:

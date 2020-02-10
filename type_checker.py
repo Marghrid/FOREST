@@ -1,6 +1,5 @@
 import itertools
 from typing import List
-import numpy
 from tyrell.decider import Example
 
 
@@ -14,6 +13,7 @@ def is_integer(arg: str):
 
 def is_real(arg: str):
     try:
+        float(arg)
         return True
     except:
         return False
@@ -47,7 +47,6 @@ def check_type(examples: List[Example]) -> (List[str], List[Example]):
     else:
         transposed_invalid = [[]]
 
-
     # separate by field
 
     for field_idx in range(num_fields):
@@ -62,13 +61,9 @@ def check_type(examples: List[Example]) -> (List[str], List[Example]):
                     types.append(validation.__name__)
                 else:
                     types.append(validation.__name__)
-                    print("type validation might be too restrict. No invalid examples are removed.")
-                    # #TODO: Query user!
+                    print("Assuming input type " + validation.__name__)
                 break
 
     examples = valid + invalid
-
     return types, examples
-#        for in_ex in valid:
-#        if validation(in_ex):
 

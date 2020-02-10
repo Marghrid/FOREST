@@ -1,5 +1,5 @@
+import re
 import sys
-
 from tyrell.interpreter import PostOrderInterpreter
 
 
@@ -41,6 +41,9 @@ class ValidationInterpreter(PostOrderInterpreter):
     def eval_Value(self, v):
         return float(v)
 
+    def eval_Char(self, v):
+        return v
+
     def eval_conj(self, node, args) -> bool:
         '''Bool -> Bool, Bool;'''
         return args[0] and args[1]
@@ -48,22 +51,6 @@ class ValidationInterpreter(PostOrderInterpreter):
     def eval_number(self, node, args) -> float:
         '''Number -> Input;'''
         return float(args[0])
-
-    def eval_is_int(self, node, args) -> bool:
-        '''Bool -> Input;'''
-        return self.check_integer(args[0])
-
-    def eval_is_real(self, node, args) -> bool:
-        '''Bool -> Input;'''
-        return self.check_real(args[0])
-
-    def eval_is_string(self, node, args) -> bool:
-        '''Bool -> Input;'''
-        return isinstance(args[0], str) and self.check_integer(args[0]) and not self.check_real(args[0])
-
-    def eval_string(self, node, args) -> str:
-        '''String -> Input;'''
-        return args[0]
 
     def eval_len(self, node, args) -> int:
         '''Number -> String;'''
@@ -79,85 +66,47 @@ class ValidationInterpreter(PostOrderInterpreter):
         # print("ge", args[0], args[1], args[0] >= args[1], file=sys.stderr)
         return args[0] >= args[1]
 
-    def apply_is_number(self, val) -> bool:
-        return self.check_integer(val) or self.check_real(val)
-
-
-def check_integer(arg):
-    if isinstance(arg, int):
-        return True
-    try:
-        int(arg)
-        return True
-    except (TypeError, ValueError):
-        return False
-
-
-def check_real(arg):
-    if check_integer(arg): return False
-    if isinstance(arg, float):
-        return True
-    try:
-        float(arg)
-        return True
-    except (TypeError, ValueError):
-        return False
-
-
-class ValidationPrinter(PostOrderInterpreter):
-
     def eval_Regex(self, v):
-        return v
-
-    def eval_Input(self, v):
-        return v
-
-    def eval_Number(self, v) -> str:
-        return v
+        return int(v)
 
     def eval_Bool(self, v):
-        return v
+        return int(v)
 
-    def eval_Value(self, v):
-        return v
+    def eval_re(self, node, args):
+        return fr'{args[0]}'
 
-    def eval_conj(self, node, args) -> str:
-        '''Bool -> Bool, Bool;'''
-        return args[0] + " /\\ " + args[1]
+    def eval_kleene(self, node, args):
+        if len(args[0]) == 1: return fr'{args[0]}*'
+        return fr'({args[0]})*'
 
-    def eval_number(self, node, args) -> str:
-        '''Number -> Input;'''
-        return args[0]
+    def eval_concat(self, node, args):
+        return fr'{args[0]}{args[1]}'
 
-    def eval_is_int(self, node, args) -> str:
-        '''Bool -> Input;'''
-        return "is int(" + args[0] + ")"
+    def eval_union(self, node, args):
+        if len(args[0]) == 1:
+            h0 = fr'{args[0]}'
+        else:
+            h0 = fr'({args[0]})'
+        if len(args[1]) == 1:
+            h1 = fr'{args[1]}'
+        else:
+            h1 = fr'({args[1]})'
+        return h0 + '|' + h1
 
-    def eval_is_real(self, node, args) -> str:
-        '''Bool -> Input;'''
-        return "is real(" + args[0] + ")"
+    def eval_interr(self, node, args):
+        if len(args[0]) == 1: return fr'{args[0]}?'
+        return fr'({args[0]})?'
 
-    def eval_is_string(self, node, args) -> str:
-        '''Bool -> Input;'''
-        return "is string(" + args[0] + ")"
+    def eval_posit(self, node, args):
+        if len(args[0]) == 1: return fr'{args[0]}+'
+        return fr'({args[0]})+'
 
-    def eval_string(self, node, args) -> str:
-        '''String -> Input;'''
-        return args[0]
+    def eval_match(self, node, args):
+        match = re.fullmatch(args[0], args[1])
+        #if match is not None:
+        #    print(args[0], 'accepts', args[1], file=sys.stderr)
+        return match is not None
 
-    def eval_len(self, node, args) -> str:
-        '''Number -> String;'''
-        return "len(" + args[0] + ")"
+    def apply_partial(self, val):
+        return re.search(val)
 
-    def eval_le(self, node, args) -> str:
-        ''''Bool -> Number, Number;'''
-        # print("le", args[0], args[1], args[0] <= args[1], file=sys.stderr)
-        return args[0] + " <= " + args[1]
-
-    def eval_ge(self, node, args) -> str:
-        '''Bool -> Number, Number;'''
-        # print("ge", args[0], args[1], args[0] >= args[1], file=sys.stderr)
-        return args[0] + " >= " + args[1]
-
-    def apply_is_number(self, val) -> bool:
-        return check_integer(val) or check_real(val)

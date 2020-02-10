@@ -37,7 +37,7 @@ class ToyInterpreter(PostOrderInterpreter):
     def eval_Match(self, node, args):
         match = re.fullmatch(args[0], args[1])
         # print('match', args[0], args[1], match is not None)
-        if match is not None: print(args[0], 'accepts', args[1], file=sys.stderr)
+        # if match is not None: print(args[0], 'accepts', args[1], file=sys.stderr)
         return match is not None
 
 

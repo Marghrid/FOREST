@@ -55,9 +55,9 @@ class Optimizer:
             if child.lhs == parent.rhs[x]:
                 child_pos.append(x)
 
-        for n in self.nodes:
+        for node in self.nodes:
             # not a leaf node
-            if n.children != None:
+            if node.children != None:
                 if weight != 100:
                     # FIXME: reduce duplication of code
                     name = 'relax' + str(self.id)
@@ -73,29 +73,28 @@ class Optimizer:
                     ctr_children = []
                     for p in range(0, len(child_pos)):
                         ctr_children.append(
-                            self.variables[n.children[p].id - 1] == child.id)
+                            self.variables[node.children[p].id - 1] == child.id)
 
                     self.solver.add(
-                        Or(Implies(Or(ctr_children), self.variables[n.id - 1] != parent.id), v == 1))
+                        Or(Implies(Or(ctr_children), self.variables[node.id - 1] != parent.id), v == 1))
                     # relation between relaxation variables and constraint
                     self.solver.add(Implies(v == 1, Or(
-                        self.variables[n.id - 1] == parent.id, Not(Or(ctr_children)))))
+                        self.variables[node.id - 1] == parent.id, Not(Or(ctr_children)))))
                     self.solver.add(
-                        Implies(And(self.variables[n.id - 1] != parent.id, Or(ctr_children)), v == 0))
+                        Implies(And(self.variables[node.id - 1] != parent.id, Or(ctr_children)), v == 0))
                     self.id = self.id + 1
                 else:
                     ctr_children = []
                     for p in range(0, len(child_pos)):
                         ctr_children.append(
-                            self.variables[n.children[p].id - 1] == child.id)
+                            self.variables[node.children[p].id - 1] == child.id)
 
                     self.solver.add(
-                        Implies(Or(ctr_children), self.variables[n.id - 1] != parent.id))
+                        Implies(Or(ctr_children), self.variables[node.id - 1] != parent.id))
 
     # FIXME: dissociate the creation of variables with the creation of constraints?
     def mk_is_parent(self, parent, child, weight=100):
         '''children production will have the parent production with probability weight'''
-
         child_pos = []
         # find positions that type-check between parent and child
         for x in range(0, len(parent.rhs)):
