@@ -1,17 +1,18 @@
 from collections import defaultdict
-from typing import cast, Any, Callable, Dict, List, Tuple, Set, FrozenSet
+from typing import cast, Any, Callable, Tuple, Set, FrozenSet
+
 import z3
 
 from .assert_violation_handler import AssertionViolationHandler
 from .blame import Blame
 from .constraint_encoder import ConstraintEncoder
-from .example_base import Example, ExampleDecider
 from .eval_expr import eval_expr
+from .example_base_decider import Example, ExampleDecider
 from .result import ok, bad
-from ..spec import TyrellSpec, ValueType
 from ..dsl import Node, AtomNode, ParamNode, ApplyNode, NodeIndexer, dfs
 from ..interpreter import Interpreter, InterpreterError
 from ..logger import get_logger
+from ..spec import TyrellSpec, ValueType
 from ..spec.expr import *
 from ..visitor import GenericVisitor
 

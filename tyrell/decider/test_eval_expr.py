@@ -1,7 +1,8 @@
 import unittest
-from ..spec import parse
-from ..interpreter import PostOrderInterpreter
+
 from .eval_expr import eval_expr
+from ..interpreter import PostOrderInterpreter
+from ..spec import parse
 
 spec_str = r'''
     value IntExpr {

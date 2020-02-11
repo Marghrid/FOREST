@@ -1,11 +1,11 @@
-from typing import Any, List, Iterable
+from typing import Any, List
 
 
 class Predicate:
     _name: str
     _args: List[Any]
 
-    def __init__(self, name: str, args: List[Any] = []):
+    def __init__(self, name: str, args: List[Any]):
         self._name = name
         self._args = args
 
@@ -14,7 +14,7 @@ class Predicate:
         return self._name
 
     @property
-    def args(self) -> Iterable[Any]:
+    def args(self) -> List[Any]:
         return self._args
 
     def num_args(self) -> int:

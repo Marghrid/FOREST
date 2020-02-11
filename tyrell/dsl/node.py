@@ -1,6 +1,8 @@
-from typing import cast, List, Any
 from abc import ABC, abstractmethod
+from typing import cast, List, Any
+
 from sexpdata import Symbol
+
 from ..spec import Type, Production, EnumProduction, ParamProduction, FunctionProduction
 
 

@@ -1,10 +1,11 @@
 import unittest
-from .. import spec as S
-from .node import AtomNode, ParamNode, ApplyNode
+
 from .builder import Builder
-from .iterator import bfs, dfs
 from .indexer import NodeIndexer
+from .iterator import bfs, dfs
+from .node import AtomNode, ParamNode, ApplyNode
 from .parent_finder import ParentFinder
+from .. import spec as S
 
 
 class TestDSL(unittest.TestCase):

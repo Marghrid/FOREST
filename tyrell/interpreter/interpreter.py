@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Iterable, List, Any
-from ..dsl import Node
+
 from .error import AssertionViolation
+from ..dsl import Node
 
 
 class Interpreter(ABC):

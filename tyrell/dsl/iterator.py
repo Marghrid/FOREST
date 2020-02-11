@@ -1,5 +1,6 @@
-from typing import Iterator
 from collections import deque
+from typing import Iterator
+
 from .node import Node
 
 

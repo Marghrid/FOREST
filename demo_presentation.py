@@ -3,7 +3,7 @@
 import tyrell.spec as S
 from tyrell.interpreter import PostOrderInterpreter
 from tyrell.enumerator import SmtEnumerator
-from tyrell.decider import Example, ExampleConstraintDecider
+from tyrell.decider import Example, ValidationDecider
 from tyrell.synthesizer import Synthesizer
 from tyrell.logger import get_logger
 import re, sys
@@ -27,7 +27,7 @@ def main():
     logger.info('Building synthesizer...')
     synthesizer = Synthesizer(
         enumerator=SmtEnumerator(spec, depth=6, loc=14),
-        decider=ExampleConstraintDecider(
+        decider=ValidationDecider(
             spec=spec,
             interpreter=RegexInterpreter(),
             examples=[

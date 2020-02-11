@@ -1,9 +1,8 @@
-from abc import ABC, abstractmethod
-from typing import Any
-from ..interpreter import InterpreterError
-from ..enumerator import Enumerator
+from abc import ABC
+
 from ..decider import Decider
-from ..dsl import Node
+from ..enumerator import Enumerator
+from ..interpreter import InterpreterError
 from ..logger import get_logger
 
 logger = get_logger('tyrell.synthesizer')
@@ -35,8 +34,10 @@ class Synthesizer(ABC):
         program = self._enumerator.next()
         while program is not None:
             num_attempts += 1
-
-
+            if self._printer is not None:
+                logger.debug('Enumerator generated: ' + self._printer.eval(program, ["IN"]))
+            else:
+                logger.debug(f'Enumerator generated: {program}')
             try:
                 res = self._decider.analyze(program)
                 if res.is_ok():
@@ -44,14 +45,14 @@ class Synthesizer(ABC):
                         'Program accepted after {} attempts'.format(num_attempts))
                     return program
                 else:
-                    info = res.why()
-                    logger.debug('Program rejected. Reason: {}'.format(info))
-                    self._enumerator.update(info)
+                    new_predicates = res.why()
+                    logger.debug('Program rejected. Predicates: {}'.format(new_predicates))
+                    self._enumerator.update(new_predicates)
                     program = self._enumerator.next()
             except InterpreterError as e:
-                info = self._decider.analyze_interpreter_error(e)
-                logger.debug('Interpreter {} failed. Exception: {}. Reason: {}'.format(self._decider.interpreter().__class__.__name__, e.__class__.__name__, info))
-                self._enumerator.update(info)
+                new_predicates = self._decider.analyze_interpreter_error(e)
+                logger.debug('Interpreter {} failed. Exception: {}. Reason: {}'.format(self._decider.interpreter().__class__.__name__, e.__class__.__name__, new_predicates))
+                self._enumerator.update(new_predicates)
                 program = self._enumerator.next()
         logger.debug(
             'Enumerator is exhausted after {} attempts'.format(num_attempts))

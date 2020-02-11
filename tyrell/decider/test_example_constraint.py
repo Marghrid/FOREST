@@ -1,10 +1,10 @@
 import unittest
-from ..spec import parse
+
+from .example_base_decider import Example
+from .validation_decider import ValidationDecider
 from ..dsl import Builder
 from ..interpreter import PostOrderInterpreter
-from .example_base import Example
-from .example_constraint import ExampleConstraintDecider
-
+from ..spec import parse
 
 spec_str = r'''
     value IntExpr {
@@ -43,7 +43,7 @@ class TestExampleConstraint(unittest.TestCase):
 
     @staticmethod
     def do_analyze(prog, examples):
-        decider = ExampleConstraintDecider(
+        decider = ValidationDecider(
             spec=spec,
             interpreter=FooInterpreter(),
             examples=examples

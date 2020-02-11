@@ -1,9 +1,10 @@
 import unittest
-from ..spec import parse
-from ..dsl import Builder
-from ..interpreter import PostOrderInterpreter, AssertionViolation
+
 from .assert_violation_handler import AssertionViolationHandler
 from .blame import Blame
+from ..dsl import Builder
+from ..interpreter import PostOrderInterpreter, AssertionViolation
+from ..spec import parse
 
 spec_str = r'''
     enum SmallInt {

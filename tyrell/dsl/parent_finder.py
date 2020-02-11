@@ -1,6 +1,7 @@
-from typing import List, Dict, Optional
-from .node import Node
+from typing import Dict, Optional
+
 from .iterator import dfs
+from .node import Node
 
 
 class ParentFinder:

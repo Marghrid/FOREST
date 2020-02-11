@@ -1,7 +1,8 @@
-from typing import List, Any, cast
 from abc import ABC, abstractmethod
-from .type import Type, EnumType, ValueType
+from typing import List, Any, cast
+
 from .expr import Expr, ExprType
+from .type import Type, EnumType, ValueType
 
 
 class Production(ABC):

@@ -1,4 +1,5 @@
-from typing import Any, Callable, ClassVar, Dict
+from typing import Any, Callable, ClassVar
+
 import z3
 
 from ..spec.expr import *

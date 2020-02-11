@@ -128,8 +128,6 @@ except NameError:   # Python 3
 
 
 import types
-from functools import wraps, partial
-from contextlib import contextmanager
 
 Str = type(u'')
 

@@ -1,7 +1,8 @@
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Callable, Iterable, Optional, Any
-from ..dsl import Node
+
 from .context import Context
+from ..dsl import Node
 
 
 class InterpreterError(RuntimeError):

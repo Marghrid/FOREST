@@ -1,8 +1,9 @@
 import unittest
-from ..spec import parse
+
+from .example_base_decider import Example, ExampleDecider
 from ..dsl import Builder
 from ..interpreter import PostOrderInterpreter
-from .example_base import Example, ExampleDecider
+from ..spec import parse
 
 spec_str = r'''
     value IntExpr {

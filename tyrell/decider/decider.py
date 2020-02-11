@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 from typing import Any
+
+from .result import Result
 from ..dsl import Node
 from ..interpreter import InterpreterError
-from .result import Result
 
 
 class Decider(ABC):

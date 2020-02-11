@@ -1,8 +1,9 @@
-import z3
 from collections import deque
+
+import z3
+
 from .enumerator import Enumerator
 from .optimizer import Optimizer
-
 from .. import dsl as D
 from ..logger import get_logger
 from ..spec import TyrellSpec
@@ -196,6 +197,45 @@ class SmtEnumerator(Enumerator):
         weight = pred.args[2]
         self.optimizer.mk_is_parent(prod0, prod1, weight)
 
+    def _resolve_do_not_concat_predicate(self, pred):
+        self._check_arg_types(pred, [str, str])
+
+
+        # idea: node_is_concat -> child[0] is not args[0] \/ child[0] is not args[1]
+        for node in self.nodes:
+            test1 = node.children is None or len(node.children) == 0
+            if test1: continue
+            test2 = node.children[0].children is None or len(node.children[0].children) == 0
+            test3 = node.children[1].children is None or len(node.children[1].children) == 0
+            if test2 or test3: continue
+
+            node_var = self.variables[node.id-1]
+            concat_id = self.spec.get_function_production("concat").id
+            node_is_concat = node_var == z3.IntVal(concat_id)
+
+            assert len(node.children) == 2
+            child0_var = self.variables[node.children[0].id-1]
+            child1_var = self.variables[node.children[1].id-1]
+            re_id = self.spec.get_function_production("re").id
+            child0_is_re = child0_var == z3.IntVal(re_id)
+            child1_is_re = child1_var == z3.IntVal(re_id)
+
+            char_type = self.spec.get_type("Char")
+            args0_id = self.spec.get_enum_production(char_type, pred.args[0]).id
+            args1_id = self.spec.get_enum_production(char_type, pred.args[1]).id
+
+            child0_child_var = self.variables[node.children[0].children[0].id-1]
+            child1_child_var = self.variables[node.children[1].children[0].id-1]
+
+            child0_child_is_args0 = child0_child_var == z3.IntVal(args0_id)
+            child1_child_is_args1 = child1_child_var == z3.IntVal(args1_id)
+
+            left_side = z3.And([node_is_concat, child0_is_re, child1_is_re])
+            right_side = z3.Not(z3.And(child0_child_is_args0, child1_child_is_args1))
+
+            self.z3_solver.add(z3.Implies(left_side, right_side))
+            pass
+
     def resolve_predicates(self, predicates):
         try:
             for pred in predicates:
@@ -207,6 +247,8 @@ class SmtEnumerator(Enumerator):
                     self._resolve_not_occurs_predicate(pred)
                 elif pred.name == 'is_not_parent':
                     self._resolve_is_not_parent_predicate(pred)
+                elif pred.name == 'do_not_concat':
+                    self._resolve_do_not_concat_predicate(pred)
 
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
@@ -258,33 +300,15 @@ class SmtEnumerator(Enumerator):
         # TODO: commutative functions that can have its args swapped
         # TODO: check concatenations and unions
 
-    def update(self, info=None):
+    def update(self, predicates = None):
         # TODO: block more than one model
         # self.blockModel() # do I need to block the model anyway?
         # 'info' is the blame found by the decider.
-        if info is not None and not isinstance(info, str):
-            for core in info:
-                '''
-                ctr = None
-                for constraint in core:
-                    if ctr is None:
-                        ctr =    self.variables[self.program2tree[constraint[0]].id - 1] != constraint[1].id
-                    else:
-                        ctr = z3.Or(
-                            ctr, self.variables[self.program2tree[constraint[0]].id - 1] != constraint[1].id)
-                self.z3_solver.add(ctr)
-                '''
-                if len(core) < 2:
-                    constraint = core[0]
-                    self.z3_solver.add(
-                        self.variables[self.program2tree[constraint[0]].id - 1]
-                        != constraint[1].id)
-                else:
-                    self.z3_solver.add(z3.Or(
-                        [self.variables[self.program2tree[constraint[0]].id - 1]
-                         != constraint[1].id for constraint in core]))
-        else:
-            self.blockModel()
+        self.blockModel()
+        if predicates is not None:
+            self.resolve_predicates(predicates)
+            for pred in predicates:
+                self.spec.add_predicate(pred)
 
     def buildProgram(self):
         result = [0] * len(self.model)

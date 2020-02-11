@@ -1,6 +1,7 @@
 import unittest
-from .type import EnumType, ValueType
+
 from .spec import TypeSpec, ProductionSpec, PredicateSpec
+from .type import EnumType, ValueType
 
 
 class TestTyrellSpec(unittest.TestCase):

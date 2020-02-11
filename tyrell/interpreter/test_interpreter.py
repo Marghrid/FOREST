@@ -1,9 +1,10 @@
 import unittest
 from itertools import product
-from .. import spec as S
-from .. import dsl as D
-from .post_order import PostOrderInterpreter
+
 from .error import GeneralError
+from .post_order import PostOrderInterpreter
+from .. import dsl as D
+from .. import spec as S
 
 
 class BoolInterpreter(PostOrderInterpreter):

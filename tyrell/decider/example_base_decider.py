@@ -1,7 +1,8 @@
 from typing import Callable, NamedTuple, List, Any
+
 from .decider import Decider
-from ..interpreter import Interpreter
 from .result import ok, bad
+from ..interpreter import Interpreter
 
 Example = NamedTuple('Example', [
     ('input', List[Any]),

@@ -1,7 +1,9 @@
 from typing import Union
+
 import sexpdata
+
 from .node import *
-from ..spec import TyrellSpec, Production, EnumType
+from ..spec import TyrellSpec, Production
 from ..visitor import GenericVisitor
 
 

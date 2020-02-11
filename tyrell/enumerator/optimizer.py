@@ -1,5 +1,5 @@
 from z3 import *
-from .. import dsl as D
+
 from ..spec import Production
 
 

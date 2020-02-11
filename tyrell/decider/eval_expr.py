@@ -1,6 +1,7 @@
-from typing import ClassVar, Callable, List, Dict, Any
-from ..spec.expr import *
+from typing import ClassVar, Callable, Any
+
 from ..interpreter import Interpreter
+from ..spec.expr import *
 from ..visitor import GenericVisitor
 
 

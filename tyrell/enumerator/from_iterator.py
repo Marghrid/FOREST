@@ -1,5 +1,6 @@
-from .enumerator import Enumerator
 from typing import Optional, List, Iterator
+
+from .enumerator import Enumerator
 from ..dsl import Node
 
 

@@ -1,9 +1,10 @@
-from typing import Iterable, List, Dict, DefaultDict, Optional, Union, Any
 from collections import defaultdict
-from .type import Type, EnumType, ValueType
-from .production import EnumProduction, ParamProduction, FunctionProduction, Production
+from typing import Iterable, List, Dict, DefaultDict, Optional, Union, Any
+
 from .expr import Expr
 from .predicate import Predicate
+from .production import EnumProduction, ParamProduction, FunctionProduction, Production
+from .type import Type, EnumType, ValueType
 
 
 class TypeSpec:
@@ -265,7 +266,7 @@ class PredicateSpec:
         self._preds = list()
         self._name_map = defaultdict(list)
 
-    def add_predicate(self, name: str, args: List[Any]=[]) -> Predicate:
+    def add_predicate(self, name: str, args: List[Any]) -> Predicate:
         pred = Predicate(name, args)
         self._preds.append(pred)
         self._name_map[name].append(pred)
@@ -397,5 +398,6 @@ class TyrellSpec:
         '''Return the number of predicates'''
         return self._pred_spec.num_predicates()
 
-    def add_predicate(self, name: str, args: List[Any]):
-        self._pred_spec.add_predicate(name, args)
+    def add_predicate(self, pred: Predicate):
+        # FIXME: This is ugly!
+        self._pred_spec.add_predicate(pred.name, pred.args)

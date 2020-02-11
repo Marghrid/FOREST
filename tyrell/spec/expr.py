@@ -1,5 +1,5 @@
-from enum import Enum, unique
 from abc import ABC, abstractmethod
+from enum import Enum, unique
 from typing import List, Dict, Union
 
 

@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional
-from collections import deque
-from .node import Node
+
 from .iterator import bfs
+from .node import Node
 
 
 class NodeIndexer:

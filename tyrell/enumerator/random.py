@@ -1,5 +1,6 @@
-from typing import Set, Optional
 from random import Random
+from typing import Optional
+
 from .enumerator import Enumerator
 from .. import dsl as D
 from .. import spec as S

@@ -1,8 +1,9 @@
 from typing import cast, List
-from ..spec import TyrellSpec, Production
+
+from .blame import Blame
 from ..dsl import AtomNode, dfs
 from ..interpreter import Interpreter, InterpreterError, AssertionViolation
-from .blame import Blame
+from ..spec import TyrellSpec, Production
 
 
 class AssertionViolationHandler:
