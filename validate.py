@@ -54,12 +54,7 @@ def main():
         enumerator = SmtEnumerator(dsl, depth=dep, loc=4)
         synthesizer = Synthesizer(
             enumerator=enumerator,
-            decider=ValidationDecider(
-        spec=dsl,
-        interpreter=ValidationInterpreter(),
-        examples=examples,
-        equal_output=my_equal_output
-    ),
+            decider=decider,
             printer=printer
         )
         program = synthesizer.synthesize()
