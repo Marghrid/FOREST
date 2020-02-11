@@ -25,8 +25,8 @@ class ASTNode:
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class SmtEnumerator(Enumerator):
     # z3 solver
-    z3_solver = z3.Solver()
-    #z3_solver = z3.SolverFor("QF_FD")
+    # z3_solver = z3.Solver()
+    z3_solver = z3.SolverFor("QF_FD")
     # productions that are leaf
     leaf_productions = []
 
@@ -162,7 +162,7 @@ class SmtEnumerator(Enumerator):
     @staticmethod
     def _check_arg_types(pred, python_tys):
         if pred.num_args() < len(python_tys):
-            msg = 'Predicate "{}" must have at least {} arugments. Only {} is found.'.format(
+            msg = 'Predicate "{}" must have at least {} arguments. Only {} is found.'.format(
                 pred.name, len(python_tys), pred.num_args())
             raise ValueError(msg)
         for index, (arg, python_ty) in enumerate(zip(pred.args, python_tys)):
@@ -199,8 +199,6 @@ class SmtEnumerator(Enumerator):
 
     def _resolve_do_not_concat_predicate(self, pred):
         self._check_arg_types(pred, [str, str])
-
-
         # idea: node_is_concat -> child[0] is not args[0] \/ child[0] is not args[1]
         for node in self.nodes:
             test1 = node.children is None or len(node.children) == 0
@@ -234,21 +232,84 @@ class SmtEnumerator(Enumerator):
             right_side = z3.Not(z3.And(child0_child_is_args0, child1_child_is_args1))
 
             self.z3_solver.add(z3.Implies(left_side, right_side))
-            pass
+
+    def _resolve_do_not_kleene_predicate(self, pred):
+        self._check_arg_types(pred, [str])
+        # idea: node_is_kleene -> child[0] is not args[0]
+        for node in self.nodes:
+            test1 = node.children is None or len(node.children) == 0
+            if test1: continue
+            test2 = node.children[0].children is None or len(node.children[0].children) == 0
+            if test2: continue
+
+            node_var = self.variables[node.id - 1]
+            kleene_id = self.spec.get_function_production("kleene").id
+            node_is_kleene = node_var == z3.IntVal(kleene_id)
+
+            assert len(node.children) > 1
+            child0_var = self.variables[node.children[0].id - 1]
+            re_id = self.spec.get_function_production("re").id
+            child0_is_re = child0_var == z3.IntVal(re_id)
+
+            char_type = self.spec.get_type("Char")
+            args0_id = self.spec.get_enum_production(char_type, pred.args[0]).id
+
+            child0_child_var = self.variables[node.children[0].children[0].id - 1]
+
+            child0_child_is_args0 = child0_child_var == z3.IntVal(args0_id)
+
+            left_side = z3.And(node_is_kleene, child0_is_re)
+            right_side = z3.Not(child0_child_is_args0)
+
+            self.z3_solver.add(z3.Implies(left_side, right_side))
+
+    def _resolve_do_not_posit_predicate(self, pred):
+        self._check_arg_types(pred, [str])
+        # idea: node_is_posit -> child[0] is not args[0]
+        for node in self.nodes:
+            test1 = node.children is None or len(node.children) == 0
+            if test1: continue
+            test2 = node.children[0].children is None or len(node.children[0].children) == 0
+            if test2: continue
+
+            node_var = self.variables[node.id - 1]
+            posit_id = self.spec.get_function_production("posit").id
+            node_is_posit = node_var == z3.IntVal(posit_id)
+
+            assert len(node.children) > 1
+            child0_var = self.variables[node.children[0].id - 1]
+            re_id = self.spec.get_function_production("re").id
+            child0_is_re = child0_var == z3.IntVal(re_id)
+
+            char_type = self.spec.get_type("Char")
+            args0_id = self.spec.get_enum_production(char_type, pred.args[0]).id
+
+            child0_child_var = self.variables[node.children[0].children[0].id - 1]
+
+            child0_child_is_args0 = child0_child_var == z3.IntVal(args0_id)
+
+            left_side = z3.And(node_is_posit, child0_is_re)
+            right_side = z3.Not(child0_child_is_args0)
+
+            self.z3_solver.add(z3.Implies(left_side, right_side))
 
     def resolve_predicates(self, predicates):
         try:
             for pred in predicates:
-                if pred.name == 'occurs':
+                if pred.name == 'is_not_parent':
+                    self._resolve_is_not_parent_predicate(pred)
+                elif pred.name == 'do_not_concat':
+                    self._resolve_do_not_concat_predicate(pred)
+                elif pred.name == 'do_not_kleene':
+                    self._resolve_do_not_kleene_predicate(pred)
+                elif pred.name == 'do_not_posit':
+                    self._resolve_do_not_posit_predicate(pred)
+                elif pred.name == 'occurs':
                     self._resolve_occurs_predicate(pred)
                 elif pred.name == 'is_parent':
                     self._resolve_is_parent_predicate(pred)
                 elif pred.name == 'not_occurs':
                     self._resolve_not_occurs_predicate(pred)
-                elif pred.name == 'is_not_parent':
-                    self._resolve_is_not_parent_predicate(pred)
-                elif pred.name == 'do_not_concat':
-                    self._resolve_do_not_concat_predicate(pred)
 
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
@@ -301,14 +362,12 @@ class SmtEnumerator(Enumerator):
         # TODO: check concatenations and unions
 
     def update(self, predicates = None):
-        # TODO: block more than one model
-        # self.blockModel() # do I need to block the model anyway?
-        # 'info' is the blame found by the decider.
-        self.blockModel()
         if predicates is not None:
             self.resolve_predicates(predicates)
             for pred in predicates:
-                self.spec.add_predicate(pred)
+                self.spec.add_predicate(pred.name, pred.args)
+        else:
+            self.blockModel()
 
     def buildProgram(self):
         result = [0] * len(self.model)
@@ -351,7 +410,6 @@ class SmtEnumerator(Enumerator):
         else:
             self.model = None
         if self.model is not None:
-            new_prog = self.buildProgram()
-            return new_prog
+            return self.buildProgram()
         else:
             return None

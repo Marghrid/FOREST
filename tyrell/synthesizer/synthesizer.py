@@ -46,7 +46,9 @@ class Synthesizer(ABC):
                     return program
                 else:
                     new_predicates = res.why()
-                    logger.debug('Program rejected. Predicates: {}'.format(new_predicates))
+                    logger.debug('Program rejected.')
+                    if new_predicates is not None:
+                        logger.debug(f'New predicates: {new_predicates}')
                     self._enumerator.update(new_predicates)
                     program = self._enumerator.next()
             except InterpreterError as e:
