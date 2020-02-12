@@ -358,7 +358,8 @@ class SmtEnumerator(Enumerator):
         ctr = z3.Or(block)
         self.z3_solver.add(ctr)
 
-        # Find if some commutative operation was used.
+
+        # Find out if some commutative operation was used.
         commutative_op_nodes = []
         for x in self.variables:
             prod_id = int(str(self.model[x]))
