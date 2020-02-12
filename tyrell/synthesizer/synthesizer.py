@@ -41,8 +41,7 @@ class Synthesizer(ABC):
             try:
                 res = self._decider.analyze(program)
                 if res.is_ok():
-                    logger.debug(
-                        'Program accepted after {} attempts'.format(num_attempts))
+                    logger.info(f'Program accepted after {num_attempts} attempts')
                     return program
                 else:
                     new_predicates = res.why()

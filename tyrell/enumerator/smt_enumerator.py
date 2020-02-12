@@ -10,6 +10,7 @@ from ..spec import TyrellSpec
 
 logger = get_logger('tyrell.enumerator.smt')
 
+
 class AST:
     def __init__(self):
         self.head = None
@@ -21,6 +22,7 @@ class ASTNode:
         self.depth = depth
         self.children = children
         self.production = None
+
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class SmtEnumerator(Enumerator):
@@ -207,13 +209,13 @@ class SmtEnumerator(Enumerator):
             test3 = node.children[1].children is None or len(node.children[1].children) == 0
             if test2 or test3: continue
 
-            node_var = self.variables[node.id-1]
+            node_var = self.variables[node.id - 1]
             concat_id = self.spec.get_function_production("concat").id
             node_is_concat = node_var == z3.IntVal(concat_id)
 
             assert len(node.children) == 2
-            child0_var = self.variables[node.children[0].id-1]
-            child1_var = self.variables[node.children[1].id-1]
+            child0_var = self.variables[node.children[0].id - 1]
+            child1_var = self.variables[node.children[1].id - 1]
             re_id = self.spec.get_function_production("re").id
             child0_is_re = child0_var == z3.IntVal(re_id)
             child1_is_re = child1_var == z3.IntVal(re_id)
@@ -222,8 +224,8 @@ class SmtEnumerator(Enumerator):
             args0_id = self.spec.get_enum_production(char_type, pred.args[0]).id
             args1_id = self.spec.get_enum_production(char_type, pred.args[1]).id
 
-            child0_child_var = self.variables[node.children[0].children[0].id-1]
-            child1_child_var = self.variables[node.children[1].children[0].id-1]
+            child0_child_var = self.variables[node.children[0].children[0].id - 1]
+            child1_child_var = self.variables[node.children[1].children[0].id - 1]
 
             child0_child_is_args0 = child0_child_var == z3.IntVal(args0_id)
             child1_child_is_args1 = child1_child_var == z3.IntVal(args1_id)
@@ -349,7 +351,6 @@ class SmtEnumerator(Enumerator):
 
     def blockModel(self):
         assert (self.model is not None)
-        # m = self.z3_solver.model()
         block = []
         # block the model using only the variables that correspond to productions
         for x in self.variables:
@@ -357,11 +358,47 @@ class SmtEnumerator(Enumerator):
         ctr = z3.Or(block)
         self.z3_solver.add(ctr)
 
-        # TODO: block also equivalent models
-        # TODO: commutative functions that can have its args swapped
-        # TODO: check concatenations and unions
+        # Find if some commutative operation was used.
+        commutative_op_nodes = []
+        for x in self.variables:
+            prod_id = int(str(self.model[x]))
+            # TODO: Union is the only commutative operation, but there could be more. Maybe have a list?
+            union_id = self.spec.get_function_production("union").id
 
-    def update(self, predicates = None):
+            if union_id == prod_id:
+                # node x is a union
+                # we have already blocked the current model. Now, we want to block the model with its arguments swapped
+                commutative_op_nodes.append(x)
+
+        for x in commutative_op_nodes:
+            node_id = int(str(x)[1:])  # remove "n"
+            subtree0, subtree1 = self.get_subtree(self.nodes[node_id - 1].children[0]), self.get_subtree(
+                self.nodes[node_id - 1].children[1])
+            # block model with subtrees swapped:
+
+            block2 = []
+            unblocked = set(self.variables)
+            # block the model using only the variables that correspond to productions
+            for i, node in enumerate(subtree0):
+                node_x = self.variables[node.id-1]
+                other_node = subtree1[i]
+                other_node_x = self.variables[other_node.id-1]
+                block2.append(node_x != self.model[other_node_x])
+                unblocked.remove(node_x)
+
+            for i, node in enumerate(subtree1):
+                node_x = self.variables[node.id-1]
+                other_node = subtree0[i]
+                other_node_x = self.variables[other_node.id-1]
+                block2.append(node_x != self.model[other_node_x])
+                unblocked.remove(node_x)
+
+            for x in unblocked:
+                block2.append(x != self.model[x])
+
+            self.z3_solver.add(z3.Or(block2))
+
+    def update(self, predicates=None):
         if predicates is not None:
             self.resolve_predicates(predicates)
             for pred in predicates:
@@ -413,3 +450,9 @@ class SmtEnumerator(Enumerator):
             return self.buildProgram()
         else:
             return None
+
+    def get_subtree(self, node):
+        if node.children is None:
+            return [node]
+        else:
+            return [node] + self.get_subtree(node.children[0]) + self.get_subtree(node.children[1])

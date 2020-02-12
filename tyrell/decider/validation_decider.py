@@ -58,7 +58,6 @@ class ValidationDecider(ExampleDecider):
             no_match = not any(matches)
 
             if no_match:
-                print(f"block concat({atoms})")
                 new_predicate = Predicate("do_not_concat", atoms)
                 new_predicates.append(new_predicate)
 
@@ -75,9 +74,6 @@ class ValidationDecider(ExampleDecider):
             no_match = not any(matches)
 
             if no_match:
-                print(f"block kleene({atom})")
-                print(f"block posit({atom})")
-
                 new_predicate = Predicate("do_not_kleene", [atom])
                 new_predicates.append(new_predicate)
                 new_predicate = Predicate("do_not_posit", [atom])
