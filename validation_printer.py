@@ -60,8 +60,12 @@ class ValidationPrinter(PostOrderInterpreter):
         return args[0]
 
     def eval_kleene(self, node, args):
-        if len(args[0]) == 1: return fr'{args[0]}*'
+        if len(args[0]) == 1: return f'{args[0]}*'
         return f'({args[0]})*'
+
+    def eval_copies(self, node, args):
+        if len(args[0]) == 1: return f'{args[0]}{{{args[1]}}}'
+        return f'({args[0]}){{{args[1]}}}'
 
     def eval_concat(self, node, args):
         return f'{args[0]}{args[1]}'

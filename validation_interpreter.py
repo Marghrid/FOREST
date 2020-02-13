@@ -79,6 +79,10 @@ class ValidationInterpreter(PostOrderInterpreter):
         if len(args[0]) == 1: return fr'{args[0]}*'
         return fr'({args[0]})*'
 
+    def eval_copies(self, node, args):
+        if len(args[0]) == 1: return fr'{args[0]}{{{args[1]}}}'
+        return fr'({args[0]}){{{args[1]}}}'
+
     def eval_concat(self, node, args):
         return fr'{args[0]}{args[1]}'
 

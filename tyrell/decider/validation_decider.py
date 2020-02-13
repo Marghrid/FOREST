@@ -78,6 +78,21 @@ class ValidationDecider(ExampleDecider):
                 new_predicates.append(new_predicate)
                 new_predicate = Predicate("do_not_posit", [atom])
                 new_predicates.append(new_predicate)
+        if node.production.id == self._spec.get_function_production("copies").id \
+                and node.children[0].production.id == self._spec.get_function_production("re").id:
+            # found a simple kleene or simple posit: directly from an atom
+            re_atom = node.children[0].children[0].data
+            count = int(node.children[1].data)
+            regex = re_atom * count
+
+            # if none of valid examples have this pattern repeated twice, then it is not feasible
+            valid_exs = list(filter(lambda ex: ex.output == True, examples))
+            matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
+            no_match = not any(matches)
+
+            if no_match:
+                new_predicate = Predicate("do_not_copies", [re_atom, count])
+                new_predicates.append(new_predicate)
 
         if node.children is not None and len(node.children) > 0:
             for child in node.children:

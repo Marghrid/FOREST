@@ -47,26 +47,28 @@ def build_dsl(type_validation, examples):
         dsl_base = dsl_file.read()
 
     if "integer" in type_validation:
-        values = set()
         exs_in = [int(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
+        values = set()
         values.add(min(exs_in))
         values.add(max(exs_in))
         dsl += "enum Value {" + ", ".join([f'"{x}"' for x in values]) + "}\n"
 
     elif "real" in type_validation:
-        values = set()
         exs_in = [float(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
+        values = set()
         values.add(min(exs_in))
         values.add(max(exs_in))
         dsl += "enum Value {" + ", ".join([f'"{x}"' for x in values]) + "}\n"
 
 
     elif "string" in type_validation:
-        values = set()
         exs_in = [len(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
+        values = set()
         values.add(min(exs_in))
         values.add(max(exs_in))
         dsl += "enum Value {" + ", ".join([f'"{x}"' for x in values]) + "}\n"
+
+        dsl += "enum NumCopies {" + ", ".join([f'"{x}"' for x in [6,4,3,2]]) + "}\n"
 
         dsl += "enum Char {" + ", ".join([f'"{x}"' for x in get_relevant_chars(examples)]) + "}\n"
 
