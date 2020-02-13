@@ -2,8 +2,12 @@ import random
 import string
 
 for i in range(20):
-	new = ''.join(random.choices(string.digits, k=1))
+	string_set = random.choice([string.digits, string.ascii_uppercase])
+	new = ''.join(random.choices(string_set, k=2))
 	new += '-'
-	new += ''.join(random.choices(string.ascii_uppercase, k=1))
-	new += ''.join(random.choices(string.ascii_uppercase, k=1))
+	string_set = random.choice([string.digits, string.ascii_uppercase])
+	new += ''.join(random.choices(string_set, k=2))
+	new += '-'
+	string_set = random.choice([string.digits, string.ascii_uppercase])
+	new += ''.join(random.choices(string_set, k=2))
 	print(new)
