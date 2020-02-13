@@ -1,0 +1,15 @@
+a|b*c
+++
+a
+c
+bc
+bbc
+bbbc
+bbbbc
+bbbbbc
+bbbbbbbc
+--
+abc
+bcc
+ac
+aa

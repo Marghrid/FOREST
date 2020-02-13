@@ -24,14 +24,14 @@ class ValidationDecider(ExampleDecider):
     def __init__(self,
                  spec: TyrellSpec,
                  interpreter: Interpreter,
-                 examples: List[Example],
-                 equal_output: Callable[[Any, Any], bool] = lambda x, y: x == y):
-        super().__init__(interpreter, examples, equal_output)
+                 examples: List[Example]):
+        super().__init__(interpreter, examples)
         self._spec = spec
 
     def analyze(self, program):
         '''
-        This version of analyze() tries to analyze the reason why a synthesized program fails, if it does not pass all the tests.
+        This version of analyze() tries to analyze the reason why a synthesized program fails,
+        if it does not pass all the tests.
         '''
         if not self.has_failed_examples(program):
             return ok()
@@ -84,3 +84,11 @@ class ValidationDecider(ExampleDecider):
                 return self.traverse_program(child, examples) + new_predicates
         else:
             return new_predicates
+
+    # def _equal_output(self, program, input, desired_output):
+    #     try:
+    #         output = self._interpreter.eval(program, input)
+    #         return output == desired_output
+    #     except Exception as e:
+    #         print("exception", e)
+    #         return False == desired_output

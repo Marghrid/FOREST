@@ -14,14 +14,12 @@ class ExampleDecider(Decider):
     _examples: List[Example]
     _equal_output: Callable[[Any, Any, Any], bool]
 
-    def __init__(self, interpreter: Interpreter, examples: List[Example],
-                 equal_output: Callable[[Any, Any, Any], bool]):
+    def __init__(self, interpreter: Interpreter, examples: List[Example]):
         self._interpreter = interpreter
         if len(examples) == 0:
             raise ValueError(
                 'ExampleDecider cannot take an empty list of examples')
         self._examples = examples
-        self._equal_output = equal_output
 
     @property
     def interpreter(self):
@@ -62,3 +60,7 @@ class ExampleDecider(Decider):
             return bad()
         else:
             return ok()
+
+    def _equal_output(self, program, input, desired_output):
+        return desired_output == self._interpreter.eval(program, input)
+

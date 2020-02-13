@@ -27,8 +27,8 @@ class ASTNode:
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class SmtEnumerator(Enumerator):
     # z3 solver
-    # z3_solver = z3.Solver()
-    z3_solver = z3.SolverFor("QF_FD")
+    z3_solver = z3.Solver()
+    # z3_solver = z3.SolverFor("QF_FD")
     # productions that are leaf
     leaf_productions = []
 
@@ -135,6 +135,29 @@ class SmtEnumerator(Enumerator):
                             ctr = z3.Implies(self.variables[x] == p.id, ctr)
                         solver.add(ctr)
 
+    def createUnionConstraints(self, z3_solver):
+        """ Prevent union of twice the same subtree: (A|B) """
+        for node in self.nodes:
+            if node.children is None or len(node.children) == 0: continue
+            test2 = node.children[0].children is None or len(node.children[0].children) == 0
+            test3 = node.children[1].children is None or len(node.children[1].children) == 0
+            if test2 or test3: continue
+
+            node_var = self.variables[node.id - 1]
+            union_id = self.spec.get_function_production("union").id
+            node_is_union = node_var == z3.IntVal(union_id)
+
+            subtree0, subtree1 = self.get_subtree(node.children[0]), \
+                                 self.get_subtree(node.children[1])
+
+            bigOr = []
+            for i in range(len(subtree0)):
+                var_i0 = self.variables[subtree0[i].id -1]
+                var_i1 = self.variables[subtree1[i].id -1]
+                bigOr.append(var_i0 != var_i1)
+
+            self.z3_solver.add(z3.Implies(node_is_union, z3.Or(bigOr)))
+
     def maxChildren(self) -> int:
         '''Finds the maximum number of children in the productions'''
         return max(map(len, [p.rhs for p in self.spec.productions()]))
@@ -173,31 +196,12 @@ class SmtEnumerator(Enumerator):
                     index, pred.name)
                 raise ValueError(msg)
 
-    def _resolve_occurs_predicate(self, pred):
-        self._check_arg_types(pred, [str, (int, float)])
-        prod = self.spec.get_function_production_or_raise(pred.args[0])
-        weight = pred.args[1]
-        self.optimizer.mk_occurs(prod, weight)
-
-    def _resolve_not_occurs_predicate(self, pred):
-        self._check_arg_types(pred, [str, (int, float)])
-        prod = self.spec.get_function_production_or_raise(pred.args[0])
-        weight = pred.args[1]
-        self.optimizer.mk_not_occurs(prod, weight)
-
     def _resolve_is_not_parent_predicate(self, pred):
         self._check_arg_types(pred, [str, str, (int, float)])
         prod0 = self.spec.get_function_production_or_raise(pred.args[0])
         prod1 = self.spec.get_function_production_or_raise(pred.args[1])
         weight = pred.args[2]
         self.optimizer.mk_is_not_parent(prod0, prod1, weight)
-
-    def _resolve_is_parent_predicate(self, pred):
-        self._check_arg_types(pred, [str, str, (int, float)])
-        prod0 = self.spec.get_function_production_or_raise(pred.args[0])
-        prod1 = self.spec.get_function_production_or_raise(pred.args[1])
-        weight = pred.args[2]
-        self.optimizer.mk_is_parent(prod0, prod1, weight)
 
     def _resolve_do_not_concat_predicate(self, pred):
         self._check_arg_types(pred, [str, str])
@@ -235,9 +239,7 @@ class SmtEnumerator(Enumerator):
 
             self.z3_solver.add(z3.Implies(left_side, right_side))
 
-    def _resolve_do_not_kleene_predicate(self, pred):
-        self._check_arg_types(pred, [str])
-        # idea: node_is_kleene -> child[0] is not args[0]
+    def _resolve_do_not_unary_operation(self, op_name, pred):
         for node in self.nodes:
             test1 = node.children is None or len(node.children) == 0
             if test1: continue
@@ -245,7 +247,8 @@ class SmtEnumerator(Enumerator):
             if test2: continue
 
             node_var = self.variables[node.id - 1]
-            kleene_id = self.spec.get_function_production("kleene").id
+
+            kleene_id = self.spec.get_function_production(op_name).id
             node_is_kleene = node_var == z3.IntVal(kleene_id)
 
             assert len(node.children) > 1
@@ -265,35 +268,15 @@ class SmtEnumerator(Enumerator):
 
             self.z3_solver.add(z3.Implies(left_side, right_side))
 
+    def _resolve_do_not_kleene_predicate(self, pred):
+        self._check_arg_types(pred, [str])
+        # idea: node_is_kleene -> child[0] is not args[0]
+        self._resolve_do_not_unary_operation("kleene", pred)
+
     def _resolve_do_not_posit_predicate(self, pred):
         self._check_arg_types(pred, [str])
         # idea: node_is_posit -> child[0] is not args[0]
-        for node in self.nodes:
-            test1 = node.children is None or len(node.children) == 0
-            if test1: continue
-            test2 = node.children[0].children is None or len(node.children[0].children) == 0
-            if test2: continue
-
-            node_var = self.variables[node.id - 1]
-            posit_id = self.spec.get_function_production("posit").id
-            node_is_posit = node_var == z3.IntVal(posit_id)
-
-            assert len(node.children) > 1
-            child0_var = self.variables[node.children[0].id - 1]
-            re_id = self.spec.get_function_production("re").id
-            child0_is_re = child0_var == z3.IntVal(re_id)
-
-            char_type = self.spec.get_type("Char")
-            args0_id = self.spec.get_enum_production(char_type, pred.args[0]).id
-
-            child0_child_var = self.variables[node.children[0].children[0].id - 1]
-
-            child0_child_is_args0 = child0_child_var == z3.IntVal(args0_id)
-
-            left_side = z3.And(node_is_posit, child0_is_re)
-            right_side = z3.Not(child0_child_is_args0)
-
-            self.z3_solver.add(z3.Implies(left_side, right_side))
+        self._resolve_do_not_unary_operation("posit", pred)
 
     def resolve_predicates(self, predicates):
         try:
@@ -306,13 +289,6 @@ class SmtEnumerator(Enumerator):
                     self._resolve_do_not_kleene_predicate(pred)
                 elif pred.name == 'do_not_posit':
                     self._resolve_do_not_posit_predicate(pred)
-                elif pred.name == 'occurs':
-                    self._resolve_occurs_predicate(pred)
-                elif pred.name == 'is_parent':
-                    self._resolve_is_parent_predicate(pred)
-                elif pred.name == 'not_occurs':
-                    self._resolve_not_occurs_predicate(pred)
-
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
         except (KeyError, ValueError) as e:
@@ -345,9 +321,16 @@ class SmtEnumerator(Enumerator):
         self.createFunctionConstraints(self.z3_solver)
         self.createLeafConstraints(self.z3_solver)
         self.createChildrenConstraints(self.z3_solver)
+        #self.createUnionConstraints(self.z3_solver)
         self.optimizer = Optimizer(
             self.z3_solver, spec, self.variables, self.nodes)
         self.resolve_predicates(self.spec.predicates())
+
+    def get_subtree(self, node):
+        if node.children is None:
+            return [node]
+        else:
+            return [node] + self.get_subtree(node.children[0]) + self.get_subtree(node.children[1])
 
     def blockModel(self):
         assert (self.model is not None)
@@ -357,7 +340,6 @@ class SmtEnumerator(Enumerator):
             block.append(x != self.model[x])
         ctr = z3.Or(block)
         self.z3_solver.add(ctr)
-
 
         # Find out if some commutative operation was used.
         commutative_op_nodes = []
@@ -373,24 +355,24 @@ class SmtEnumerator(Enumerator):
 
         for x in commutative_op_nodes:
             node_id = int(str(x)[1:])  # remove "n"
-            subtree0, subtree1 = self.get_subtree(self.nodes[node_id - 1].children[0]), self.get_subtree(
-                self.nodes[node_id - 1].children[1])
+            subtree0, subtree1 = self.get_subtree(self.nodes[node_id - 1].children[0]),\
+                                 self.get_subtree(self.nodes[node_id - 1].children[1])
             # block model with subtrees swapped:
 
             block2 = []
             unblocked = set(self.variables)
             # block the model using only the variables that correspond to productions
             for i, node in enumerate(subtree0):
-                node_x = self.variables[node.id-1]
+                node_x = self.variables[node.id - 1]
                 other_node = subtree1[i]
-                other_node_x = self.variables[other_node.id-1]
+                other_node_x = self.variables[other_node.id - 1]
                 block2.append(node_x != self.model[other_node_x])
                 unblocked.remove(node_x)
 
             for i, node in enumerate(subtree1):
-                node_x = self.variables[node.id-1]
+                node_x = self.variables[node.id - 1]
                 other_node = subtree0[i]
-                other_node_x = self.variables[other_node.id-1]
+                other_node_x = self.variables[other_node.id - 1]
                 block2.append(node_x != self.model[other_node_x])
                 unblocked.remove(node_x)
 
@@ -451,9 +433,3 @@ class SmtEnumerator(Enumerator):
             return self.buildProgram()
         else:
             return None
-
-    def get_subtree(self, node):
-        if node.children is None:
-            return [node]
-        else:
-            return [node] + self.get_subtree(node.children[0]) + self.get_subtree(node.children[1])

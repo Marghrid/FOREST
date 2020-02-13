@@ -15,17 +15,6 @@ from validation_printer import ValidationPrinter
 
 logger = get_logger('tyrell')
 
-
-def my_equal_output(program, input, desired_output):
-    interpreter = ValidationInterpreter()
-    try:
-        output = interpreter.eval(program, input)
-        return output == desired_output
-    except Exception as e:
-        print("exception", e, file=sys.stderr)
-        return False == desired_output
-
-
 def main():
     examples_file = read_cmd_args()
 
@@ -33,20 +22,19 @@ def main():
     examples = parse_file(examples_file)
 
     type_validation, examples = check_type(examples)
-    logger.info("assuming types: " + str(type_validation))
-    logger.debug("remaining examples:" + str(examples))
+    logger.info("Assuming types: " + str(type_validation))
+    logger.debug("Remaining examples:" + str(examples))
 
     # TODO create DSL as spec object instead of string
     dsl = build_dsl(type_validation, examples)
-    logger.debug("using DSL:\n" + dsl)
+    logger.debug("Using DSL:\n" + dsl)
     dsl = S.parse(dsl)
 
     printer = ValidationPrinter()
     decider = ValidationDecider(
         spec=dsl,
         interpreter=ValidationInterpreter(),
-        examples=examples,
-        equal_output=my_equal_output
+        examples=examples
     )
     maxdep = 6
     for dep in range(3, maxdep + 1):

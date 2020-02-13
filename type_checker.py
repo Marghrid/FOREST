@@ -61,7 +61,6 @@ def check_type(examples: List[Example]) -> (List[str], List[Example]):
                     types.append(validation.__name__)
                 else:
                     types.append(validation.__name__)
-                    print("Assuming input type " + validation.__name__)
                 break
 
     examples = valid + invalid

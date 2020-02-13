@@ -24,13 +24,13 @@ def get_relevant_chars(examples):
                     if all([char in s for s in field]):
                         relevant_chars.add(char)
                     if '[a-z]' in relevant_chars:
-                        relevant_chars.add('[A-Z][a-z]')
+                        relevant_chars.add('[A-Za-z]')
                 elif 'a' <= char <= 'z':
                     relevant_chars.add('[a-z]')
                     if all([char in s for s in field]):
                         relevant_chars.add(char)
                     if '[A-Z]' in relevant_chars:
-                        relevant_chars.add('[A-Z][a-z]')
+                        relevant_chars.add('[A-Za-z]')
                 elif '0' <= char <= '9':
                     relevant_chars.add('[0-9]')
                     if all([(char in s) for s in field]):
