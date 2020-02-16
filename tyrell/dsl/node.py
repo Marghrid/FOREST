@@ -48,6 +48,16 @@ class Node(ABC):
     def to_sexp(self):
         raise NotImplementedError
 
+    def depth(self):
+        if self.children is None or len(self.children) == 0:
+            return 1
+        else:
+            # Compute the depth of each subtree
+            children_depths = [child.depth() for child in self.children]
+
+            # Use the larger one
+            return 1 + max(children_depths)
+
 
 class LeafNode(Node):
     '''Generic and abstract class for AST nodes that have no children'''

@@ -55,6 +55,6 @@ class Synthesizer(ABC):
                 logger.debug('Interpreter {} failed. Exception: {}. Reason: {}'.format(self._decider.interpreter().__class__.__name__, e.__class__.__name__, new_predicates))
                 self._enumerator.update(new_predicates)
                 program = self._enumerator.next()
-        logger.debug(
+        logger.info(
             'Enumerator is exhausted after {} attempts'.format(num_attempts))
         return None

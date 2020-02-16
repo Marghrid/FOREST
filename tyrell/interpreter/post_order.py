@@ -11,7 +11,8 @@ class PostOrderInterpreter(Interpreter):
 
     def eval(self, prog: Node, inputs: List[Any]) -> Any:
         '''
-        Interpret the Given AST in post-order. Assumes the existence of `eval_XXX` method where `XXX` is the name of a function defined in the DSL.
+        Interpret the Given AST in post-order. Assumes the existence of `eval_XXX` method
+        where `XXX` is the name of a function defined in the DSL.
         '''
         class NodeVisitor(GenericVisitor):
             _interp: PostOrderInterpreter

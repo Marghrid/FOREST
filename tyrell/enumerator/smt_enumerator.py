@@ -1,10 +1,12 @@
 from collections import deque
+from typing import List
 
 import z3
 
 from .enumerator import Enumerator
 from .optimizer import Optimizer
 from .. import dsl as D
+from ..dsl import Node
 from ..logger import get_logger
 from ..spec import TyrellSpec
 
@@ -150,8 +152,8 @@ class SmtEnumerator(Enumerator):
 
             bigOr = []
             for i in range(len(subtree0)):
-                var_i0 = self.variables[subtree0[i].id -1]
-                var_i1 = self.variables[subtree1[i].id -1]
+                var_i0 = self.variables[subtree0[i].id - 1]
+                var_i1 = self.variables[subtree1[i].id - 1]
                 bigOr.append(var_i0 != var_i1)
 
             self.z3_solver.add(z3.Implies(node_is_union, z3.Or(bigOr)))
@@ -202,39 +204,12 @@ class SmtEnumerator(Enumerator):
         self.optimizer.mk_is_not_parent(prod0, prod1, weight)
 
     def _resolve_do_not_concat_predicate(self, pred):
-        self._check_arg_types(pred, [str, str])
+        self._check_arg_types(pred, [Node])
         # idea: node_is_concat -> child[0] is not args[0] \/ child[0] is not args[1]
-        for node in self.nodes:
-            test1 = node.children is None or len(node.children) == 0
-            if test1: continue
-            test2 = node.children[0].children is None or len(node.children[0].children) == 0
-            test3 = node.children[1].children is None or len(node.children[1].children) == 0
-            if test2 or test3: continue
+        program = pred.args[0]
 
-            node_var = self.variables[node.id - 1]
-            concat_id = self.spec.get_function_production("concat").id
-            node_is_concat = node_var == z3.IntVal(concat_id)
-
-            child0_var = self.variables[node.children[0].id - 1]
-            child1_var = self.variables[node.children[1].id - 1]
-            re_id = self.spec.get_function_production("re").id
-            child0_is_re = child0_var == z3.IntVal(re_id)
-            child1_is_re = child1_var == z3.IntVal(re_id)
-
-            char_type = self.spec.get_type("Char")
-            args0_id = self.spec.get_enum_production(char_type, pred.args[0]).id
-            args1_id = self.spec.get_enum_production(char_type, pred.args[1]).id
-
-            child0_child_var = self.variables[node.children[0].children[0].id - 1]
-            child1_child_var = self.variables[node.children[1].children[0].id - 1]
-
-            child0_child_is_args0 = child0_child_var == z3.IntVal(args0_id)
-            child1_child_is_args1 = child1_child_var == z3.IntVal(args1_id)
-
-            left_side = z3.And([node_is_concat, child0_is_re, child1_is_re])
-            right_side = z3.Not(z3.And(child0_child_is_args0, child1_child_is_args1))
-
-            self.z3_solver.add(z3.Implies(left_side, right_side))
+        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
+            self.block_subtree(node, program)
 
     def _resolve_do_not_unary_operation(self, op_name, pred):
         for node in self.nodes:
@@ -357,8 +332,8 @@ class SmtEnumerator(Enumerator):
             self.z3_solver, spec, self.variables, self.nodes)
         self.resolve_predicates(self.spec.predicates())
 
-    def get_subtree(self, node):
-        if node.children is None:
+    def get_subtree(self, node: ASTNode):
+        if node.children is None or len(node.children) < 2:
             return [node]
         else:
             return [node] + self.get_subtree(node.children[0]) + self.get_subtree(node.children[1])
@@ -385,7 +360,7 @@ class SmtEnumerator(Enumerator):
 
         for x in commutative_op_nodes:
             node_id = int(str(x)[1:])  # remove "n"
-            subtree0, subtree1 = self.get_subtree(self.nodes[node_id - 1].children[0]),\
+            subtree0, subtree1 = self.get_subtree(self.nodes[node_id - 1].children[0]), \
                                  self.get_subtree(self.nodes[node_id - 1].children[1])
             # block model with subtrees swapped:
 
@@ -429,6 +404,7 @@ class SmtEnumerator(Enumerator):
 
         # result contains the values of 'n' variables
         self.program2tree.clear()
+        # code is a list with the productions
         code = []
         for n in self.nodes:
             prod = self.spec.get_production_or_raise(result[n.id - 1])
@@ -461,3 +437,36 @@ class SmtEnumerator(Enumerator):
             return self.buildProgram()
         else:
             return None
+
+    def nodes_until_depth(self, depth: int):
+        last_node = 2 ** depth - 1
+        return self.nodes[:last_node]
+
+    def block_subtree_rec(self, subtree: ASTNode, program: Node):
+        head_var = self.variables[subtree.id-1]
+        production_id = program.production.id
+        block = [head_var != z3.IntVal(production_id)]
+        if program.children is None or len(program.children) == 0:
+            # if subtree.children is not None and len(subtree.children) > 0:
+            #     children_vars = [self.variables[child.id-1] for child in subtree.children]
+            #     assert len(children_vars) == 2
+            #     block += [child != z3.IntVal(self.spec.get_function_production("empty").id) for child in children_vars]
+            pass
+        elif len(program.children) == 1:
+            assert len(subtree.children) == 2
+            children_vars = [self.variables[child.id - 1] for child in subtree.children]
+            assert len(children_vars) == 2
+            assert len(program.children) == 1
+            block += self.block_subtree_rec(subtree.children[0], program.children[0])
+            block += [children_vars[1] != z3.IntVal(self.spec.get_function_production("empty").id)]
+        elif len(program.children) == 2:
+            assert len(subtree.children) == 2
+            block += self.block_subtree_rec(subtree.children[0], program.children[0])
+            block += self.block_subtree_rec(subtree.children[1], program.children[1])
+        return block
+
+    def block_subtree(self, subtree: ASTNode, program: Node):
+        block = self.block_subtree_rec(subtree, program)
+        self.z3_solver.add(z3.Or(block))
+
+
