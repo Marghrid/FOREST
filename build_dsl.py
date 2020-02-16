@@ -48,30 +48,25 @@ def build_dsl(type_validation, examples):
 
     if "integer" in type_validation:
         exs_in = [int(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
-        values = set()
-        values.add(min(exs_in))
-        values.add(max(exs_in))
-        dsl += "enum Value {" + ", ".join([f'"{x}"' for x in values]) + "}\n"
+        dsl += "enum Value {" + ", ".join([f'"{x}"' for x in get_values(exs_in)]) + "}\n"
 
     elif "real" in type_validation:
         exs_in = [float(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
-        values = set()
-        values.add(min(exs_in))
-        values.add(max(exs_in))
-        dsl += "enum Value {" + ", ".join([f'"{x}"' for x in values]) + "}\n"
-
+        dsl += "enum Value {" + ", ".join([f'"{x}"' for x in get_values(exs_in)]) + "}\n"
 
     elif "string" in type_validation:
         exs_in = [len(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
-        values = set()
-        values.add(min(exs_in))
-        values.add(max(exs_in))
-        dsl += "enum Value {" + ", ".join([f'"{x}"' for x in values]) + "}\n"
-
-        dsl += "enum NumCopies {" + ", ".join([f'"{x}"' for x in [6,4,3,2]]) + "}\n"
-
-        dsl += "enum Char {" + ", ".join([f'"{x}"' for x in get_relevant_chars(examples)]) + "}\n"
+        dsl += "enum Value {" + ",".join([f'"{x}"' for x in get_values(exs_in)]) + "}\n"
+        dsl += "enum NumCopies {" + ",".join([f'"{x}"' for x in [6, 4, 3, 2]]) + "}\n"
+        dsl += "enum Char {" + ",".join([f'"{x}"' for x in get_relevant_chars(examples)]) + "}\n"
 
     dsl += dsl_base
 
     return dsl
+
+
+def get_values(exs_in):
+    values = set()
+    values.add(min(exs_in))
+    values.add(max(exs_in))
+    return values

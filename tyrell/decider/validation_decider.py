@@ -30,8 +30,7 @@ class ValidationDecider(ExampleDecider):
 
     def analyze(self, program):
         '''
-        This version of analyze() tries to analyze the reason why a synthesized program fails,
-        if it does not pass all the tests.
+        Analyze the reason why a synthesized program fails if it does not pass all the tests.
         '''
         if not self.has_failed_examples(program):
             return ok()
@@ -46,19 +45,16 @@ class ValidationDecider(ExampleDecider):
         # print("node prod", node.production)
         # print("spec prod", self._spec.get_function_production("concat"))
         new_predicates = []
-        if node.production.id == self._spec.get_function_production("concat").id and all(
-                [child.production.id == self._spec.get_function_production("re").id for child in node.children]):
-            # found a simple concat: the direct concatenation of 2 atoms
-            atoms = [child.children[0].data for child in node.children]
-            regex = ''.join(atoms)
-
+        if node.production.id == self._spec.get_function_production("concat").id:
             # if none of valid examples have this pattern, then it is not feasible
             valid_exs = list(filter(lambda ex: ex.output == True, examples))
+            regex = self.interpreter.eval(node, valid_exs[0])
+
             matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
             no_match = not any(matches)
 
             if no_match:
-                new_predicate = Predicate("do_not_concat", atoms)
+                new_predicate = Predicate("do_not_concat", [node])
                 new_predicates.append(new_predicate)
 
         if (node.production.id == self._spec.get_function_production("kleene").id

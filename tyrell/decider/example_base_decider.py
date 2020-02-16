@@ -12,7 +12,6 @@ Example = NamedTuple('Example', [
 class ExampleDecider(Decider):
     _interpreter: Interpreter
     _examples: List[Example]
-    _equal_output: Callable[[Any, Any, Any], bool]
 
     def __init__(self, interpreter: Interpreter, examples: List[Example]):
         self._interpreter = interpreter
