@@ -25,14 +25,15 @@ func match: Bool -> Regex, String;
 # predicate is_commutative(union);
 
 predicate is_not_parent(kleene, kleene, 100);
+predicate is_not_parent(interr, interr, 100);
+predicate is_not_parent(posit, posit,   100);
+
 predicate is_not_parent(kleene, posit,  100);
 predicate is_not_parent(kleene, interr, 100);
 predicate is_not_parent(posit, kleene,  100);
-predicate is_not_parent(posit, posit,   100);
 predicate is_not_parent(posit, interr,  100);
 predicate is_not_parent(interr, kleene, 100);
 predicate is_not_parent(interr, posit,  100);
-predicate is_not_parent(interr, interr, 100);
 
 # predicate not_occurs(union, 1); # doesn't work
 
