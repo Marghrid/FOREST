@@ -42,6 +42,7 @@ class ValidationDecider(ExampleDecider):
                 return bad(why=new_predicates)
 
     def traverse_program(self, node, examples: List[Example]):
+        if self._spec.get_function_production("concat") is None: return []
         # print("node prod", node.production)
         # print("spec prod", self._spec.get_function_production("concat"))
         new_predicates = []
@@ -56,6 +57,17 @@ class ValidationDecider(ExampleDecider):
             if no_match:
                 new_predicate = Predicate("do_not_concat", [node])
                 new_predicates.append(new_predicate)
+
+        # if node.production.id == self._spec.get_function_production("union").id:
+        #     valid_exs = list(filter(lambda ex: ex.output == True, examples))
+        #     regex = self.interpreter.eval(node, valid_exs[0])
+        #
+        #     matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
+        #     no_match = not any(matches)
+        #
+        #     if no_match:
+        #         new_predicate = Predicate("do_not_union", [node])
+        #         new_predicates.append(new_predicate)
 
         if (node.production.id == self._spec.get_function_production("kleene").id
             or node.production.id == self._spec.get_function_production("posit").id)\

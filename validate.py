@@ -1,17 +1,16 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 import argparse
-import sys
 
 import tyrell.spec as S
 from build_dsl import build_dsl
 from input_parser import parse_file
 from type_checker import check_type
 from tyrell.enumerator import SmtEnumerator
-from tyrell.decider import ValidationDecider, ExampleConstraintPruningDecider
+from tyrell.decider import ValidationDecider
 from tyrell.synthesizer import Synthesizer
 from tyrell.logger import get_logger
-from validation_interpreter import ValidationInterpreter
-from validation_printer import ValidationPrinter
+from tyrell.interpreter.validation_interpreter import ValidationInterpreter
+from tyrell.interpreter.validation_printer import ValidationPrinter
 
 logger = get_logger('tyrell')
 

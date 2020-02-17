@@ -17,14 +17,12 @@ class AST:
     def __init__(self):
         self.head = None
 
-
 class ASTNode:
     def __init__(self, nb=None, depth=None, children=None):
         self.id = nb
         self.depth = depth
         self.children = children
         self.production = None
-
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class SmtEnumerator(Enumerator):
@@ -144,6 +142,7 @@ class SmtEnumerator(Enumerator):
             if test2 or test3: continue
 
             node_var = self.variables[node.id - 1]
+            if self.spec.get_function_production("union") is None: return
             union_id = self.spec.get_function_production("union").id
             node_is_union = node_var == z3.IntVal(union_id)
 
@@ -160,7 +159,7 @@ class SmtEnumerator(Enumerator):
 
     def maxChildren(self) -> int:
         '''Finds the maximum number of children in the productions'''
-        return max(map(len, [p.rhs for p in self.spec.productions()]))
+        return 2 #max(map(len, [p.rhs for p in self.spec.productions()]))
 
     def buildKTree(self, children, depth):
         '''Builds a K-tree that will contain the program'''
@@ -204,6 +203,14 @@ class SmtEnumerator(Enumerator):
         self.optimizer.mk_is_not_parent(prod0, prod1, weight)
 
     def _resolve_do_not_concat_predicate(self, pred):
+        self._check_arg_types(pred, [Node])
+        # idea: node_is_concat -> child[0] is not args[0] \/ child[0] is not args[1]
+        program = pred.args[0]
+
+        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
+            self.block_subtree(node, program)
+
+    def _resolve_do_not_union_predicate(self, pred):
         self._check_arg_types(pred, [Node])
         # idea: node_is_concat -> child[0] is not args[0] \/ child[0] is not args[1]
         program = pred.args[0]
@@ -289,6 +296,8 @@ class SmtEnumerator(Enumerator):
                     self._resolve_is_not_parent_predicate(pred)
                 elif pred.name == 'do_not_concat':
                     self._resolve_do_not_concat_predicate(pred)
+                # elif pred.name == 'do_not_union':
+                #    self._resolve_do_not_union_predicate(pred)
                 elif pred.name == 'do_not_kleene':
                     self._resolve_do_not_kleene_predicate(pred)
                 elif pred.name == 'do_not_posit':
@@ -348,6 +357,7 @@ class SmtEnumerator(Enumerator):
 
         # Find out if some commutative operation was used.
         commutative_op_nodes = []
+        if self.spec.get_function_production("union") is None: return
         for x in self.variables:
             prod_id = int(str(self.model[x]))
             # TODO: Union is the only commutative operation, but there could be more. Maybe have a list?

@@ -3,23 +3,20 @@ import subprocess
 import os
 
 instances = []
-for file in glob.glob("instances/*.txt"):
+for file in glob.glob("instances/strings/*.txt"):
     instances.append(file)
-commands = [["python3", "validate.py", "-f", instance] for instance in instances]
+commands = [["runsolver", "-W", "60", "python3", "validate.py", "-f", instance] for instance in instances]
 
 processes = []
 
-while len(commands) > 0:
-    command = commands.pop()
-
-for instance in instances:
-    process = subprocess.Popen(["python3", "validate.py", "-f", instance],
+for command in commands:
+    process = subprocess.Popen(command,
                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    processes.append((process, instance))
+    processes.append((process, command))
     
 for task in processes:
     process = task[0]
-    instance = task[1]
+    instance = task[1][-1]
     print("\n=====  " + instance + "  =====")
     try:
         process.wait(timeout=120)
@@ -30,4 +27,5 @@ for task in processes:
     po = str(po, encoding ='utf-8').splitlines()
     pe = str(pe, encoding ='utf-8').splitlines()
     for l in po + pe:
-        print(l)
+        if "Real time" in l:
+            print(l)
