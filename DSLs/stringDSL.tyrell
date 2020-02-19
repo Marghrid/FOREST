@@ -35,5 +35,4 @@ predicate is_not_parent(posit, interr,  100);
 predicate is_not_parent(interr, kleene, 100);
 predicate is_not_parent(interr, posit,  100);
 
-# predicate not_occurs(union, 1); # doesn't work
 
