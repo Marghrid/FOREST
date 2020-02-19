@@ -210,14 +210,6 @@ class SmtEnumerator(Enumerator):
         for node in self.nodes_until_depth(self.depth - program.depth() + 1):
             self.block_subtree(node, program)
 
-    def _resolve_do_not_union_predicate(self, pred):
-        self._check_arg_types(pred, [Node])
-        # idea: node_is_concat -> child[0] is not args[0] \/ child[0] is not args[1]
-        program = pred.args[0]
-
-        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
-            self.block_subtree(node, program)
-
     def _resolve_do_not_unary_operation(self, op_name, pred):
         for node in self.nodes:
             test1 = node.children is None or len(node.children) == 0
@@ -296,8 +288,6 @@ class SmtEnumerator(Enumerator):
                     self._resolve_is_not_parent_predicate(pred)
                 elif pred.name == 'do_not_concat':
                     self._resolve_do_not_concat_predicate(pred)
-                # elif pred.name == 'do_not_union':
-                #    self._resolve_do_not_union_predicate(pred)
                 elif pred.name == 'do_not_kleene':
                     self._resolve_do_not_kleene_predicate(pred)
                 elif pred.name == 'do_not_posit':
@@ -464,11 +454,11 @@ class SmtEnumerator(Enumerator):
             pass
         elif len(program.children) == 1:
             assert len(subtree.children) == 2
-            children_vars = [self.variables[child.id - 1] for child in subtree.children]
+            children_vars = list(map(lambda x: self.variables[x.id - 1], subtree.children))
             assert len(children_vars) == 2
             assert len(program.children) == 1
             block += self.block_subtree_rec(subtree.children[0], program.children[0])
-            block += [children_vars[1] != z3.IntVal(self.spec.get_function_production("empty").id)]
+            # block += [children_vars[1] != z3.IntVal(self.spec.get_function_production("empty").id)]
         elif len(program.children) == 2:
             assert len(subtree.children) == 2
             block += self.block_subtree_rec(subtree.children[0], program.children[0])

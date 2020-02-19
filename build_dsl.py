@@ -1,6 +1,11 @@
 import re
 from LCS import LCSubStr
 
+def get_values(exs_in):
+    values = set()
+    values.add(min(exs_in))
+    values.add(max(exs_in))
+    return sorted(values)
 
 def get_relevant_chars(examples):
     relevant_chars = set()
@@ -37,8 +42,7 @@ def get_relevant_chars(examples):
                         relevant_chars.add(char)
                 else:
                     relevant_chars.add(char)
-    return relevant_chars
-
+    return sorted(relevant_chars)
 
 def build_dsl(type_validation, examples):
     type_validation = type_validation[0]
@@ -63,10 +67,3 @@ def build_dsl(type_validation, examples):
     dsl += dsl_base
 
     return dsl
-
-
-def get_values(exs_in):
-    values = set()
-    values.add(min(exs_in))
-    values.add(max(exs_in))
-    return values
