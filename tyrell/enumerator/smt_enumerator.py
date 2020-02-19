@@ -296,6 +296,7 @@ class SmtEnumerator(Enumerator):
                     self._resolve_do_not_copies_predicate(pred)
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
+                
         except (KeyError, ValueError) as e:
             msg = 'Failed to resolve predicates. {}'.format(e)
             raise RuntimeError(msg) from None
@@ -313,7 +314,7 @@ class SmtEnumerator(Enumerator):
         self.depth = depth
         if loc <= 0:
             raise ValueError(
-                'LOC cannot be non-positive: {}'.format(loc))
+                f'LOC cannot be non-positive: {loc}')
         self.loc = loc
         self.max_children = self.maxChildren()
         self.tree, self.nodes = self.buildKTree(self.max_children, self.depth)
@@ -344,7 +345,7 @@ class SmtEnumerator(Enumerator):
             block.append(x != self.model[x])
         ctr = z3.Or(block)
         self.z3_solver.add(ctr)
-
+        
         # Find out if some commutative operation was used.
         commutative_op_nodes = []
         if self.spec.get_function_production("union") is None: return
