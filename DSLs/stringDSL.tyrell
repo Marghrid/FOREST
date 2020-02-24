@@ -11,8 +11,8 @@ func le: Bool -> Number, Value;
 func ge: Bool -> Number, Value;
 
 func empty: Empty -> Empty;
-
 func re:     Regex -> Char;
+
 func concat: Regex -> Regex, Regex;
 func union:  Regex -> Regex, Regex;
 func copies: Regex -> Regex, NumCopies;

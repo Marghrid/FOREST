@@ -201,29 +201,7 @@ class SmtEnumerator(Enumerator):
         prod1 = self.spec.get_function_production_or_raise(pred.args[1])
         self.optimizer.mk_is_not_parent(prod0, prod1, 100)
 
-    def _resolve_do_not_concat_predicate(self, pred):
-        self._check_arg_types(pred, [Node])
-        # idea: node_is_concat -> child[0] is not args[0] \/ child[0] is not args[1]
-        program = pred.args[0]
-
-        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
-            self.block_subtree(node, program)
-
-    def _resolve_do_not_kleene_predicate(self, pred):
-        self._check_arg_types(pred, [Node])
-        program = pred.args[0]
-
-        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
-            self.block_subtree(node, program)
-
-    def _resolve_do_not_posit_predicate(self, pred):
-        self._check_arg_types(pred, [Node])
-        program = pred.args[0]
-
-        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
-            self.block_subtree(node, program)
-
-    def _resolve_do_not_copies_predicate(self, pred):
+    def _resolve_block_predicate(self, pred):
         self._check_arg_types(pred, [Node])
         program = pred.args[0]
 
@@ -236,13 +214,13 @@ class SmtEnumerator(Enumerator):
                 if pred.name == 'is_not_parent':
                     self._resolve_is_not_parent_predicate(pred)
                 elif pred.name == 'do_not_concat':
-                    self._resolve_do_not_concat_predicate(pred)
+                    self._resolve_block_predicate(pred)
                 elif pred.name == 'do_not_kleene':
-                    self._resolve_do_not_kleene_predicate(pred)
+                    self._resolve_block_predicate(pred)
                 elif pred.name == 'do_not_posit':
-                    self._resolve_do_not_posit_predicate(pred)
+                    self._resolve_block_predicate(pred)
                 elif pred.name == 'do_not_copies':
-                    self._resolve_do_not_copies_predicate(pred)
+                    self._resolve_block_predicate(pred)
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
                 
