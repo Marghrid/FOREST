@@ -43,11 +43,8 @@ class ValidationDecider(ExampleDecider):
 
     def traverse_program(self, node, examples: List[Example]):
         if self._spec.get_function_production("concat") is None: return []
-        # print("node prod", node.production)
-        # print("spec prod", self._spec.get_function_production("concat"))
         new_predicates = []
         if node.production.id == self._spec.get_function_production("concat").id:
-            # if none of valid examples have this pattern, then it is not feasible
             valid_exs = list(filter(lambda ex: ex.output == True, examples))
             regex = self.interpreter.eval(node, valid_exs[0])
 
@@ -58,48 +55,32 @@ class ValidationDecider(ExampleDecider):
                 new_predicate = Predicate("do_not_concat", [node])
                 new_predicates.append(new_predicate)
 
-        # if node.production.id == self._spec.get_function_production("union").id:
-        #     valid_exs = list(filter(lambda ex: ex.output == True, examples))
-        #     regex = self.interpreter.eval(node, valid_exs[0])
-        #
-        #     matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
-        #     no_match = not any(matches)
-        #
-        #     if no_match:
-        #         new_predicate = Predicate("do_not_union", [node])
-        #         new_predicates.append(new_predicate)
-
-        if (node.production.id == self._spec.get_function_production("kleene").id
-            or node.production.id == self._spec.get_function_production("posit").id)\
-                and node.children[0].production.id == self._spec.get_function_production("re").id:
-            # found a simple kleene or simple posit: directly from an atom
-            atom = node.children[0].children[0].data
-            regex = atom + atom
-
-            # if none of valid examples have this pattern repeated twice, then it is not feasible
+        elif node.production.id == self._spec.get_function_production("copies").id:
             valid_exs = list(filter(lambda ex: ex.output == True, examples))
+            regex = self.interpreter.eval(node, valid_exs[0])
+
             matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
             no_match = not any(matches)
 
             if no_match:
-                new_predicate = Predicate("do_not_kleene", [atom])
+                new_predicate = Predicate("do_not_copies", [node])
                 new_predicates.append(new_predicate)
-                new_predicate = Predicate("do_not_posit", [atom])
-                new_predicates.append(new_predicate)
-        if node.production.id == self._spec.get_function_production("copies").id \
-                and node.children[0].production.id == self._spec.get_function_production("re").id:
-            # found a simple kleene or simple posit: directly from an atom
-            re_atom = node.children[0].children[0].data
-            count = int(node.children[1].data)
-            regex = re_atom * count
 
-            # if none of valid examples have this pattern repeated twice, then it is not feasible
+        elif node.production.id == self._spec.get_function_production("kleene").id \
+            or node.production.id == self._spec.get_function_production("posit").id:
             valid_exs = list(filter(lambda ex: ex.output == True, examples))
+            regex = self.interpreter.eval(node.children[0], valid_exs[0])
+
+            regex = regex + regex
+
             matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
             no_match = not any(matches)
 
+
             if no_match:
-                new_predicate = Predicate("do_not_copies", [re_atom, count])
+                new_predicate = Predicate("do_not_kleene", [node])
+                new_predicates.append(new_predicate)
+                new_predicate = Predicate("do_not_posit", [node])
                 new_predicates.append(new_predicate)
 
         if node.children is not None and len(node.children) > 0:

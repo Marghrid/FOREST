@@ -196,11 +196,10 @@ class SmtEnumerator(Enumerator):
                 raise ValueError(msg)
 
     def _resolve_is_not_parent_predicate(self, pred):
-        self._check_arg_types(pred, [str, str, (int, float)])
+        self._check_arg_types(pred, [str, str])
         prod0 = self.spec.get_function_production_or_raise(pred.args[0])
         prod1 = self.spec.get_function_production_or_raise(pred.args[1])
-        weight = pred.args[2]
-        self.optimizer.mk_is_not_parent(prod0, prod1, weight)
+        self.optimizer.mk_is_not_parent(prod0, prod1, 100)
 
     def _resolve_do_not_concat_predicate(self, pred):
         self._check_arg_types(pred, [Node])
@@ -210,76 +209,26 @@ class SmtEnumerator(Enumerator):
         for node in self.nodes_until_depth(self.depth - program.depth() + 1):
             self.block_subtree(node, program)
 
-    def _resolve_do_not_unary_operation(self, op_name, pred):
-        for node in self.nodes:
-            test1 = node.children is None or len(node.children) == 0
-            if test1: continue
-            test2 = node.children[0].children is None or len(node.children[0].children) == 0
-            if test2: continue
-
-            node_var = self.variables[node.id - 1]
-
-            kleene_id = self.spec.get_function_production(op_name).id
-            node_is_kleene = node_var == z3.IntVal(kleene_id)
-
-            child0_var = self.variables[node.children[0].id - 1]
-            re_id = self.spec.get_function_production("re").id
-            child0_is_re = child0_var == z3.IntVal(re_id)
-
-            char_type = self.spec.get_type("Char")
-            args0_id = self.spec.get_enum_production(char_type, pred.args[0]).id
-
-            child0_child_var = self.variables[node.children[0].children[0].id - 1]
-
-            child0_child_is_args0 = child0_child_var == z3.IntVal(args0_id)
-
-            left_side = z3.And(node_is_kleene, child0_is_re)
-            right_side = z3.Not(child0_child_is_args0)
-
-            self.z3_solver.add(z3.Implies(left_side, right_side))
-
     def _resolve_do_not_kleene_predicate(self, pred):
-        self._check_arg_types(pred, [str])
-        # idea: node_is_kleene -> child[0] is not args[0]
-        self._resolve_do_not_unary_operation("kleene", pred)
+        self._check_arg_types(pred, [Node])
+        program = pred.args[0]
+
+        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
+            self.block_subtree(node, program)
 
     def _resolve_do_not_posit_predicate(self, pred):
-        self._check_arg_types(pred, [str])
-        # idea: node_is_posit -> child[0] is not args[0]
-        self._resolve_do_not_unary_operation("posit", pred)
+        self._check_arg_types(pred, [Node])
+        program = pred.args[0]
+
+        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
+            self.block_subtree(node, program)
 
     def _resolve_do_not_copies_predicate(self, pred):
-        self._check_arg_types(pred, [str, int])
-        # idea: node_is_concat -> child[0] is not args[0] \/ child[0] is not args[1]
-        for node in self.nodes:
-            test1 = node.children is None or len(node.children) == 0
-            if test1: continue
-            test2 = node.children[0].children is None or len(node.children[0].children) == 0
-            if test2: continue
+        self._check_arg_types(pred, [Node])
+        program = pred.args[0]
 
-            node_var = self.variables[node.id - 1]
-            copies_id = self.spec.get_function_production("copies").id
-            node_is_copies = node_var == z3.IntVal(copies_id)
-
-            child0_var = self.variables[node.children[0].id - 1]
-            child1_var = self.variables[node.children[1].id - 1]
-            re_id = self.spec.get_function_production("re").id
-            child0_is_re = child0_var == z3.IntVal(re_id)
-
-            char_type = self.spec.get_type("Char")
-            args0_id = self.spec.get_enum_production(char_type, pred.args[0]).id
-            numCopies_type = self.spec.get_type('NumCopies')
-            args1_id = self.spec.get_enum_production(numCopies_type, str(pred.args[1])).id
-
-            child0_child_var = self.variables[node.children[0].children[0].id - 1]
-
-            child0_child_is_args0 = child0_child_var == z3.IntVal(args0_id)
-            child1_is_args1 = child1_var == z3.IntVal(args1_id)
-
-            left_side = z3.And([node_is_copies, child0_is_re])
-            right_side = z3.Not(z3.And(child0_child_is_args0, child1_is_args1))
-
-            self.z3_solver.add(z3.Implies(left_side, right_side))
+        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
+            self.block_subtree(node, program)
 
     def resolve_predicates(self, predicates):
         try:
@@ -306,7 +255,6 @@ class SmtEnumerator(Enumerator):
         self.leaf_productions = []
         self.variables = []
         self.variables_fun = []
-        self.program2tree = {}
         self.spec = spec
         if depth <= 0:
             raise ValueError(
@@ -397,14 +345,13 @@ class SmtEnumerator(Enumerator):
 
     def buildProgram(self):
         result = [0] * len(self.model)
-        for x in self.model:
-            c = x()
+        for x in self.model.keys():
             a = str(x)
             if a[:1] == 'n':
-                result[int(a[1:]) - 1] = int(str(self.model[c]))
+                result[int(a[1:]) - 1] = int(str(self.model[x]))
 
         # result contains the values of 'n' variables
-        self.program2tree.clear()
+        program2tree = {}
         # code is a list with the productions
         code = []
         for n in self.nodes:
@@ -423,7 +370,7 @@ class SmtEnumerator(Enumerator):
                             children.append(builder_nodes[c.id - 1])
                 n = code[self.nodes[y].id - 1].id
                 builder_nodes[y] = builder.make_node(n, children)
-                self.program2tree[builder_nodes[y]] = self.nodes[y]
+                program2tree[builder_nodes[y]] = self.nodes[y]
 
         return builder_nodes[0]
 
@@ -431,7 +378,9 @@ class SmtEnumerator(Enumerator):
         # self.model = self.optimizer.optimize(self.z3_solver)
         res = self.z3_solver.check()
         if res == z3.sat:
-            self.model = self.z3_solver.model()
+            self.model = {}
+            for var in self.variables:
+                self.model[var] = self.z3_solver.model()[var]
         else:
             self.model = None
         if self.model is not None:
@@ -457,7 +406,6 @@ class SmtEnumerator(Enumerator):
             assert len(subtree.children) == 2
             children_vars = list(map(lambda x: self.variables[x.id - 1], subtree.children))
             assert len(children_vars) == 2
-            assert len(program.children) == 1
             block += self.block_subtree_rec(subtree.children[0], program.children[0])
             # block += [children_vars[1] != z3.IntVal(self.spec.get_function_production("empty").id)]
         elif len(program.children) == 2:
