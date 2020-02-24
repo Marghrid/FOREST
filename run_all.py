@@ -2,22 +2,39 @@ import glob
 import re
 import subprocess
 
-instances = []
-for file in glob.glob("instances/strings/*.txt"):
-    instances.append(file)
-commands = [["runsolver", "-W", "60", "python3", "validate.py", "-f", instance] for instance in instances]
-processes = []
-instance_times = {}
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
 
-for command in commands:
-    times = []
-    instructions = []
-    print("\n=====  " + command[-1] + "  =====")
-    for i in range(4):
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        processes.append(process)
-    
-    for process in processes:
+run_each = 2
+num_processes = 12
+
+instances_dir = "instances/strings/"
+if instances_dir[-1] != '/':
+    instances_dir += '/'
+command_base = ["runsolver", "-W", "600", "python3", "validate.py", "-f"]
+
+instances = glob.glob(instances_dir + "*.txt")
+
+
+instance_times = {i:[] for i in instances}
+instance_enumerated = {i:[] for i in instances}
+
+for chunk in chunks(instances, num_processes//run_each):
+    tasks = []
+    for instance in chunk:
+        command = command_base + [instance]
+        
+        for i in range(run_each):
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            tasks.append((command, process))
+
+    for task in tasks:
+        command = task[0]
+        instance = command[-1]
+
+        process = task[1]
         process.wait()
         po, pe = process.communicate()
         po = str(po, encoding ='utf-8').splitlines()
@@ -33,21 +50,41 @@ for command in commands:
                 time = float(time)
             if "attempts" in l:
                 regex = "(\\d+) attempts"
-                bla = int(re.search(regex, l)[1])
-                enumerated = bla
-        times.append(time)
+                enumerated = int(re.search(regex, l)[1])
+        if time > -1:
+            instance_times[instance].append(time)
+            instance_enumerated[instance].append(enumerated)
+        inst_name = instance.replace(instances_dir, "", 1)
+        inst_name = inst_name.replace(".txt", "", 1)
+        print("\n=====  " + inst_name + "  =====")
         print(time, "s")
-        print("enumerated", bla)
+        print("enumerated", enumerated)
 
-    processes = []
+        tasks = []
+
+
+# ================
+
+for inst in instances:  
+    times = instance_times[inst]
     if len(times) > 0:
         avg_time = sum(times) / len(times)
     else:
         avg_time = -1
     print("avg time:", avg_time, "s")
-    instance_times[command[-1]] = avg_time
+    instance_times[inst] = round(avg_time)
 
-print("\n===== Final =====")
-for i in instance_times:
-    print(i, ",", "{0:.2f}".format(instance_times[i]))
+    enumerated = instance_enumerated[inst]
+    if len(enumerated) > 0 and all([el == enumerated[0] for el in enumerated]):
+        instance_enumerated[inst] = enumerated[0]
+    else:
+        instance_enumerated[inst] = -1
+
+
+print("\n======= Final =======")
+for instance in instance_times:
+    inst_name = instance.replace(instances_dir, "", 1)
+    inst_name = inst_name.replace(".txt", "", 1)
+    print(f"{inst_name}: {instance_times[instance]}s, enumerated {instance_enumerated[instance]}")
+print('All OK - GREAT SUCCESS')
 
