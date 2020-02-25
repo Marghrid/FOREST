@@ -1,21 +1,22 @@
 import re
+import tyrell.spec as spec
 from LCS import LCSubStr
+
 
 def get_values(exs_in):
     values = set()
-    values.add(min(exs_in))
-    values.add(max(exs_in))
+    for field in exs_in:
+        field = list(field)
+        values.add(min(field))
+        values.add(max(field))
     return sorted(values)
 
-def get_relevant_chars(examples):
+
+def get_relevant_chars(valid_examples):
     relevant_chars = set()
 
-    # filter valid examples
-    valid = list(filter(lambda x: x.output == True, examples))
-
     # discard outputs and transpose, i.e., separate by field.
-    transposed_valid = list(map(list, zip(*valid)))[0]
-    transposed_valid = list(map(list, zip(*transposed_valid)))
+    transposed_valid = list(map(list, zip(*valid_examples)))
 
     for field in transposed_valid:
         substrings = LCSubStr(field)
@@ -44,26 +45,31 @@ def get_relevant_chars(examples):
                     relevant_chars.add(char)
     return sorted(relevant_chars)
 
-def build_dsl(type_validation, examples):
+
+# TODO: Should DSL be built using only valid examples?
+def build_dsl(type_validation, valid, invalid):
     type_validation = type_validation[0]
+    transposed_valid = list(map(list, zip(*valid)))
     dsl = ''
     with open("DSLs/" + re.sub('^is_', '', type_validation) + "DSL.tyrell", "r") as dsl_file:
         dsl_base = dsl_file.read()
 
     if "integer" in type_validation:
-        exs_in = [int(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
+        exs_in = list(map(lambda field : map(int, field), transposed_valid))
         dsl += "enum Value {" + ", ".join([f'"{x}"' for x in get_values(exs_in)]) + "}\n"
 
     elif "real" in type_validation:
-        exs_in = [float(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
+        exs_in = list(map(lambda field : map(float, field), transposed_valid))
         dsl += "enum Value {" + ", ".join([f'"{x}"' for x in get_values(exs_in)]) + "}\n"
 
     elif "string" in type_validation:
-        exs_in = [len(ex.input[0]) for ex in filter(lambda x: x.output == True, examples)]
+        exs_in = list(map(lambda field : map(len, field), transposed_valid))
         dsl += "enum Value {" + ",".join([f'"{x}"' for x in get_values(exs_in)]) + "}\n"
         dsl += "enum NumCopies {" + ",".join([f'"{x}"' for x in [6, 4, 3, 2]]) + "}\n"
-        dsl += "enum Char {" + ",".join([f'"{x}"' for x in get_relevant_chars(examples)]) + "}\n"
+        dsl += "enum Char {" + ",".join([f'"{x}"' for x in get_relevant_chars(valid)]) + "}\n"
 
     dsl += dsl_base
+
+    dsl = spec.parse(dsl)
 
     return dsl

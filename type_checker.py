@@ -25,25 +25,19 @@ def is_string(arg:str):
 possible_types_validations = [is_integer, is_real, is_string]
 
 
-def check_type(examples: List[Example]) -> (List[str], List[Example]):
-    assert len(examples) > 0
-    num_examples = len(examples)
-    num_fields = len(examples[0][0])
+def check_type(valid: List, invalid: List):
+    num_fields = len(valid[0])
     types = []
-    valid = list(filter(lambda x: x.output == True, examples))
-    invalid = list(filter(lambda x: x.output == False, examples))
 
     # discard outputs
     if len(valid) > 0:
         # separate by field
-        transposed_valid = list(map(list, zip(*valid)))[0]
-        transposed_valid = list(map(list, zip(*transposed_valid)))
+        transposed_valid = list(map(list, zip(*valid)))
     else:
         transposed_valid = [[]]
 
     if len(invalid) > 0:
-        transposed_invalid = list(map(list, zip(*invalid)))[0]
-        transposed_invalid = list(map(list, zip(*transposed_invalid)))
+        transposed_invalid = list(map(list, zip(*invalid)))
     else:
         transposed_invalid = [[]]
 
@@ -63,6 +57,5 @@ def check_type(examples: List[Example]) -> (List[str], List[Example]):
                     types.append(validation.__name__)
                 break
 
-    examples = valid + invalid
-    return types, examples
+    return types, valid, invalid
 

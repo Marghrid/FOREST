@@ -44,8 +44,8 @@ class ValidationDecider(ExampleDecider):
     def traverse_program(self, node, examples: List[Example]):
         if self._spec.get_function_production("concat") is None: return []
         new_predicates = []
+        valid_exs = list(filter(lambda ex: ex.output == True, examples))
         if node.production.id == self._spec.get_function_production("concat").id:
-            valid_exs = list(filter(lambda ex: ex.output == True, examples))
             regex = self.interpreter.eval(node, valid_exs[0])
 
             matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
@@ -56,7 +56,6 @@ class ValidationDecider(ExampleDecider):
                 new_predicates.append(new_predicate)
 
         elif node.production.id == self._spec.get_function_production("copies").id:
-            valid_exs = list(filter(lambda ex: ex.output == True, examples))
             regex = self.interpreter.eval(node, valid_exs[0])
 
             matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
@@ -68,14 +67,12 @@ class ValidationDecider(ExampleDecider):
 
         elif node.production.id == self._spec.get_function_production("kleene").id \
             or node.production.id == self._spec.get_function_production("posit").id:
-            valid_exs = list(filter(lambda ex: ex.output == True, examples))
             regex = self.interpreter.eval(node.children[0], valid_exs[0])
 
             regex = regex + regex
 
             matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
             no_match = not any(matches)
-
 
             if no_match:
                 new_predicate = Predicate("do_not_kleene", [node])

@@ -1,6 +1,3 @@
-from tyrell.decider import Example
-
-
 def parse_file(filename):
     valid_exs = []
     invalid_exs = []
@@ -23,14 +20,4 @@ def parse_file(filename):
                 invalid_exs.append([i.strip() for i in next_line.split(',')])
             next_line = in_file.readline()
 
-    # if len(valid_exs) < 1:
-    #     new_ex = input("Please enter a valid example for the form:")
-    #     valid_exs.append(new_ex)
-    # if len(invalid_exs) < 1:
-    #     new_ex = input("Please enter a invalid example for the form:")
-    #     invalid_exs.append(new_ex)
-
-    examples = [Example(x, True) for x in valid_exs]
-    examples += [Example(x, False) for x in invalid_exs]
-
-    return examples
+    return valid_exs, invalid_exs
