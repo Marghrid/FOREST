@@ -1,3 +1,4 @@
+import datetime
 import time
 from abc import ABC
 
@@ -39,6 +40,10 @@ class Synthesizer(ABC):
                 logger.debug('Enumerator generated: ' + self._printer.eval(program, ["IN"]))
             else:
                 logger.debug(f'Enumerator generated: {program}')
+
+            if num_attempts % 500 == 0:
+                currentDT = datetime.datetime.now()
+                logger.info(f'Enumerated {num_attempts} programs at {currentDT.strftime("%H:%M:%S")}.')
             try:
                 res = self._decider.analyze(program)
                 if res.is_ok():
@@ -48,7 +53,9 @@ class Synthesizer(ABC):
                     new_predicates = res.why()
                     # logger.debug('Program rejected.')
                     if new_predicates is not None:
-                        logger.debug(f'New predicates: {new_predicates}')
+                        for pred in new_predicates:
+                            pred_str = self._printer.eval(pred.args[0], ["IN"])
+                            logger.debug(f'New predicate: block {pred_str}')
                     self._enumerator.update(new_predicates)
                     program = self._enumerator.next()
             except InterpreterError as e:

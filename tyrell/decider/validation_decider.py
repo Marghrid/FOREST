@@ -55,7 +55,8 @@ class ValidationDecider(ExampleDecider):
                 new_predicate = Predicate("do_not_concat", [node])
                 new_predicates.append(new_predicate)
 
-        elif node.production.id == self._spec.get_function_production("copies").id:
+        elif self._spec.get_function_production("copies") is not None \
+                and node.production.id == self._spec.get_function_production("copies").id:
             regex = self.interpreter.eval(node, valid_exs[0])
 
             matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]

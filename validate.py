@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import argparse
 
-from build_dsl import build_dsl
+from build_dsl import DSLBuilder
 from examples_parser import parse_file
 from type_checker import check_type
 from tyrell.decider import ValidationDecider, Example
@@ -26,7 +26,9 @@ def main():
     logger.debug("Remaining invalid examples:" + str(invalid_examples))
 
     # TODO create DSL as spec object instead of string
-    dsl = build_dsl(type_validation, valid_examples, invalid_examples)
+    builder = DSLBuilder(type_validation, valid_examples, invalid_examples)
+    dsl = builder.build()[0]
+    # TODO: build() returns a list of DSLs for each different type of element. Now I'm just using the first element
     # logger.debug("Using DSL:\n" + str(dsl))
 
     examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
