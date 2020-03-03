@@ -1,4 +1,10 @@
 ([A-Z]|[0-9])+-
+
+         concat
+      posit    -
+    union
+A-Z      0-9
+
 ++
 A1S-
 CV3-

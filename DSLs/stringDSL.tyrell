@@ -18,31 +18,29 @@ func union:  Regex -> Regex, Regex;
 func copies: Regex -> Regex, NumCopies;
 func kleene: Regex s -> Regex r;
 func posit:  Regex s -> Regex r;
-func interr: Regex s -> Regex r;
+func option: Regex s -> Regex r;
 
 func match: Bool -> Regex, String;
 
 # predicate is_commutative(union);
 
 predicate is_not_parent(kleene, kleene);
-predicate is_not_parent(interr, interr);
+predicate is_not_parent(option, option);
 predicate is_not_parent(posit,  posit);
 predicate is_not_parent(copies, copies);
 
 predicate is_not_parent(kleene, posit);
-predicate is_not_parent(kleene, interr);
+predicate is_not_parent(kleene, option);
 predicate is_not_parent(kleene, copies);
 
 predicate is_not_parent(posit, kleene);
-predicate is_not_parent(posit, interr);
+predicate is_not_parent(posit, option);
 predicate is_not_parent(posit, copies);
 
-predicate is_not_parent(interr, kleene);
-predicate is_not_parent(interr, posit);
-predicate is_not_parent(interr, copies);
+predicate is_not_parent(option, kleene);
+predicate is_not_parent(option, posit);
+predicate is_not_parent(option, copies);
 
 predicate is_not_parent(copies, posit);
-predicate is_not_parent(copies, interr);
+predicate is_not_parent(copies, option);
 predicate is_not_parent(copies, kleene);
-
-

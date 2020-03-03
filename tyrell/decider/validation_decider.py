@@ -86,11 +86,3 @@ class ValidationDecider(ExampleDecider):
                 return self.traverse_program(child, examples) + new_predicates
         else:
             return new_predicates
-
-    # def _equal_output(self, program, input, desired_output):
-    #     try:
-    #         output = self._interpreter.eval(program, input)
-    #         return output == desired_output
-    #     except Exception as e:
-    #         print("exception", e)
-    #         return False == desired_output

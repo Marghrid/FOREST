@@ -45,8 +45,8 @@ class DSLBuilder:
             #     dsl_base = dsl_base.replace("predicate is_not_parent(copies, copies);", "")
             #     dsl_base = dsl_base.replace("predicate is_not_parent(kleene, copies);", "")
             #     dsl_base = dsl_base.replace("predicate is_not_parent(posit, copies);", "")
-            #     dsl_base = dsl_base.replace("predicate is_not_parent(interr, copies);", "")
-            #     dsl_base = dsl_base.replace("predicate is_not_parent(copies, posit);\npredicate is_not_parent(copies, interr);\npredicate is_not_parent(copies, kleene);", "")
+            #     dsl_base = dsl_base.replace("predicate is_not_parent(option, copies);", "")
+            #     dsl_base = dsl_base.replace("predicate is_not_parent(copies, posit);\npredicate is_not_parent(copies, option);\npredicate is_not_parent(copies, kleene);", "")
 
             dsl += "enum Char {" + ",".join([f'"{x}"' for x in self.relevant_chars]) + "}\n"
 
@@ -98,6 +98,12 @@ class DSLBuilder:
                         if '[a-z]' in relevant_chars:
                             relevant_chars.add('[A-Za-z]')
                             char_classes.add('[A-Za-z]')
+                        if '[0-9]' in relevant_chars:
+                            relevant_chars.add('[A-Z0-9]')
+                            char_classes.add('[A-Z0-9]')
+                        if '[a-z]' in relevant_chars and '[0-9]' in relevant_chars:
+                            relevant_chars.add('[A-Za-z0-9]')
+                            char_classes.add('[A-Za-z0-9]')
                     elif 'a' <= char <= 'z':
                         letters.add(char)
                         relevant_chars.add('[a-z]')
@@ -107,10 +113,25 @@ class DSLBuilder:
                         if '[A-Z]' in relevant_chars:
                             relevant_chars.add('[A-Za-z]')
                             char_classes.add('[A-Za-z]')
+                        if '[0-9]' in relevant_chars:
+                            relevant_chars.add('[a-z0-9]')
+                            char_classes.add('[a-z0-9]')
+                        if '[A-Z]' in relevant_chars and '[0-9]' in relevant_chars:
+                            relevant_chars.add('[A-Za-z0-9]')
+                            char_classes.add('[A-Za-z0-9]')
                     elif '0' <= char <= '9':
                         numbers.add(char)
                         relevant_chars.add('[0-9]')
                         char_classes.add('[0-9]')
+                        if '[A-Z]' in relevant_chars:
+                            relevant_chars.add('[A-Z0-9]')
+                            char_classes.add('[A-Z0-9]')
+                        if '[a-z]' in relevant_chars:
+                            relevant_chars.add('[0-9a-z]')
+                            char_classes.add('[0-9a-z]')
+                        if '[a-z]' in relevant_chars and '[A-Z]' in relevant_chars:
+                            relevant_chars.add('[A-Za-z0-9]')
+                            char_classes.add('[A-Za-z0-9]')
                         # if all([(char in s) for s in field]):
                         #     relevant_chars.add(char)
                     elif char in self.special_chars:
@@ -131,7 +152,7 @@ class DSLBuilder:
 
         lens = map(lambda field: map(len, field), self.transposed_valid)
         m = max(map(max, lens))
-        num_copies.update(range(2, m))
+        num_copies.update(range(3, m))
         # for ch in self.char_classes:
         #     regex = f"{ch}+"
         #     for field in self.transposed_valid:

@@ -12,8 +12,6 @@ from tyrell.logger import get_logger
 from tyrell.synthesizer import Synthesizer
 
 
-
-
 def main():
     logger = get_logger('tyrell')
     examples_file = read_cmd_args(logger)

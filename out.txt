@@ -25,22 +25,22 @@
 [debug] func copies: Regex -> Regex, NumCopies;
 [debug] func kleene: Regex s -> Regex r;
 [debug] func posit:  Regex s -> Regex r;
-[debug] func interr: Regex s -> Regex r;
+[debug] func option: Regex s -> Regex r;
 [debug] 
 [debug] func match: Bool -> Regex, String;
 [debug] 
 [debug] # predicate is_commutative(union);
 [debug] 
 [debug] predicate is_not_parent(kleene, kleene);
-[debug] predicate is_not_parent(interr, interr);
+[debug] predicate is_not_parent(option, option);
 [debug] predicate is_not_parent(posit,  posit);
 [debug] 
 [debug] predicate is_not_parent(kleene, posit);
-[debug] predicate is_not_parent(kleene, interr);
+[debug] predicate is_not_parent(kleene, option);
 [debug] predicate is_not_parent(posit,  kleene);
-[debug] predicate is_not_parent(posit,  interr);
-[debug] predicate is_not_parent(interr, kleene);
-[debug] predicate is_not_parent(interr, posit);
+[debug] predicate is_not_parent(posit,  option);
+[debug] predicate is_not_parent(option, kleene);
+[debug] predicate is_not_parent(option, posit);
 [debug] 
 [debug] 
 [debug] Building Tyrell spec from parse tree...
@@ -1354,7 +1354,7 @@
 [debug] Enumerator generated: match([0-9]//?/|([0-9])([0-9]){3}, IN)
 [debug] Enumerator generated: match([0-9]//?/|([0-9])([0-9]){2}, IN)
 [debug] Enumerator generated: match([0-9]//?/|([0-9])([0-9]){4}, IN)
-[debug] New predicates: [Predicate(name=do_not_concat, args=[ApplyNode(concat, [ApplyNode(concat, [ApplyNode(concat, [ApplyNode(re, [AtomNode([0-9])]), ApplyNode(re, [AtomNode(/)])]), ApplyNode(interr, [ApplyNode(re, [AtomNode(/)])])]), ApplyNode(concat, [ApplyNode(union, [ApplyNode(re, [AtomNode(/)]), ApplyNode(re, [AtomNode([0-9])])]), ApplyNode(copies, [ApplyNode(re, [AtomNode([0-9])]), AtomNode(4)])])])])]
+[debug] New predicates: [Predicate(name=do_not_concat, args=[ApplyNode(concat, [ApplyNode(concat, [ApplyNode(concat, [ApplyNode(re, [AtomNode([0-9])]), ApplyNode(re, [AtomNode(/)])]), ApplyNode(option, [ApplyNode(re, [AtomNode(/)])])]), ApplyNode(concat, [ApplyNode(union, [ApplyNode(re, [AtomNode(/)]), ApplyNode(re, [AtomNode([0-9])])]), ApplyNode(copies, [ApplyNode(re, [AtomNode([0-9])]), AtomNode(4)])])])])]
 [debug] Enumerator generated: match([0-9]/([0-9])*/|([0-9])([0-9])*, IN)
 [debug] Enumerator generated: match([0-9]/([0-9])+/|([0-9])([0-9])*, IN)
 [debug] Enumerator generated: match([0-9]/([0-9])?/|([0-9])([0-9])*, IN)
@@ -2468,10 +2468,10 @@
 [debug] Enumerator generated: match(([0-9]){2}[0-9][0-9]/([0-9]){3}, IN)
 [debug] New predicates: [Predicate(name=do_not_concat, args=[ApplyNode(concat, [ApplyNode(concat, [ApplyNode(copies, [ApplyNode(re, [AtomNode([0-9])]), AtomNode(2)]), ApplyNode(concat, [ApplyNode(re, [AtomNode([0-9])]), ApplyNode(re, [AtomNode([0-9])])])]), ApplyNode(concat, [ApplyNode(re, [AtomNode(/)]), ApplyNode(copies, [ApplyNode(re, [AtomNode([0-9])]), AtomNode(3)])])])])]
 [debug] Enumerator generated: match(([0-9]){2}[0-9][0-9]/([0-9])?, IN)
-[debug] New predicates: [Predicate(name=do_not_concat, args=[ApplyNode(concat, [ApplyNode(concat, [ApplyNode(copies, [ApplyNode(re, [AtomNode([0-9])]), AtomNode(2)]), ApplyNode(concat, [ApplyNode(re, [AtomNode([0-9])]), ApplyNode(re, [AtomNode([0-9])])])]), ApplyNode(concat, [ApplyNode(re, [AtomNode(/)]), ApplyNode(interr, [ApplyNode(re, [AtomNode([0-9])])])])])])]
+[debug] New predicates: [Predicate(name=do_not_concat, args=[ApplyNode(concat, [ApplyNode(concat, [ApplyNode(copies, [ApplyNode(re, [AtomNode([0-9])]), AtomNode(2)]), ApplyNode(concat, [ApplyNode(re, [AtomNode([0-9])]), ApplyNode(re, [AtomNode([0-9])])])]), ApplyNode(concat, [ApplyNode(re, [AtomNode(/)]), ApplyNode(option, [ApplyNode(re, [AtomNode([0-9])])])])])])]
 [debug] Enumerator generated: match((([0-9]){2}[0-9][0-9])|(/([0-9])?), IN)
 [debug] Enumerator generated: match(([0-9]){2}[0-9][0-9]//?, IN)
-[debug] New predicates: [Predicate(name=do_not_concat, args=[ApplyNode(concat, [ApplyNode(concat, [ApplyNode(copies, [ApplyNode(re, [AtomNode([0-9])]), AtomNode(2)]), ApplyNode(concat, [ApplyNode(re, [AtomNode([0-9])]), ApplyNode(re, [AtomNode([0-9])])])]), ApplyNode(concat, [ApplyNode(re, [AtomNode(/)]), ApplyNode(interr, [ApplyNode(re, [AtomNode(/)])])])])])]
+[debug] New predicates: [Predicate(name=do_not_concat, args=[ApplyNode(concat, [ApplyNode(concat, [ApplyNode(copies, [ApplyNode(re, [AtomNode([0-9])]), AtomNode(2)]), ApplyNode(concat, [ApplyNode(re, [AtomNode([0-9])]), ApplyNode(re, [AtomNode([0-9])])])]), ApplyNode(concat, [ApplyNode(re, [AtomNode(/)]), ApplyNode(option, [ApplyNode(re, [AtomNode(/)])])])])])]
 [debug] Enumerator generated: match((([0-9]){2}[0-9][0-9])|(//?), IN)
 [debug] Enumerator generated: match(([0-9]){2}([0-9])|///|([0-9]), IN)
 [debug] Enumerator generated: match((([0-9]){2}([0-9])|/)|(/([0-9])|/), IN)

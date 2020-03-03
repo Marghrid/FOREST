@@ -4,7 +4,7 @@ from tyrell.interpreter import PostOrderInterpreter
 
 class ValidationPrinter(PostOrderInterpreter):
     # */+/? concat |
-    # {"kleene":3, "copies":3, "posit":3, "interr":3, "concat":2, "union":1}
+    # {"kleene":3, "copies":3, "posit":3, "option":3, "concat":2, "union":1}
     def __init__(self):
         super().__init__()
         self.precedences = {}
@@ -73,7 +73,7 @@ class ValidationPrinter(PostOrderInterpreter):
         else:
             return f'({args[0]})*'
 
-    def eval_interr(self, node, args):
+    def eval_option(self, node, args):
         self.precedences[node.production.id] = 3
         child_id = node.children[0].production.id
         child_prec = self.precedences[child_id]

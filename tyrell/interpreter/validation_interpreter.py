@@ -4,6 +4,10 @@ from tyrell.interpreter import PostOrderInterpreter
 
 
 class ValidationInterpreter(PostOrderInterpreter):
+    def __init__(self):
+        super().__init__()
+        self.precedences = {}
+
     def check_integer(self, arg):
         if isinstance(arg, int):
             return True
@@ -23,9 +27,6 @@ class ValidationInterpreter(PostOrderInterpreter):
         except (TypeError, ValueError):
             return False
 
-    def eval_Regex(self, v):
-        return v
-
     def eval_Input(self, v):
         return v
 
@@ -34,9 +35,6 @@ class ValidationInterpreter(PostOrderInterpreter):
 
     def eval_Number(self, v) -> float:
         return float(v)
-
-    def eval_Bool(self, v):
-        return v
 
     def eval_Value(self, v):
         return float(v)
@@ -49,61 +47,96 @@ class ValidationInterpreter(PostOrderInterpreter):
         return args[0] and args[1]
 
     def eval_number(self, node, args) -> float:
-        '''Number -> Input;'''
         return float(args[0])
 
     def eval_len(self, node, args) -> int:
-        '''Number -> String;'''
         return len(args[0])
 
     def eval_le(self, node, args) -> bool:
-        ''''Bool -> Number, Number;'''
-        # print("le", args[0], args[1], args[0] <= args[1], file=sys.stderr)
         return args[0] <= args[1]
 
     def eval_ge(self, node, args) -> bool:
-        '''Bool -> Number, Number;'''
-        # print("ge", args[0], args[1], args[0] >= args[1], file=sys.stderr)
         return args[0] >= args[1]
 
     def eval_Regex(self, v):
-        return int(v)
+        return v
 
     def eval_Bool(self, v):
-        return int(v)
+        return v
 
     def eval_re(self, node, args):
+        self.precedences[node.production.id] = 4
         return fr'{args[0]}'
 
     def eval_kleene(self, node, args):
-        if len(args[0]) == 1: return fr'{args[0]}*'
-        return fr'({args[0]})*'
-
-    def eval_copies(self, node, args):
-        if len(args[0]) == 1: return fr'{args[0]}{{{args[1]}}}'
-        return fr'({args[0]}){{{args[1]}}}'
-
-    def eval_concat(self, node, args):
-        return fr'{args[0]}{args[1]}'
-
-    def eval_union(self, node, args):
-        if len(args[0]) == 1:
-            h0 = fr'{args[0]}'
+        self.precedences[node.production.id] = 3
+        child_id = node.children[0].production.id
+        child_prec = self.precedences[child_id]
+        if child_prec >= self.precedences[node.production.id]:
+            return f'{args[0]}*'
         else:
-            h0 = fr'({args[0]})'
-        if len(args[1]) == 1:
-            h1 = fr'{args[1]}'
-        else:
-            h1 = fr'({args[1]})'
-        return h0 + '|' + h1
+            return f'({args[0]})*'
 
-    def eval_interr(self, node, args):
-        if len(args[0]) == 1: return fr'{args[0]}?'
-        return fr'({args[0]})?'
+    def eval_option(self, node, args):
+        self.precedences[node.production.id] = 3
+        child_id = node.children[0].production.id
+        child_prec = self.precedences[child_id]
+        if child_prec >= self.precedences[node.production.id]:
+            return f'{args[0]}?'
+        else:
+            return f'({args[0]})?'
 
     def eval_posit(self, node, args):
-        if len(args[0]) == 1: return fr'{args[0]}+'
-        return fr'({args[0]})+'
+        self.precedences[node.production.id] = 3
+        child_id = node.children[0].production.id
+        child_prec = self.precedences[child_id]
+        if child_prec >= self.precedences[node.production.id]:
+            return f'{args[0]}+'
+        else:
+            return f'({args[0]})+'
+
+    def eval_copies(self, node, args):
+        self.precedences[node.production.id] = 3
+        child_id = node.children[0].production.id
+        child_prec = self.precedences[child_id]
+        if child_prec >= self.precedences[node.production.id]:
+            return f'{args[0]}{{{args[1]}}}'
+        else:
+            return f'({args[0]}){{{args[1]}}}'
+
+    def eval_concat(self, node, args):
+        self.precedences[node.production.id] = 2
+        child_id = node.children[0].production.id
+        child_prec = self.precedences[child_id]
+        if child_prec >= self.precedences[node.production.id]:
+            ch0 = f'{args[0]}'
+        else:
+            ch0 = f'({args[0]})'
+
+        child_id = node.children[1].production.id
+        child_prec = self.precedences[child_id]
+        if child_prec >= self.precedences[node.production.id]:
+            ch1 = f'{args[1]}'
+        else:
+            ch1 = f'({args[1]})'
+        return f'{ch0}{ch1}'
+
+    def eval_union(self, node, args):
+        self.precedences[node.production.id] = 1
+        child_id = node.children[0].production.id
+        child_prec = self.precedences[child_id]
+        if child_prec >= self.precedences[node.production.id]:
+            ch0 = f'{args[0]}'
+        else:
+            ch0 = f'({args[0]}) '
+
+        child_id = node.children[1].production.id
+        child_prec = self.precedences[child_id]
+        if child_prec >= self.precedences[node.production.id]:
+            ch1 = f'{args[1]}'
+        else:
+            ch1 = f' ({args[1]})'
+        return f'{ch0}|{ch1}'
 
     def eval_match(self, node, args):
         match = re.fullmatch(args[0], args[1])

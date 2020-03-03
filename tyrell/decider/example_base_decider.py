@@ -47,8 +47,7 @@ class ExampleDecider(Decider):
         Test whether the given program would fail on any of the examples provided.
         '''
         return any(
-            not self._equal_output(prog, x.input, x.output)
-            for x in self._examples
+            map(lambda x: not self._equal_output(prog, x.input, x.output), self._examples)
         )
 
     def analyze(self, prog):

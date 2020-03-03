@@ -12,7 +12,7 @@ run_each = 2
 num_processes = 1
 timeout = 60
 
-instances_dir = "instances/strings/hard"
+instances_dir = "instances/strings/"
 if instances_dir[-1] != '/':
 	instances_dir += '/'
 command_base = ["time", "python3", "validate.py", "-f"]
