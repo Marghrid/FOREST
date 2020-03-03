@@ -1,6 +1,7 @@
 # Validations Synthesizer:
 
-[Trinity](https://github.com/fredfeng/Trinity)
+_Trinity Sapiens Sapiens_.
+Built based on [Trinity](https://github.com/fredfeng/Trinity).
 
 Dev Environment Setup
 =====================
