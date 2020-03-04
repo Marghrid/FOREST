@@ -12,7 +12,7 @@ def chunks(lst, n):
 # If num_processes < 2*run_each, then run_each = 1.
 run_each = 1
 num_processes = 1
-timeout = 180
+timeout = 60
 
 instances_dir = "instances/strings/"
 if instances_dir[-1] != '/':
@@ -32,7 +32,8 @@ for chunk in chunks(instances, chunk_size):
         command = command_base + [instance]
 
         for i in range(run_each):
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print(instance)
+            process = subprocess.Popen(command)#, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             tasks.append((command, process))
 
     for task in tasks:
@@ -52,6 +53,7 @@ for chunk in chunks(instances, chunk_size):
         enumerated = -1
         solutions = []
         for l in po + pe:
+            print(l)
             if "real" in l:
                 regex = r"(\d+\.\d+) real"
                 time = float(re.search(regex, l)[1])
@@ -70,7 +72,9 @@ for chunk in chunks(instances, chunk_size):
         print("\n=====  " + inst_name + "  =====")
         print(time, "s")
         print("enumerated", enumerated)
-        print("solutions:\n", solutions)
+        print("solutions:")
+        for sol in solutions:
+            print('\t', sol)
 
         tasks = []
 

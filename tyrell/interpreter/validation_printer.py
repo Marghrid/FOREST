@@ -1,5 +1,5 @@
 from tyrell.dsl import Node
-from tyrell.interpreter import PostOrderInterpreter
+from .post_order import PostOrderInterpreter
 
 
 class ValidationPrinter(PostOrderInterpreter):

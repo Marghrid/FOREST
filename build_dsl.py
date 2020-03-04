@@ -52,7 +52,7 @@ class DSLBuilder:
 
         dsl += dsl_base
 
-        print(dsl)
+        # print(dsl)
 
         dsl = spec.parse(dsl)
 
@@ -99,8 +99,8 @@ class DSLBuilder:
                             relevant_chars.add('[A-Za-z]')
                             char_classes.add('[A-Za-z]')
                         if '[0-9]' in relevant_chars:
-                            relevant_chars.add('[A-Z0-9]')
-                            char_classes.add('[A-Z0-9]')
+                            relevant_chars.add('[0-9A-Z]')
+                            char_classes.add('[0-9A-Z]')
                         if '[a-z]' in relevant_chars and '[0-9]' in relevant_chars:
                             relevant_chars.add('[A-Za-z0-9]')
                             char_classes.add('[A-Za-z0-9]')
@@ -114,24 +114,24 @@ class DSLBuilder:
                             relevant_chars.add('[A-Za-z]')
                             char_classes.add('[A-Za-z]')
                         if '[0-9]' in relevant_chars:
-                            relevant_chars.add('[a-z0-9]')
-                            char_classes.add('[a-z0-9]')
+                            relevant_chars.add('[0-9a-z]')
+                            char_classes.add('[0-9a-z]')
                         if '[A-Z]' in relevant_chars and '[0-9]' in relevant_chars:
-                            relevant_chars.add('[A-Za-z0-9]')
-                            char_classes.add('[A-Za-z0-9]')
+                            relevant_chars.add('[0-9A-Za-z]')
+                            char_classes.add('[0-9A-Za-z]')
                     elif '0' <= char <= '9':
                         numbers.add(char)
                         relevant_chars.add('[0-9]')
                         char_classes.add('[0-9]')
                         if '[A-Z]' in relevant_chars:
-                            relevant_chars.add('[A-Z0-9]')
-                            char_classes.add('[A-Z0-9]')
+                            relevant_chars.add('[0-9A-Z]')
+                            char_classes.add('[0-9A-Z]')
                         if '[a-z]' in relevant_chars:
                             relevant_chars.add('[0-9a-z]')
                             char_classes.add('[0-9a-z]')
                         if '[a-z]' in relevant_chars and '[A-Z]' in relevant_chars:
-                            relevant_chars.add('[A-Za-z0-9]')
-                            char_classes.add('[A-Za-z0-9]')
+                            relevant_chars.add('[0-9A-Za-z]')
+                            char_classes.add('[0-9A-Za-z]')
                         # if all([(char in s) for s in field]):
                         #     relevant_chars.add(char)
                     elif char in self.special_chars:

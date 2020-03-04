@@ -1,6 +1,5 @@
 import re
-import sys
-from tyrell.interpreter import PostOrderInterpreter
+from .post_order import PostOrderInterpreter
 
 
 class ValidationInterpreter(PostOrderInterpreter):

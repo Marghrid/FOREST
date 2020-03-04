@@ -1,10 +1,9 @@
 import datetime
-import time
 from abc import ABC
 
 from ..decider import Decider
 from ..enumerator import Enumerator
-from ..interpreter import InterpreterError
+from ..interpreter import InterpreterError, Interpreter
 from ..logger import get_logger
 
 logger = get_logger('tyrell.synthesizer')
@@ -13,6 +12,7 @@ logger = get_logger('tyrell.synthesizer')
 class Synthesizer(ABC):
     _enumerator: Enumerator
     _decider: Decider
+    _printer: Interpreter
 
     def __init__(self, enumerator: Enumerator, decider: Decider, printer=None):
         self._enumerator = enumerator

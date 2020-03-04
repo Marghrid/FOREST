@@ -1,8 +1,8 @@
 from collections import deque
-from typing import List
 
 import z3
 
+from .ast import AST, ASTNode
 from .enumerator import Enumerator
 from .optimizer import Optimizer
 from .. import dsl as D
@@ -12,17 +12,6 @@ from ..spec import TyrellSpec
 
 logger = get_logger('tyrell.enumerator.smt')
 
-
-class AST:
-    def __init__(self):
-        self.head = None
-
-class ASTNode:
-    def __init__(self, nb=None, depth=None, children=None):
-        self.id = nb
-        self.depth = depth
-        self.children = children
-        self.production = None
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class SmtEnumerator(Enumerator):
@@ -314,6 +303,9 @@ class SmtEnumerator(Enumerator):
             self.z3_solver.add(z3.Or(block2))
 
     def update(self, predicates=None):
+        """
+        :param predicates: information about the program. If None, enumerator will block complete model.
+        """
         if predicates is not None:
             self.resolve_predicates(predicates)
             for pred in predicates:

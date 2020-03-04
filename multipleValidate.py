@@ -38,24 +38,26 @@ def main():
         examples=examples
     )
     maxdep = 6
-    programs = []
+    program = None
     for dep in range(3, maxdep + 1):
-        logger.info(f'Synthesizing programs of depth {dep}')
+        logger.debug(f'Synthesizing programs of depth {dep}')
         enumerator = SmtEnumerator(dsl, depth=dep, loc=4)
         synthesizer = MultipleSynthesizer(
             enumerator=enumerator,
             decider=decider,
             printer=printer
         )
-        programs = synthesizer.synthesize()
+        program = synthesizer.synthesize()
 
-        if len(programs) > 0:
-            for program in programs:
-                logger.info('Solution found: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]))
-                logger.info(f'depth: {dep}')
-            return
+        if program is not None:
+            logger.info('Solution: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]))
+            logger.info(f'depth: {dep}')
+            break
 
-    logger.info('Solution not found!')
+    if program is None:
+        logger.info('Solution not found!')
+
+
 
 
 def read_cmd_args(logger):
