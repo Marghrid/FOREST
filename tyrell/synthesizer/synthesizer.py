@@ -41,7 +41,7 @@ class Synthesizer(ABC):
             else:
                 logger.debug(f'Enumerator generated: {program}')
 
-            if num_attempts % 500 == 0:
+            if num_attempts % 1000 == 0:
                 currentDT = datetime.datetime.now()
                 logger.info(f'Enumerated {num_attempts} programs at {currentDT.strftime("%H:%M:%S")}.')
             try:

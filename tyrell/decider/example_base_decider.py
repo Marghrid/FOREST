@@ -14,6 +14,7 @@ class ExampleDecider(Decider):
     _examples: List[Example]
 
     def __init__(self, interpreter: Interpreter, examples: List[Example]):
+        super().__init__()
         self._interpreter = interpreter
         if len(examples) == 0:
             raise ValueError(
@@ -31,6 +32,10 @@ class ExampleDecider(Decider):
     @property
     def equal_output(self):
         return self._equal_output
+
+    def add_example(self, ex_in, ex_out):
+        new = Example(ex_in, ex_out)
+        self.examples.append(new)
 
     def get_failed_examples(self, prog):
         '''

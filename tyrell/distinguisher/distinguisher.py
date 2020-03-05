@@ -15,9 +15,12 @@ class Distinguisher:
         distInP1 = z3.InRe(dist, z3_prog1)
         distInP2 = z3.InRe(dist, z3_prog2)
 
+        # print("p1", z3_prog1)
+        # print("p2", z3_prog2)
+
         solver.add(distInP1 != distInP2)
 
         res = solver.check()
         if res == z3.sat:
-            return str(solver.model()[dist])
+            return str(solver.model()[dist]).strip('"')
         else: return None
