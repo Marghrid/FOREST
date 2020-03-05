@@ -1,6 +1,9 @@
 import re
 import tyrell.spec as spec
 from LCS import LCSubStr
+from tyrell.logger import get_logger
+
+logger = get_logger('tyrell.synthesizer')
 
 # TODO: Because different input fields have different types, I must have a different DSL for each input field. To
 #  achieve this, I must find a way to return a "set" of DSLs. Perhaps one per field type?
@@ -52,7 +55,7 @@ class DSLBuilder:
 
         dsl += dsl_base
 
-        # print(dsl)
+        logger.debug(dsl)
 
         dsl = spec.parse(dsl)
 
@@ -102,8 +105,8 @@ class DSLBuilder:
                             relevant_chars.add('[0-9A-Z]')
                             char_classes.add('[0-9A-Z]')
                         if '[a-z]' in relevant_chars and '[0-9]' in relevant_chars:
-                            relevant_chars.add('[A-Za-z0-9]')
-                            char_classes.add('[A-Za-z0-9]')
+                            relevant_chars.add('[0-9A-Za-z]')
+                            char_classes.add('[0-9A-Za-z]')
                     elif 'a' <= char <= 'z':
                         letters.add(char)
                         relevant_chars.add('[a-z]')
@@ -152,21 +155,7 @@ class DSLBuilder:
 
         lens = map(lambda field: map(len, field), self.transposed_valid)
         m = max(map(max, lens))
-        num_copies.update(range(3, m))
-        # for ch in self.char_classes:
-        #     regex = f"{ch}+"
-        #     for field in self.transposed_valid:
-        #         for ex in field:
-        #             matches = re.findall(regex, ex)
-        #             num_copies.update(map(len, matches))
-        #
-        # for ss in self.substrings:
-        #     regex = f"{ss}+"
-        #     for field in self.transposed_valid:
-        #         for ex in field:
-        #             matches = re.findall(regex, ex)
-        #             num_copies.update(map(lambda m: len(m)/len(ss), matches))
-        #
+        num_copies.update(range(2, m))
 
         if 1 in num_copies: num_copies.remove(1) # 1 makes no sense for this operation
         a = sorted(num_copies)

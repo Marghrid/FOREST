@@ -1,6 +1,8 @@
+#!/usr/bin/env python3
 import glob
 import re
 import subprocess
+from termcolor import colored
 
 def chunks(lst, n):
 	""" Yield successive n-sized chunks from lst. """
@@ -12,18 +14,24 @@ run_each = 2
 num_processes = 1
 timeout = 60
 
-instances_dir = "instances/strings/"
-if instances_dir[-1] != '/':
-	instances_dir += '/'
+instances_dirs = ["instances/strings/ambiguous/", "instances/strings/"]
 command_base = ["time", "python3", "validate.py", "-f"]
 
-instances = glob.glob(instances_dir + "*.txt")
+instances = []
+for instances_dir in instances_dirs:
+	instances += glob.glob(instances_dir + "/*.txt")
+
+print("=====  Found instances:  =====")
+for inst in instances:
+	print(inst)
 
 
-instance_times = {i:[] for i in instances}
+instance_times = {i.split("/")[-1].replace(".txt", "", 1):[] for i in instances}
 instance_enumerated = {i:[] for i in instances}
 
 chunk_size = max(num_processes//run_each, 1)
+
+
 for chunk in chunks(instances, chunk_size):
 	tasks = []
 	for instance in chunk:
@@ -36,6 +44,8 @@ for chunk in chunks(instances, chunk_size):
 	for task in tasks:
 		command = task[0]
 		instance = command[-1]
+		inst_name = instance.split("/")[-1]
+		inst_name = inst_name.replace(".txt", "", 1)
 
 		process = task[1]
 		try:
@@ -60,11 +70,9 @@ for chunk in chunks(instances, chunk_size):
 				solution = l.replace("[info] Solution found: ", "", 1)
 
 		if time > -1:
-			instance_times[instance].append(time)
+			instance_times[inst_name].append(time)
 			instance_enumerated[instance].append(enumerated)
-		inst_name = instance.replace(instances_dir, "", 1)
-		inst_name = inst_name.replace(".txt", "", 1)
-		print("\n=====  " + inst_name + "  =====")
+		print(colored("\n=====  " + inst_name + "  =====", "blue"))
 		print(time, "s")
 		print("enumerated", enumerated)
 		print("solution", solution)
@@ -74,13 +82,15 @@ for chunk in chunks(instances, chunk_size):
 
 # ================
 
-for inst in instances:  
-	times = instance_times[inst]
+for inst in instances:
+	inst_name = inst.split("/")[-1]
+	inst_name = inst_name.replace(".txt", "", 1)
+	times = instance_times[inst_name]
 	if len(times) > 0:
 		avg_time = sum(times) / len(times)
 	else:
 		avg_time = -1
-	instance_times[inst] = round(avg_time)
+	instance_times[inst_name] = round(avg_time)
 
 	enumerated = instance_enumerated[inst]
 	if len(enumerated) > 0 and all([el == enumerated[0] for el in enumerated]):
@@ -90,9 +100,9 @@ for inst in instances:
 
 
 print("\n======= Final =======")
-for instance in instance_times:
-	inst_name = instance.replace(instances_dir, "", 1)
+for instance in sorted(instance_enumerated):
+	inst_name = instance.split("/")[-1]
 	inst_name = inst_name.replace(".txt", "", 1)
-	print(f"{inst_name}: {instance_times[instance]}s, enumerated {instance_enumerated[instance]}")
+	print(f"{inst_name}: {instance_times[inst_name]}s, enumerated {instance_enumerated[instance]}")
 print('All OK - GREAT SUCCESS')
 

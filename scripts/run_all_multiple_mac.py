@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import glob
 import re
 import subprocess
@@ -17,7 +18,7 @@ timeout = 60
 instances_dir = "instances/strings/"
 if instances_dir[-1] != '/':
     instances_dir += '/'
-command_base = ["time", "python3", "multipleValidate.py", "-f"]
+command_base = ["python3", "multipleValidate.py", "-f"]
 
 instances = glob.glob(instances_dir + "*.txt")
 
