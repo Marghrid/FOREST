@@ -13,8 +13,8 @@ def chunks(lst, n):
 
 
 # If num_processes < 2*run_each, then run_each = 1.
-run_each = 1
-num_processes = 1
+run_each = 4
+num_processes = 12
 timeout = 120
 
 instances_dir = "instances/strings/ambiguous"
@@ -50,7 +50,7 @@ for chunk in chunks(instances, chunk_size):
         try:
             process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
-            print(colored("\n=====  " + inst_name + "timed out.  =====", "red"))
+            print(colored("\n=====  " + inst_name + " timed out.  =====", "red"))
 
             continue
         po, pe = process.communicate()

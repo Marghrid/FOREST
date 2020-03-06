@@ -2,6 +2,7 @@
 import glob
 import re
 import subprocess
+from termcolor import colored
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
@@ -36,6 +37,8 @@ for chunk in chunks(instances, num_processes // run_each):
         instance = command[-1]
 
         process = task[1]
+        inst_name = instance.replace(instances_dir, "", 1)
+        inst_name = inst_name.replace(".txt", "", 1)
         process.wait()
         po, pe = process.communicate()
         po = str(po, encoding='utf-8').splitlines()
@@ -44,7 +47,7 @@ for chunk in chunks(instances, num_processes // run_each):
         enumerated = -1
         for l in po + pe:
             if "Maximum wall clock time exceeded:" in l:
-                print("timeout")
+                print(colored("\n=====  " + inst_name + "timed out.  =====", "red"))
                 break
             if "Real time" in l:
                 time = l.replace("Real time (s):", " ", 1)
@@ -55,9 +58,7 @@ for chunk in chunks(instances, num_processes // run_each):
         if time > -1:
             instance_times[instance].append(time)
             instance_enumerated[instance].append(enumerated)
-        inst_name = instance.replace(instances_dir, "", 1)
-        inst_name = inst_name.replace(".txt", "", 1)
-        print("\n=====  " + inst_name + "  =====")
+        print(colored("\n=====  " + inst_name + "  =====", "blue"))
         print(time, "s")
         print("enumerated", enumerated)
 
