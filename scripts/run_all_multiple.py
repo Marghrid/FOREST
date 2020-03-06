@@ -2,6 +2,7 @@
 import glob
 import re
 import subprocess
+from termcolor import colored
 
 from termcolor import colored
 
@@ -18,7 +19,7 @@ run_each = 2
 num_processes = 12
 timeout = 120
 
-instances_dir = "instances/strings/"
+instances_dir = "instances/strings/ambiguous"
 if instances_dir[-1] != '/':
 	instances_dir += '/'
 command_base = ["runsolver", "-W", str(timeout), "python3", "multipleValidate.py", "-f"]
@@ -37,7 +38,8 @@ for chunk in chunks(instances, chunk_size):
 
 		for i in range(run_each):
 			print(instance)
-			process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+			process = subprocess.Popen(command, stdout=subprocess.PIPE,
+				stderr=subprocess.PIPE, stdin=subprocess.PIPE)
 			tasks.append((command, process))
 
 	for task in tasks:
@@ -46,7 +48,7 @@ for chunk in chunks(instances, chunk_size):
 
 		process = task[1]
 		process.wait()
-		po, pe = process.communicate()
+		po, pe = process.communicate(input=bytes("no", 'utf-8'))
 		po = str(po, encoding='utf-8').splitlines()
 		pe = str(pe, encoding='utf-8').splitlines()
 		time = -1
@@ -54,10 +56,10 @@ for chunk in chunks(instances, chunk_size):
 		solutions = []
 		inst_name = instance.replace(instances_dir, "", 1)
 		inst_name = inst_name.replace(".txt", "", 1)
-		print(colored("\n=====  " + inst_name + "  =====", "blue"))
+		print(colored("\n=====  " + inst_name + "  =====", "green"))
 		for l in po + pe:
 			if "[info]" in l:
-				print(l)
+				print(colored(l, "blue"))
 			if "Maximum wall clock time exceeded:" in l:
 				print("timeout")
 				break
