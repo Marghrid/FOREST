@@ -52,17 +52,14 @@ class Validation2Z3(PostOrderInterpreter):
         return None
 
     def eval_re(self, node, args):
-        range_AZ = z3.Range('A', 'Z')
-        range_09 = z3.Range('0', '9')
-        range_az = z3.Range('a', 'z')
         ranges = []
         c = args[0]
         if "0-9" in c:
-            ranges.append(range_09)
+            ranges.append(z3.Range('0', '9'))
         if "a-z" in c:
-            ranges.append(range_az)
+            ranges.append(z3.Range('a', 'z'))
         if "A-Z" in c:
-            ranges.append(range_AZ)
+            ranges.append(z3.Range('A', 'Z'))
 
         if len(ranges) == 1:
             return ranges[0]

@@ -5,12 +5,12 @@ import click
 
 class _ColorFormatter(logging.Formatter):
     colors = {
+        'critical': dict(fg='red'),
         'error': dict(fg='red'),
         'exception': dict(fg='red'),
-        'critical': dict(fg='red'),
-        'debug': dict(fg='green'),
+        'warning': dict(fg='yellow'),
         'info': dict(fg='blue'),
-        'warning': dict(fg='yellow')
+        'debug': dict(fg='green')
     }
 
     def format(self, record):
@@ -26,7 +26,7 @@ class _ColorFormatter(logging.Formatter):
 
 
 class _ClickHandler(logging.Handler):
-    _use_stderr = True
+    _use_stderr = False
 
     def emit(self, record):
         try:

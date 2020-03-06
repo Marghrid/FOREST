@@ -51,76 +51,70 @@ class SmtEnumerator(Enumerator):
 
     def createOutputConstraints(self, solver):
         '''The output production matches the output type'''
-        ctr = None
-        for p in self.spec.get_productions_with_lhs(self.spec.output):
-            if ctr is None:
-                # variables[0] is the root of the tree
-                ctr = self.variables[0] == p.id
-            else:
-                ctr = z3.Or(ctr, self.variables[0] == p.id)
-        solver.add(ctr)
+        big_or = list(map(lambda p: self.variables[0] == p.id, self.spec.get_productions_with_lhs(self.spec.output)))
+        solver.add(z3.Or(big_or))
 
     def createLocConstraints(self, solver):
         '''Exactly k functions are used in the program'''
-        ctr = self.variables_fun[0]
-        for x in range(1, len(self.variables_fun)):
-            ctr += self.variables_fun[x]
-        ctr_fun = ctr == self.loc
-        solver.add(ctr_fun)
+        # ctr = self.variables_fun[0]
+        # for x in range(1, len(self.variables_fun)):
+        #     ctr += self.variables_fun[x]
+        # ctr_fun = ctr == self.loc
+        solver.add(self.loc == z3.Sum(self.variables_fun))
 
     def createInputConstraints(self, solver):
         '''Each input will appear at least once in the program'''
         input_productions = self.spec.get_param_productions()
         for x in range(0, len(input_productions)):
-            ctr = self.variables[0] == input_productions[x].id
-            for y in range(1, len(self.nodes)):
-                ctr = z3.Or(self.variables[y] == input_productions[x].id, ctr)
-            solver.add(ctr)
+            big_or = list(map(lambda y: self.variables[y] == input_productions[x].id, range(len(self.nodes))))
+            solver.add(z3.Or(big_or))
+            # ctr = self.variables[0] == input_productions[x].id
+            # for y in range(1, len(self.nodes)):
+            #     ctr = z3.Or(self.variables[y] == input_productions[x].id, ctr)
+            # solver.add(ctr)
 
     def createFunctionConstraints(self, solver):
         '''If a function occurs then set the function variable to 1 and 0 otherwise'''
         for x in range(0, len(self.nodes)):
             for p in self.spec.productions():
                 # FIXME: improve empty integration
-                if p.is_function() and str(p).find('Empty') == -1:
+                if p.is_function() and not 'Empty' in str(p):  # str(p).find('Empty') == -1:
                     ctr = z3.Implies(
                         self.variables[x] == p.id, self.variables_fun[x] == 1)
-                    solver.add(ctr)
                 else:
                     ctr = z3.Implies(
                         self.variables[x] == p.id, self.variables_fun[x] == 0)
-                    solver.add(ctr)
+                solver.add(ctr)
 
     def createLeafConstraints(self, solver):
-        '''Leaf productions correspond to leaf nodes'''
+        """Leaf productions correspond to leaf nodes"""
         for x in range(0, len(self.nodes)):
             node = self.nodes[x]
             if node.children is None:
-                ctr = self.variables[x] == self.leaf_productions[0].id
-                for y in range(1, len(self.leaf_productions)):
-                    ctr = z3.Or(self.variables[x] ==
-                                self.leaf_productions[y].id, ctr)
-                solver.add(ctr)
+                big_or = list(map(lambda y: self.variables[x] == self.leaf_productions[y].id,
+                                  range(len(self.leaf_productions))))
+                solver.add(z3.Or(big_or))
+                # ctr = self.variables[x] == self.leaf_productions[0].id
+                # for y in range(1, len(self.leaf_productions)):
+                #     ctr = z3.Or(self.variables[x] ==
+                #                 self.leaf_productions[y].id, ctr)
+                # solver.add(ctr)
 
     def createChildrenConstraints(self, solver):
-        for x in range(0, len(self.nodes)):
-            node = self.nodes[x]
+        for parent_id in range(0, len(self.nodes)):
+            node = self.nodes[parent_id]
             if node.children is not None:
                 # the node has children
-                for p in self.spec.productions():
-                    for y in range(0, len(node.children)):
-                        ctr = None
+                for prod in self.spec.productions():
+                    for child_idx in range(0, len(node.children)):
                         child_type = 'Empty'
-                        if p.is_function() and y < len(p.rhs):
-                            child_type = str(p.rhs[y])
+                        if prod.is_function() and child_idx < len(prod.rhs):
+                            child_type = str(prod.rhs[child_idx])
+                        big_or = []
                         for t in self.spec.get_productions_with_lhs(child_type):
-                            if ctr is None:
-                                ctr = self.variables[node.children[y].id - 1] == t.id
-                            else:
-                                ctr = z3.Or(
-                                    ctr, self.variables[node.children[y].id - 1] == t.id)
-                            ctr = z3.Implies(self.variables[x] == p.id, ctr)
-                        solver.add(ctr)
+                            big_or.append(self.variables[node.children[child_idx].id - 1] == t.id)
+                            big_or.append(self.variables[parent_id] != prod.id)
+                        solver.add(z3.Or(big_or))
 
     def createUnionConstraints(self, z3_solver):
         """ Prevent union of twice the same subtree: (A|B) """
@@ -148,7 +142,7 @@ class SmtEnumerator(Enumerator):
 
     def maxChildren(self) -> int:
         '''Finds the maximum number of children in the productions'''
-        return 2 #max(map(len, [p.rhs for p in self.spec.productions()]))
+        return 2  # max(map(len, [p.rhs for p in self.spec.productions()]))
 
     def buildKTree(self, children, depth):
         '''Builds a K-tree that will contain the program'''
@@ -212,12 +206,13 @@ class SmtEnumerator(Enumerator):
                     self._resolve_block_predicate(pred)
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
-                
+
         except (KeyError, ValueError) as e:
             msg = 'Failed to resolve predicates. {}'.format(e)
             raise RuntimeError(msg) from None
 
     def __init__(self, spec: TyrellSpec, depth=None, loc=None):
+        super().__init__()
         self.z3_solver = z3.Solver()
         self.leaf_productions = []
         self.variables = []
@@ -254,25 +249,17 @@ class SmtEnumerator(Enumerator):
             return [node] + self.get_subtree(node.children[0]) + self.get_subtree(node.children[1])
 
     def blockModel(self):
-        block = []
         # block the model using only the variables that correspond to productions
-        for x in self.variables:
-            block.append(x != self.model[x])
-        ctr = z3.Or(block)
-        self.z3_solver.add(ctr)
-        
-        # Find out if some commutative operation was used.
-        commutative_op_nodes = []
-        if self.spec.get_function_production("union") is None: return
-        for x in self.variables:
-            prod_id = int(str(self.model[x]))
-            # TODO: Union is the only commutative operation, but there could be more. Maybe have a list?
-            union_id = self.spec.get_function_production("union").id
+        block = list(map(lambda x: x != self.model[x], self.variables))
+        self.z3_solver.add(z3.Or(block))
 
-            if union_id == prod_id:
-                # node x is a union
-                # we have already blocked the current model. Now, we want to block the model with its arguments swapped
-                commutative_op_nodes.append(x)
+        # Find out if some commutative operation was used.
+        #FIXME: union is hardcoded as commutative operation!
+        if self.spec.get_function_production("union") is None: return
+        union_id = self.spec.get_function_production("union").id
+        # commutative_op_nodes contains the variables of all nodes that have id of a commutative operation (in this
+        # case, it is only union)
+        commutative_op_nodes = filter(lambda x: int(str(self.model[x])) == union_id, self.variables)
 
         for x in commutative_op_nodes:
             node_id = int(str(x)[1:])  # remove "n"
@@ -282,7 +269,6 @@ class SmtEnumerator(Enumerator):
 
             block2 = []
             unblocked = set(self.variables)
-            # block the model using only the variables that correspond to productions
             for i, node in enumerate(subtree0):
                 node_x = self.variables[node.id - 1]
                 other_node = subtree1[i]
@@ -363,7 +349,7 @@ class SmtEnumerator(Enumerator):
         return self.nodes[:last_node]
 
     def block_subtree_rec(self, subtree: ASTNode, program: Node):
-        head_var = self.variables[subtree.id-1]
+        head_var = self.variables[subtree.id - 1]
         production_id = program.production.id
         block = [head_var != z3.IntVal(production_id)]
         if program.children is None or len(program.children) == 0:
@@ -387,5 +373,3 @@ class SmtEnumerator(Enumerator):
     def block_subtree(self, subtree: ASTNode, program: Node):
         block = self.block_subtree_rec(subtree, program)
         self.z3_solver.add(z3.Or(block))
-
-

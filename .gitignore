@@ -80,3 +80,6 @@ _build/
 # Miscellaneous
 .DS_Store
 .idea
+
+# Jupyter
+.ipynb_checkpoints
