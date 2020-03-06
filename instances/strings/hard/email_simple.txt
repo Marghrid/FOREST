@@ -1,0 +1,14 @@
+email
+[A-Za-z0-9._]+@[A-Za-z0-9]+\.[A-Za-z][A-Za-z]+
+++
+abc@tecnico.ulisboa.pt
+bla@hghg.com
+bla.ble@hotmail.com
+ble.ble@hotmeil.com
+bla.ble@hctmail.cm
+fla.fle@hotmail.om
+--
+bla
+hotmail.com
+@
+bla.bleffbrihotmail.com
