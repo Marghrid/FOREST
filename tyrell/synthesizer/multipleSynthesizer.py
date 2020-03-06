@@ -13,6 +13,16 @@ logger = get_logger('tyrell.synthesizer')
 yes_values = {"yes","valid", "true", "1","+","v","y","t"}
 no_values =  {"no","invalid","false","0","-","i","n","f"}
 
+def nice_time(seconds):
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    ret = ''
+    if h > 0:
+        ret += f'{h}h'
+    if m > 0:
+        ret += f'{m}m'
+    ret += f'{s}s'
+    return ret
 
 class MultipleSynthesizer(ABC):
     _enumerator: SmtEnumerator
@@ -104,7 +114,7 @@ class MultipleSynthesizer(ABC):
             logger.debug(f'Enumerator generated: {program}')
 
         if self.num_attempts > 0 and self.num_attempts % 1000 == 0:
-            logger.info(f'Enumerated {self.num_attempts} programs in {round(time.time() - self.start_time)} seconds.')
+            logger.info(f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')
             logger.info(f'DSL has {len(self._enumerator.spec.predicates())} predicates.')
 
         return program

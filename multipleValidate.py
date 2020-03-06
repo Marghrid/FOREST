@@ -33,16 +33,14 @@ def show(examples_file):
 
 def synthesize(examples_file):
     logger.info("Parsing examples from file " + examples_file)
-    valid_examples, invalid_examples = parse_file(examples_file)
-    type_validation, valid_examples, invalid_examples = check_type(valid_examples, invalid_examples)
+    valid, invalid = parse_file(examples_file)
+    type_validation, valid, invalid = check_type(valid, invalid)
     logger.info("Assuming types: " + str(type_validation))
-    logger.debug("Remaining invalid examples:" + str(invalid_examples))
-    # TODO create DSL as spec object instead of string
-    builder = DSLBuilder(type_validation, valid_examples, invalid_examples)
+    logger.debug("Remaining invalid examples:" + str(invalid))
+    builder = DSLBuilder(type_validation, valid, invalid)
     dsl = builder.build()[0]
     # TODO: build() returns a list of DSLs for each different type of element. Now I'm just using the first element
-    # logger.debug("Using DSL:\n" + str(dsl))
-    examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
+    examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
     printer = ValidationPrinter()
     decider = ValidationDecider(
         spec=dsl,
