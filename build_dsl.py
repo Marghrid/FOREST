@@ -41,16 +41,7 @@ class DSLBuilder:
 
         elif "string" in val_type:
             dsl += "enum Value {" + ",".join([f'"{x}"' for x in self.get_values(len)]) + "}\n"
-            # if len(self.get_num_copies()) > 0:
             dsl += "enum NumCopies {" + ",".join([f'"{x}"' for x in self.get_num_copies()]) + "}\n"
-            # else:
-            #     dsl_base = dsl_base.replace("func copies: Regex -> Regex, NumCopies;", "")
-            #     dsl_base = dsl_base.replace("predicate is_not_parent(copies, copies);", "")
-            #     dsl_base = dsl_base.replace("predicate is_not_parent(kleene, copies);", "")
-            #     dsl_base = dsl_base.replace("predicate is_not_parent(posit, copies);", "")
-            #     dsl_base = dsl_base.replace("predicate is_not_parent(option, copies);", "")
-            #     dsl_base = dsl_base.replace("predicate is_not_parent(copies, posit);\npredicate is_not_parent(copies, option);\npredicate is_not_parent(copies, kleene);", "")
-
             dsl += "enum Char {" + ",".join([f'"{x}"' for x in self.relevant_chars]) + "}\n"
 
         dsl += dsl_base
