@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse
+import time
 
 from termcolor import colored
 from build_dsl import DSLBuilder
@@ -50,6 +51,7 @@ def synthesize(examples_file):
     )
     maxdep = 6
     program = None
+    start_time = time.time()
     for dep in range(3, maxdep + 1):
         logger.debug(f'Synthesizing programs of depth {dep}')
         enumerator = SmtEnumerator(dsl, depth=dep, loc=4)
@@ -62,7 +64,7 @@ def synthesize(examples_file):
 
         if program is not None:
             logger.info(colored('Solution: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]), "green"))
-            logger.info(f'depth: {dep}')
+            logger.info(f'depth: {dep}, elapsed: {round(time.time() - start_time)} seconds.')
             break
     if program is None:
         logger.info('Solution not found!')

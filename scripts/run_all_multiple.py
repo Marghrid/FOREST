@@ -3,6 +3,9 @@ import glob
 import re
 import subprocess
 
+from termcolor import colored
+
+
 def chunks(lst, n):
 	""" Yield successive n-sized chunks from lst. """
 	assert n > 0
@@ -51,7 +54,7 @@ for chunk in chunks(instances, chunk_size):
 		solutions = []
 		inst_name = instance.replace(instances_dir, "", 1)
 		inst_name = inst_name.replace(".txt", "", 1)
-		print("\n=====  " + inst_name + "  =====")
+		print(colored("\n=====  " + inst_name + "  =====", "blue"))
 		for l in po + pe:
 			if "[info]" in l:
 				print(l)
