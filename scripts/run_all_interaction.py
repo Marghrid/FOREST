@@ -51,8 +51,8 @@ for chunk in chunks(instances, chunk_size):
             process.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
             print(colored("\n=====  " + inst_name + " timed out.  =====", "red"))
-
             continue
+
         po, pe = process.communicate()
         po = str(po, encoding='utf-8').splitlines()
         pe = str(pe, encoding='utf-8').splitlines()
