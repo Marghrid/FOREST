@@ -13,6 +13,10 @@ class Instance:
     def add_task(self, task):
         self.tasks.append(task)
 
+    def kill_tasks(self):
+        for t in self.tasks:
+            t.kill()
+
     def __str__(self):
         return self.name
 
@@ -35,12 +39,17 @@ class Task:
         self.process = subprocess.Popen(self.command, stdin=interaction_file,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+    def kill(self):
+        if self.process is not None:
+            self.process.kill()
+
     def wait(self, show_output):
         print(colored(f"Waiting for {self.instance}.", "cyan"))
         try:
             self.process.wait(timeout=self.timeout)
         except subprocess.TimeoutExpired:
             print(colored(f"{self.instance} timed out.", "red"))
+            self.instance.kill_tasks()
             return
 
         po, pe = self.process.communicate()
@@ -123,9 +132,9 @@ class Tester:
                 print(f"{inst.name}:".ljust(maxl), "does not always enumerate the same number of programs")
             else:
                 print(f"{inst.name}:".ljust(maxl),
-                      "avg time", round(sum(times)/len(times)),
-                      ", enum", enumerated[0],
-                      ", sol", inst.tasks[0].solution)
+                      f"avg time {round(sum(times)/len(times))}s,".ljust(15),
+                      f"enum {enumerated[0]},".ljust(11),
+                      f"sol {inst.tasks[0].solution}")
 
 
 
