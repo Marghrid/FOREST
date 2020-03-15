@@ -56,10 +56,6 @@ class SmtEnumerator(Enumerator):
 
     def createLocConstraints(self, solver):
         '''Exactly k functions are used in the program'''
-        # ctr = self.variables_fun[0]
-        # for x in range(1, len(self.variables_fun)):
-        #     ctr += self.variables_fun[x]
-        # ctr_fun = ctr == self.loc
         solver.add(self.loc == z3.Sum(self.variables_fun))
 
     def createInputConstraints(self, solver):
@@ -68,10 +64,6 @@ class SmtEnumerator(Enumerator):
         for x in range(0, len(input_productions)):
             big_or = list(map(lambda y: self.variables[y] == input_productions[x].id, range(len(self.nodes))))
             solver.add(z3.Or(big_or))
-            # ctr = self.variables[0] == input_productions[x].id
-            # for y in range(1, len(self.nodes)):
-            #     ctr = z3.Or(self.variables[y] == input_productions[x].id, ctr)
-            # solver.add(ctr)
 
     def createFunctionConstraints(self, solver):
         '''If a function occurs then set the function variable to 1 and 0 otherwise'''
@@ -94,11 +86,6 @@ class SmtEnumerator(Enumerator):
                 big_or = list(map(lambda y: self.variables[x] == self.leaf_productions[y].id,
                                   range(len(self.leaf_productions))))
                 solver.add(z3.Or(big_or))
-                # ctr = self.variables[x] == self.leaf_productions[0].id
-                # for y in range(1, len(self.leaf_productions)):
-                #     ctr = z3.Or(self.variables[x] ==
-                #                 self.leaf_productions[y].id, ctr)
-                # solver.add(ctr)
 
     def createChildrenConstraints(self, solver):
         for parent_id in range(0, len(self.nodes)):
@@ -317,7 +304,6 @@ class SmtEnumerator(Enumerator):
         builder = D.Builder(self.spec)
         builder_nodes = [None] * len(self.nodes)
         for y in range(len(self.nodes) - 1, -1, -1):
-            # y = len(self.nodes) - x - 1
             if "Empty" not in str(code[self.nodes[y].id - 1]):
                 children = []
                 if self.nodes[y].children is not None:
@@ -331,7 +317,6 @@ class SmtEnumerator(Enumerator):
         return builder_nodes[0]
 
     def next(self):
-        # self.model = self.optimizer.optimize(self.z3_solver)
         res = self.z3_solver.check()
         if res == z3.sat:
             self.model = {}
@@ -342,6 +327,7 @@ class SmtEnumerator(Enumerator):
         if self.model is not None:
             return self.buildProgram()
         else:
+            logger.info(f'Enumerator exhausted for depth {self.depth}.')
             return None
 
     def nodes_until_depth(self, depth: int):

@@ -25,12 +25,12 @@ def nice_time(seconds):
     return ret
 
 class MultipleSynthesizer(ABC):
-    _enumerator: FunnyEnumerator
+    _enumerator: Enumerator
     _decider: ExampleDecider
     _printer: Interpreter
     _distinguisher: Distinguisher
 
-    def __init__(self, enumerator: FunnyEnumerator, decider: ExampleDecider, printer=None):
+    def __init__(self, enumerator: Enumerator, decider: ExampleDecider, printer=None):
         self._enumerator = enumerator
         self._decider = decider
         self._printer = printer
@@ -72,7 +72,7 @@ class MultipleSynthesizer(ABC):
 
             self._enumerator.update(new_predicates)
             program = self.enumerate()
-        logger.info(f'Synthesizer done for depth {self._enumerator.depth} and length {self._enumerator.length} after\n'
+        logger.info(f'Synthesizer done after\n'
                     f'  {self.num_attempts} attempts,\n'
                     f'  {self.num_interactions} interactions,\n'
                     f'  and {round(time.time() - self.start_time)} seconds')

@@ -14,7 +14,6 @@ from tyrell.synthesizer import MultipleSynthesizer
 
 logger = get_logger('tyrell')
 
-
 def main():
     examples_file = read_cmd_args()
     funnySynthesize(examples_file)

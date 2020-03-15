@@ -214,10 +214,6 @@ class FunnyEnumerator(Enumerator):
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
 
-        # except (KeyError, ValueError) as e:
-        #     msg = 'Failed to resolve predicates. {}'.format(e)
-        #     raise RuntimeError(msg) from None
-
     def get_subtree(self, node: ASTNode):
         if node.children is None or len(node.children) < 2:
             return [node]
@@ -328,6 +324,7 @@ class FunnyEnumerator(Enumerator):
         if self.model is not None:
             return self.buildProgram()
         else:
+            logger.info(f'Enumerator exhausted for depth {self.depth} and length {self.length}.')
             return None
 
     def nodes_until_depth(self, depth: int):
