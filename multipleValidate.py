@@ -22,12 +22,21 @@ def main():
 def show(examples_file):
     valid_examples, invalid_examples = parse_file(examples_file)
     print("Valid examples:")
-    for ex in valid_examples:
-        print(colored('  ' + str(ex), "blue"))
+    maxlen = max(map(lambda x: len(x[0]), valid_examples))
+    for i, ex in enumerate(valid_examples):
+        print(colored(f'{ex[0]}'.center(maxlen), "blue"), end='  ')
+        if (i+1)%5 == 0:
+            print()
+    print()
 
     print("Invalid examples:")
-    for ex in invalid_examples:
-        print(colored('  ' + str(ex), "red"))
+    maxlen = max(map(lambda x: len(x[0]), invalid_examples))
+    for i, ex in enumerate(invalid_examples):
+        print(colored(f'{ex[0]}'.center(maxlen), "red"), end='  ')
+        if (i + 1) % 5 == 0:
+            print()
+    print()
+
 
 def synthesize(examples_file):
     logger.info("Parsing examples from file " + examples_file)
