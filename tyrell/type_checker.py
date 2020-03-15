@@ -1,6 +1,5 @@
 import itertools
 from typing import List
-from tyrell.decider import Example
 
 
 def is_integer(arg: str):
@@ -18,7 +17,8 @@ def is_real(arg: str):
     except:
         return False
 
-def is_string(arg:str):
+
+def is_string(arg: str):
     return True
 
 
@@ -45,10 +45,10 @@ def check_type(valid: List, invalid: List):
 
     for field_idx in range(num_fields):
         for validation in possible_types_validations:
-            if all(map(validation, transposed_valid[field_idx])): # this validation is verified for all valid examples
+            if all(map(validation, transposed_valid[field_idx])):  # this validation is verified for all valid examples
                 if any(list(map(validation, transposed_invalid[field_idx]))):
                     eliminated = list(map(validation, transposed_invalid[field_idx]))
-                    
+
                     assert len(eliminated) == len(invalid)
                     # remove from invalid examples those that are cleared up by this validation:
                     invalid = list(itertools.compress(invalid, eliminated))
@@ -58,4 +58,3 @@ def check_type(valid: List, invalid: List):
                 break
 
     return types, valid, invalid
-

@@ -9,7 +9,7 @@ from ..logger import get_logger
 logger = get_logger('tyrell.synthesizer')
 
 
-class Synthesizer(ABC):
+class SingleSynthesizer(ABC):
     _enumerator: Enumerator
     _decider: Decider
     _printer: Interpreter

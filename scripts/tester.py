@@ -73,11 +73,6 @@ class Task:
                 self.interactions = int(re.search(regex, l)[1])
             if "Solution:" in l:
                 self.solution = l.replace("[info] Solution: ", "", 1)
-        #
-        # print(colored("\n=====  " + inst_name + "  =====", "blue"))
-        # print(time, "s")
-        # print("enumerated", enumerated)
-        # print("solution:", solution)
 
 
 class Tester:
@@ -88,9 +83,9 @@ class Tester:
         self.instances = []
         self.num_processes = num_processes
         if runsolver:
-            command_base = ["runsolver", "-W", str(timeout), "python3", "multipleValidate.py", "-f"]
+            command_base = ["runsolver", "-W", str(timeout), "python3", "validate.py", "-d", "-f"]
         else:
-            command_base = ["python3", "multipleValidate.py", "-f"]
+            command_base = ["python3", "validate.py", "-d", "-f"]
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")

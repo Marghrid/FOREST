@@ -10,13 +10,12 @@ develop_dependencies = [
     'lark-parser',  # for parsing
     'sphinx',  # for documentation generation
 ]
-
 setup(
-    name='tyrell',
+    name='Validations Synthesizer',
     version='0.1dev',
     packages=find_packages(),
     license='LICENSE.txt',
-    description='Deduction-based synthesis framework',
+    description='User input validatios synthesis tool',
     install_requires=install_dependencies,
     extras_require={
         'dev': develop_dependencies

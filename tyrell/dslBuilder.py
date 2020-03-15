@@ -1,6 +1,6 @@
 import re
 import tyrell.spec as spec
-from LCS import LCSubStr
+from tyrell.LCS import LCSubStr
 from tyrell.logger import get_logger
 
 logger = get_logger('tyrell.synthesizer')
