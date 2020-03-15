@@ -41,10 +41,6 @@ class Node(ABC):
     def children(self) -> List['Node']:
         raise NotImplementedError
 
-    @abstractmethod
-    def to_sexp(self):
-        raise NotImplementedError
-
     def depth(self):
         if self.children is None or len(self.children) == 0:
             return 1
@@ -96,9 +92,6 @@ class AtomNode(LeafNode):
     def is_param(self) -> bool:
         return False
 
-    def to_sexp(self):
-        return [Symbol(self.type.name), self.data]
-
     def deep_eq(self, other) -> bool:
         '''
         Test whether this node is the same with ``other``. This function performs deep comparison rather than just comparing the object identity.
@@ -143,9 +136,6 @@ class ParamNode(LeafNode):
 
     def is_param(self) -> bool:
         return True
-
-    def to_sexp(self):
-        return [Symbol('@param'), self.index]
 
     def deep_eq(self, other) -> bool:
         '''
