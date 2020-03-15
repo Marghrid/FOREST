@@ -3,7 +3,6 @@ from setuptools import setup, find_packages
 install_dependencies = [
     'Click',
     'colorama',
-    'sexpdata',
     'z3-solver'
 ]
 develop_dependencies = [

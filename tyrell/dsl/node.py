@@ -1,8 +1,5 @@
 from abc import ABC, abstractmethod
 from typing import cast, List, Any
-
-from sexpdata import Symbol
-
 from ..spec import Type, Production, EnumProduction, ParamProduction, FunctionProduction
 
 
@@ -216,9 +213,6 @@ class ApplyNode(Node):
 
     def is_apply(self) -> bool:
         return True
-
-    def to_sexp(self):
-        return [Symbol(self.name)] + [x.to_sexp() for x in self.args]
 
     def deep_eq(self, other) -> bool:
         '''
