@@ -33,7 +33,7 @@ def synthesize(examples_file):
     logger.info("Parsing examples from file " + examples_file)
     valid, invalid = parse_file(examples_file)
     type_validation, valid, invalid = check_type(valid, invalid)
-    logger.info("Assuming types: " + str(type_validation))
+    # logger.info("Assuming types: " + str(type_validation))
     logger.debug("Remaining invalid examples:" + str(invalid))
     builder = DSLBuilder(type_validation, valid, invalid)
     dsl = builder.build()[0]
@@ -69,7 +69,7 @@ def funnySynthesize(examples_file):
     logger.info("Parsing examples from file " + examples_file)
     valid, invalid = parse_file(examples_file)
     type_validation, valid, invalid = check_type(valid, invalid)
-    logger.info("Assuming types: " + str(type_validation))
+    # logger.info("Assuming types: " + str(type_validation))
     logger.debug("Remaining invalid examples:" + str(invalid))
     builder = DSLBuilder(type_validation, valid, invalid)
     dsl = builder.build()[0]

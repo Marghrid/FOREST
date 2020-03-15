@@ -324,7 +324,7 @@ class FunnyEnumerator(Enumerator):
         if self.model is not None:
             return self.buildProgram()
         else:
-            logger.info(f'Enumerator exhausted for depth {self.depth} and length {self.length}.')
+            logger.debug(f'Enumerator exhausted for depth {self.depth} and length {self.length}.')
             return None
 
     def nodes_until_depth(self, depth: int):

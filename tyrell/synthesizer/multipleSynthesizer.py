@@ -72,7 +72,7 @@ class MultipleSynthesizer(ABC):
 
             self._enumerator.update(new_predicates)
             program = self.enumerate()
-        logger.info(f'Synthesizer done after\n'
+        logger.debug(f'Synthesizer done after\n'
                     f'  {self.num_attempts} attempts,\n'
                     f'  {self.num_interactions} interactions,\n'
                     f'  and {round(time.time() - self.start_time)} seconds')
