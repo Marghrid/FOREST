@@ -183,12 +183,12 @@ class ApplyNode(Node):
         if len(prod.rhs) != len(args):
             msg = 'Argument count mismatch: expected {} but found {}'.format(
                 len(prod.rhs), len(args))
-            raise ValueError(msg)
+            # FIXME: I have nary operators, so I can't check number of arguments :/
+            # raise ValueError(msg)
         for index, (decl_ty, node) in enumerate(zip(prod.rhs, args)):
             actual_ty = node.type
             if decl_ty != actual_ty:
-                msg = 'Argument {} type mismatch: expected {} but found {}'.format(
-                    index, decl_ty, actual_ty)
+                msg = f'Argument {index} type mismatch on {prod}: expected {decl_ty} but found {actual_ty}'
                 raise ValueError(msg)
         self._args = args
 
