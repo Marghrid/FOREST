@@ -115,10 +115,10 @@ class MultipleSynthesizer(ABC):
         self.num_attempts += 1
         program = self._enumerator.next()
         if program is None: return
-        if self._printer is not None:
-            logger.debug('Enumerator generated: ' + self._printer.eval(program, ["IN"]))
-        else:
-            logger.debug(f'Enumerator generated: {program}')
+        # if self._printer is not None:
+        #     logger.debug(f'Enumerator generated: {self._printer.eval(program, ["IN"])}')
+        # else:
+        #     logger.debug(f'Enumerator generated: {program}')
 
         if self.num_attempts > 0 and self.num_attempts % 1000 == 0:
             logger.info(f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')

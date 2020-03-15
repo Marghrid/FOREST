@@ -36,13 +36,13 @@ class FunnyEnumerator(Enumerator):
         self.variables = {}
         self.variables_fun = []
         self.spec = spec
-        if depth <= 0:
+        if depth < 2:
             raise ValueError(
-                'Depth cannot be non-positive: {}'.format(depth))
+                f'Depth must be larger or equal to 2: {depth}')
         self.depth = depth
-        if length <= 0:
+        if length < 1:
             raise ValueError(
-                f'LOC cannot be non-positive: {length}')
+                f'Length must be larger or equal to 1: {length}')
         self.length = length
 
         self.max_children = self.maxChildren()
@@ -62,6 +62,8 @@ class FunnyEnumerator(Enumerator):
         self.createChildrenConstraints(self.z3_solver)
         self.createUnionConstraints(self.z3_solver)
         self.resolve_predicates(self.spec.predicates())
+
+        logger.debug(f"New enumerator: depth {self.depth}, length {self.length}, variables {len(self.variables)}")
 
 
     def initLeafProductions(self):
@@ -191,12 +193,27 @@ class FunnyEnumerator(Enumerator):
                     z3.Implies(z3.Or(ctr_children),
                                self.variables[node] != parent.id))
 
-    def _resolve_block_predicate(self, pred):
+    def _resolve_block_subtree_predicate(self, pred):
         self._check_arg_types(pred, [Node])
         program = pred.args[0]
 
         for node in self.nodes_until_depth(self.depth - program.depth() + 1):
             self.block_subtree(node, program)
+
+    def _resolve_block_tree_predicate(self, pred):
+        self._check_arg_types(pred, [Node])
+        program = pred.args[0]
+
+        for tree in self.trees:
+            node = tree.head
+            self.block_subtree(node, program)
+
+    def _resolve_block_first_tree_predicate(self, pred):
+        self._check_arg_types(pred, [Node])
+        program = pred.args[0]
+
+        node = self.trees[0].head
+        self.block_subtree(node, program)
 
     def resolve_predicates(self, predicates):
         # try:
@@ -204,13 +221,17 @@ class FunnyEnumerator(Enumerator):
                 if pred.name == 'is_not_parent':
                     self._resolve_is_not_parent_predicate(pred)
                 elif pred.name == 'do_not_concat':
-                    self._resolve_block_predicate(pred)
+                    self._resolve_block_subtree_predicate(pred)
                 elif pred.name == 'do_not_kleene':
-                    self._resolve_block_predicate(pred)
+                    self._resolve_block_subtree_predicate(pred)
                 elif pred.name == 'do_not_posit':
-                    self._resolve_block_predicate(pred)
+                    self._resolve_block_subtree_predicate(pred)
                 elif pred.name == 'do_not_copies':
-                    self._resolve_block_predicate(pred)
+                    self._resolve_block_subtree_predicate(pred)
+                elif pred.name == 'block_tree':
+                    self._resolve_block_tree_predicate(pred)
+                elif pred.name == 'block_first_tree':
+                    self._resolve_block_first_tree_predicate(pred)
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
 

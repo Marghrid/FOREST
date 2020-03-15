@@ -23,7 +23,6 @@ class ValidationInterpreter(PostOrderInterpreter):
         return v
 
     def eval_conj(self, node, args) -> bool:
-        '''Bool -> Bool, Bool;'''
         return args[0] and args[1]
 
     def eval_number(self, node, args) -> float:

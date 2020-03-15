@@ -2,8 +2,8 @@ from setuptools import setup, find_packages
 
 install_dependencies = [
     'Click',
-    'colorama',
-    'z3-solver'
+    'z3-solver',
+    'termcolor'
 ]
 develop_dependencies = [
     'mypy',  # for type checking

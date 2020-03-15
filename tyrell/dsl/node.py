@@ -51,6 +51,9 @@ class Node(ABC):
             # Use the larger one
             return 1 + max(children_depths)
 
+    def has_children(self):
+        return self.children is not None and len(self.children) > 0
+
 
 class LeafNode(Node):
     '''Generic and abstract class for AST nodes that have no children'''
@@ -170,7 +173,7 @@ class ApplyNode(Node):
         if len(prod.rhs) != len(args):
             msg = 'Argument count mismatch: expected {} but found {}'.format(
                 len(prod.rhs), len(args))
-            # FIXME: I have nary operators, so I can't check number of arguments :/
+            # FIXME: I have n-ary operators, so I can't check number of arguments :/
             # raise ValueError(msg)
         for index, (decl_ty, node) in enumerate(zip(prod.rhs, args)):
             actual_ty = node.type

@@ -95,8 +95,8 @@ def funnySynthesize(examples_file):
     maxdep = 6
     program = None
     start_time = time.time()
-    for dep in range(2, maxdep + 1):
-        for leng in range(1, 3*dep):
+    for dep in range(3, maxdep + 1):
+        for leng in range(1, 10):
             logger.debug(f'Synthesizing programs of depth {dep} and length {leng}')
             enumerator = FunnyEnumerator(dsl, depth=dep, length=leng)
             synthesizer = MultipleSynthesizer(
@@ -108,7 +108,7 @@ def funnySynthesize(examples_file):
 
             if program is not None:
                 logger.info(colored('Solution: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]), "green"))
-                logger.info(f'depth: {dep}, length {leng}, elapsed: {round(time.time() - start_time)} seconds.')
+                logger.info(f'depth: {dep}, length: {leng}, elapsed: {round(time.time() - start_time)} seconds.')
                 break
         if program is not None:
             break

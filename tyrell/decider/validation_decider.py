@@ -9,6 +9,7 @@ from typing import (
 
 from .example_base_decider import Example, ExampleDecider
 from .result import ok, bad
+from ..dsl import Node
 from ..interpreter import Interpreter
 from ..logger import get_logger
 from ..spec import Production, TyrellSpec, Predicate
@@ -29,9 +30,9 @@ class ValidationDecider(ExampleDecider):
         self._spec = spec
 
     def analyze(self, program):
-        '''
+        """
         Analyze the reason why a synthesized program fails if it does not pass all the tests.
-        '''
+        """
         if not self.has_failed_examples(program):
             return ok()
         else:
@@ -41,13 +42,37 @@ class ValidationDecider(ExampleDecider):
             else:
                 return bad(why=new_predicates)
 
-    def traverse_program(self, node, examples: List[Example]):
+    def traverse_program(self, node: Node, examples: List[Example]):
         if self._spec.get_function_production("concat") is None: return []
         new_predicates = []
         valid_exs = list(filter(lambda ex: ex.output == True, examples))
-        if node.production.id == self._spec.get_function_production("concat").id:
-            regex = self.interpreter.eval(node, valid_exs[0])
+        if node.production.id == self._spec.get_function_production("match").id and node.has_children() \
+                and node.children[0].production.id == self._spec.get_function_production("concat").id:
+            # Top-level concat
+            concat_node = node.children[0]
+            assert concat_node.has_children()
 
+            # first child must occur in the beginning of the examples:
+            child = concat_node.children[0]
+            regex = self.interpreter.eval(child, valid_exs[0])
+            # re.match() is not None if zero or more characters at the beginning of string match this regular expression
+            matches = [re.match(regex, ex.input[0]) is not None for ex in valid_exs]
+
+            if not all(matches):
+                new_predicate = Predicate("block_first_tree", [child])
+                new_predicates.append(new_predicate)
+
+            for child in concat_node.children:
+                # if one child has no match in one of the inputs, then it cannot happen as a direct top concat node
+                regex = self.interpreter.eval(child, valid_exs[0])
+                matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
+
+                if not all(matches):
+                    new_predicate = Predicate("block_tree", [child])
+                    new_predicates.append(new_predicate)
+
+        elif node.production.id == self._spec.get_function_production("concat").id:
+            regex = self.interpreter.eval(node, valid_exs[0])
             matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
             no_match = not any(matches)
 
