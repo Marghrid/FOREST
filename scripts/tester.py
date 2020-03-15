@@ -1,4 +1,5 @@
 import glob
+import random
 import re
 import subprocess
 from termcolor import colored
@@ -31,6 +32,7 @@ class Task:
 
         self.time = -1
         self.enumerated = -1
+        self.interactions = -1
         self.solution = ''
 
     def run(self):
@@ -66,6 +68,9 @@ class Task:
             if "attempts" in l:
                 regex = "(\\d+) attempts"
                 self.enumerated = int(re.search(regex, l)[1])
+            if "interactions" in l:
+                regex = "(\\d+) interactions"
+                self.interactions = int(re.search(regex, l)[1])
             if "Solution:" in l:
                 self.solution = l.replace("[info] Solution: ", "", 1)
         #
@@ -95,6 +100,7 @@ class Tester:
                 inst_name = inst_name.replace(".txt", "", 1)
                 self.instances.append(Instance(inst_name, inst_path))
 
+        # instances are sorted by name
         self.instances = sorted(self.instances, key=lambda i: i.name)
 
         for inst in self.instances:
@@ -103,12 +109,16 @@ class Tester:
                 new_task = Task(command=command, instance=inst, timeout=timeout)
                 self.tasks.append(new_task)
 
+        # tasks are ordered randomly
+        random.shuffle(self.tasks)
+
     def chunks(self, lst, n):
         """ Yield successive n-sized chunks from lst. """
         for i in range(0, len(lst), n):
             yield lst[i:i + n]
 
     def test(self):
+        """ Starts running tasks in random order """
         for chunk in self.chunks(self.tasks, self.num_processes):
             for task in chunk:
                 task.run()
@@ -117,14 +127,17 @@ class Tester:
                 task.wait(self.show_output)
 
     def print_results(self):
-        maxl = max(map(lambda i:len(i.name), self.instances)) + 2
+        """ Print execution information for each instance (sorted by name) """
+        maxl = max(map(lambda i: len(i.name), self.instances)) + 2
         print("\n =====  RESULTS  ===== ")
         for inst in self.instances:
             times = [t.time for t in inst.tasks]
             enumerated = [t.enumerated for t in inst.tasks]
-            times = list(filter(lambda x: x>0, times))
-            enumerated = list(filter(lambda x: x > 0, enumerated))
+            interactions = [t.interactions for t in inst.tasks]
 
+            times = list(filter(lambda x: x > 0, times))
+            enumerated = list(filter(lambda x: x > 0, enumerated))
+            interactions = list(filter(lambda x: x >= 0, interactions))
 
             if len(times) == 0:
                 print(f"{inst.name}:".ljust(maxl), "timed out")
@@ -132,11 +145,7 @@ class Tester:
                 print(f"{inst.name}:".ljust(maxl), "does not always enumerate the same number of programs")
             else:
                 print(f"{inst.name}:".ljust(maxl),
-                      f"avg time {round(sum(times)/len(times))}s,".ljust(15),
+                      f"avg time {round(sum(times) / len(times))}s,".ljust(15),
+                      f"avg int {round(sum(interactions) / len(interactions))},".ljust(11),
                       f"enum {enumerated[0]},".ljust(11),
                       f"sol {inst.tasks[0].solution}")
-
-
-
-
-

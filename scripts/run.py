@@ -5,7 +5,6 @@ import argparse
 from tester import Tester
 
 def main():
-
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester')
     parser.add_argument('directories', type=str, metavar="dir", nargs='+', help='Directories with instances')
     parser.add_argument('-p', '--processes', metavar="P", type=int, help='Number of processes. Default: 1.', default=1)
