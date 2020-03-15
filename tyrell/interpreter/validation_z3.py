@@ -5,10 +5,11 @@ import z3
 from .post_order import PostOrderInterpreter
 
 
-class Validation2Z3(PostOrderInterpreter):
+class Validation_z3(PostOrderInterpreter):
     """
     Returns a z3 regular expression that corresponds to the argument of the match() operation in the program
     """
+
     def __init__(self):
         super().__init__()
 
@@ -82,10 +83,14 @@ class Validation2Z3(PostOrderInterpreter):
         return z3.Loop(args[0], num_copies, num_copies)
 
     def eval_concat(self, node, args):
-        return z3.Concat(args[0], args[1])
+        if len(args) == 1:
+            return args[0]
+        return z3.Concat(args)
 
     def eval_union(self, node, args):
-        return z3.Union(args[0], args[1])
+        if len(args) == 1:
+            return args[0]
+        return z3.Union(args)
 
     def eval_match(self, node, args):
         return args[0]

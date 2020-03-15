@@ -1,9 +1,9 @@
 import z3
-from tyrell.interpreter import Validation2Z3
+from tyrell.interpreter import Validation_z3
 
 class Distinguisher:
     def __init__(self):
-        self._validation2z3 = Validation2Z3()
+        self._validation2z3 = Validation_z3()
 
     def distinguish(self, prog1, prog2):
         solver = z3.Solver()
@@ -12,13 +12,10 @@ class Distinguisher:
 
         dist = z3.String("distinguishing")
 
-        distInP1 = z3.InRe(dist, z3_prog1)
-        distInP2 = z3.InRe(dist, z3_prog2)
+        dist_in_p1 = z3.InRe(dist, z3_prog1)
+        dist_in_p2 = z3.InRe(dist, z3_prog2)
 
-        # print("p1", z3_prog1)
-        # print("p2", z3_prog2)
-
-        solver.add(distInP1 != distInP2)
+        solver.add(dist_in_p1 != dist_in_p2)
 
         res = solver.check()
         if res == z3.sat:

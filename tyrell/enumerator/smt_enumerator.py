@@ -352,12 +352,7 @@ class SmtEnumerator(Enumerator):
         head_var = self.variables[subtree.id - 1]
         production_id = program.production.id
         block = [head_var != z3.IntVal(production_id)]
-        if program.children is None or len(program.children) == 0:
-            # if subtree.children is not None and len(subtree.children) > 0:
-            #     children_vars = [self.variables[child.id-1] for child in subtree.children]
-            #     assert len(children_vars) == 2
-            #     block += [child != z3.IntVal(self.spec.get_function_production("empty").id) for child in children_vars]
-            pass
+        if program.children is None: pass
         elif len(program.children) == 1:
             assert len(subtree.children) == 2
             children_vars = list(map(lambda x: self.variables[x.id - 1], subtree.children))
