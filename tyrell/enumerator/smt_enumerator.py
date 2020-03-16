@@ -185,6 +185,8 @@ class SmtEnumerator(Enumerator):
                     self._resolve_is_not_parent_predicate(pred)
                 elif pred.name == 'block_subtree':
                     self._resolve_block_predicate(pred)
+                elif pred.name == 'block_first_tree':
+                    pass
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
 
