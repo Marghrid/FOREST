@@ -2,6 +2,8 @@ import glob
 import random
 import re
 import subprocess
+import time
+
 from termcolor import colored
 
 
@@ -29,7 +31,7 @@ class Task:
         self.instance.add_task(self)
         self.timeout = timeout
         self.process = None
-
+        self.start_time = 0
         self.time = -1
         self.enumerated = -1
         self.interactions = -1
@@ -40,6 +42,7 @@ class Task:
         interaction_file = open('interaction.txt')
         self.process = subprocess.Popen(self.command, stdin=interaction_file,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.start_time = time.time()
 
     def kill(self):
         if self.process is not None:
@@ -47,8 +50,10 @@ class Task:
 
     def wait(self, show_output):
         print(colored(f"Waiting for {self.instance}.", "cyan"))
+        elapsed = time.time() - self.start_time
+        current_timeout = max(0.1, self.timeout - elapsed)
         try:
-            self.process.wait(timeout=self.timeout)
+            self.process.wait(timeout=current_timeout)
         except subprocess.TimeoutExpired:
             print(colored(f"{self.instance} timed out.", "red"))
             self.instance.kill_tasks()
@@ -126,9 +131,9 @@ class Tester:
         maxl = max(map(lambda i: len(i.name), self.instances)) + 2
         print("\n =====  RESULTS  ===== ")
         for inst in self.instances:
-            times = [t.time for t in inst.tasks]
-            enumerated = [t.enumerated for t in inst.tasks]
-            interactions = [t.interactions for t in inst.tasks]
+            times = map(lambda t: t.time, inst.tasks)
+            enumerated = map(lambda t: t.enumerated, inst.tasks)
+            interactions = map(lambda t: t.interactions, inst.tasks)
 
             times = list(filter(lambda x: x > 0, times))
             enumerated = list(filter(lambda x: x > 0, enumerated))
@@ -136,7 +141,7 @@ class Tester:
 
             if len(times) == 0:
                 print(f"{inst.name}:".ljust(maxl), "timed out")
-            elif any(x != enumerated[0] for x in enumerated):
+            elif any(map(lambda x: x != enumerated[0], enumerated)):
                 print(f"{inst.name}:".ljust(maxl), "does not always enumerate the same number of programs")
             else:
                 print(f"{inst.name}:".ljust(maxl),
