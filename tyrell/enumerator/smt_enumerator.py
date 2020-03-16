@@ -106,9 +106,9 @@ class SmtEnumerator(Enumerator):
     def createUnionConstraints(self, z3_solver):
         """ Prevent union of twice the same subtree: (A|B) """
         for node in self.nodes:
-            if node.children is None or len(node.children) == 0: continue
-            test2 = node.children[0].children is None or len(node.children[0].children) == 0
-            test3 = node.children[1].children is None or len(node.children[1].children) == 0
+            if not node.has_children(): continue
+            test2 = not node.children[0].has_children()
+            test3 = not node.children[1].has_children()
             if test2 or test3: continue
 
             node_var = self.variables[node.id - 1]
@@ -183,13 +183,7 @@ class SmtEnumerator(Enumerator):
             for pred in predicates:
                 if pred.name == 'is_not_parent':
                     self._resolve_is_not_parent_predicate(pred)
-                elif pred.name == 'do_not_concat':
-                    self._resolve_block_predicate(pred)
-                elif pred.name == 'do_not_kleene':
-                    self._resolve_block_predicate(pred)
-                elif pred.name == 'do_not_posit':
-                    self._resolve_block_predicate(pred)
-                elif pred.name == 'do_not_copies':
+                elif pred.name == 'block_subtree':
                     self._resolve_block_predicate(pred)
                 else:
                     logger.warning('Predicate not handled: {}'.format(pred))
@@ -306,7 +300,7 @@ class SmtEnumerator(Enumerator):
         for y in range(len(self.nodes) - 1, -1, -1):
             if "Empty" not in str(code[self.nodes[y].id - 1]):
                 children = []
-                if self.nodes[y].children is not None:
+                if self.nodes[y].has_children():
                     for c in self.nodes[y].children:
                         if "Empty" not in str(code[c.id - 1]):
                             children.append(builder_nodes[c.id - 1])
@@ -338,7 +332,7 @@ class SmtEnumerator(Enumerator):
         head_var = self.variables[subtree.id - 1]
         production_id = program.production.id
         block = [head_var != z3.IntVal(production_id)]
-        if program.children is None: pass
+        if not program.has_children(): pass
         elif len(program.children) == 1:
             assert len(subtree.children) == 2
             children_vars = list(map(lambda x: self.variables[x.id - 1], subtree.children))

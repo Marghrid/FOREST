@@ -136,7 +136,7 @@ class FunnyEnumerator(Enumerator):
 
     def maxChildren(self) -> int:
         '''Finds the maximum number of children in the productions'''
-        return 2 # max(map(len, [p.rhs for p in self.spec.productions()]))
+        return max(map(lambda p: len(p.rhs), self.spec.productions()))
 
     def buildKTree(self, children, depth, id):
         """Builds a K-tree that will contain the program"""
@@ -220,13 +220,7 @@ class FunnyEnumerator(Enumerator):
             for pred in predicates:
                 if pred.name == 'is_not_parent':
                     self._resolve_is_not_parent_predicate(pred)
-                elif pred.name == 'do_not_concat':
-                    self._resolve_block_subtree_predicate(pred)
-                elif pred.name == 'do_not_kleene':
-                    self._resolve_block_subtree_predicate(pred)
-                elif pred.name == 'do_not_posit':
-                    self._resolve_block_subtree_predicate(pred)
-                elif pred.name == 'do_not_copies':
+                elif pred.name == 'block_subtree':
                     self._resolve_block_subtree_predicate(pred)
                 elif pred.name == 'block_tree':
                     self._resolve_block_tree_predicate(pred)
@@ -292,7 +286,7 @@ class FunnyEnumerator(Enumerator):
     def buildProgram(self):
         result = [[] for i in range(len(self.trees))]
         for i in range(len(self.trees)):
-            result[i] = [-1 for k in range(len(self.trees[i].nodes))]
+            result[i] = [-1] * len(self.trees[i].nodes)
         for x in self.model.keys():
             tree_id, node_id = x.tree_id, x.id
             result[tree_id-1][node_id-1] = int(str(self.model[x]))

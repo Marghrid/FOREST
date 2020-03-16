@@ -3,14 +3,15 @@ import argparse
 import time
 
 from termcolor import colored
-from tyrell.dslBuilder import DSLBuilder
-from tyrell.examples_parser import parse_file
-from tyrell.type_checker import check_type
+
 from tyrell.decider import ValidationDecider, Example
+from tyrell.dslBuilder import DSLBuilder
 from tyrell.enumerator import SmtEnumerator, FunnyEnumerator
+from tyrell.examples_parser import parse_file
 from tyrell.interpreter import ValidationInterpreter, ValidationPrinter
 from tyrell.logger import get_logger
 from tyrell.synthesizer import MultipleSynthesizer, SingleSynthesizer
+from tyrell.type_checker import check_type
 
 logger = get_logger('tyrell')
 

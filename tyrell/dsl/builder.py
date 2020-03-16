@@ -1,4 +1,5 @@
 from typing import Union
+
 from .node import *
 from ..spec import TyrellSpec, Production
 from ..visitor import GenericVisitor

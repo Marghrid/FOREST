@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import cast, List, Any
+
 from ..spec import Type, Production, EnumProduction, ParamProduction, FunctionProduction
 
 
@@ -42,11 +43,11 @@ class Node(ABC):
         raise NotImplementedError
 
     def depth(self):
-        if self.children is None or len(self.children) == 0:
+        if not self.has_children():
             return 1
         else:
             # Compute the depth of each subtree
-            children_depths = [child.depth() for child in self.children]
+            children_depths = map(lambda ch: ch.depth(), self.children)
 
             # Use the larger one
             return 1 + max(children_depths)
@@ -222,10 +223,10 @@ class ApplyNode(Node):
         '''
         This function performs deep hash rather than just hashing the object identity.
         '''
-        return hash((self.name, tuple([x.deep_hash() for x in self.args])))
+        return hash((self.name, tuple(map(lambda x: x.deep_hash(), self.args))))
 
     def __repr__(self) -> str:
-        return 'ApplyNode({}, {})'.format(self.name, self._args)
+        return f'ApplyNode({self.name}, {self._args})'
 
     def __str__(self) -> str:
-        return '{}({})'.format(self.name, ', '.join([str(x) for x in self._args]))
+        return f'{self.name}({", ".join(map(str, self._args))})'

@@ -1,5 +1,3 @@
-import re
-import sys
 import z3
 
 from .post_order import PostOrderInterpreter

@@ -1,10 +1,9 @@
-import datetime
 import time
 from abc import ABC
 
 from ..decider import ExampleDecider
 from ..distinguisher import Distinguisher
-from ..enumerator import Enumerator, SmtEnumerator, FunnyEnumerator
+from ..enumerator import Enumerator
 from ..interpreter import Interpreter
 from ..logger import get_logger
 
@@ -68,7 +67,7 @@ class MultipleSynthesizer(ABC):
                 if new_predicates is not None:
                     for pred in new_predicates:
                         pred_str = self._printer.eval(pred.args[0], ["IN"])
-                        # logger.debug(f'New predicate: block {pred_str}')
+                        logger.debug(f'New predicate: {pred.name} {pred_str}')
 
             self._enumerator.update(new_predicates)
             program = self.enumerate()
@@ -115,10 +114,10 @@ class MultipleSynthesizer(ABC):
         self.num_attempts += 1
         program = self._enumerator.next()
         if program is None: return
-        # if self._printer is not None:
-        #     logger.debug(f'Enumerator generated: {self._printer.eval(program, ["IN"])}')
-        # else:
-        #     logger.debug(f'Enumerator generated: {program}')
+        if self._printer is not None:
+            logger.debug(f'Enumerator generated: {self._printer.eval(program, ["IN"])}')
+        else:
+            logger.debug(f'Enumerator generated: {program}')
 
         if self.num_attempts > 0 and self.num_attempts % 1000 == 0:
             logger.info(f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')

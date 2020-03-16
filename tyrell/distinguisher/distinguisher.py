@@ -1,5 +1,7 @@
 import z3
+
 from tyrell.interpreter import Validation_z3
+
 
 class Distinguisher:
     def __init__(self):

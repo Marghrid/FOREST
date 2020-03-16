@@ -1,4 +1,4 @@
-from typing import Callable, NamedTuple, List, Any
+from typing import NamedTuple, List, Any
 
 from .decider import Decider
 from .result import ok, bad

@@ -4,8 +4,7 @@ def LCSubStr2(X: str, Y: str):
     # lc_suff[i][j] contains length of longest common suffix of X[0..i-1] and Y[0..j-1].
     m = len(X)
     n = len(Y)
-    lc_suff = [[0 for i in range(n + 1)]
-               for j in range(m + 1)]
+    lc_suff = [[0 for i in range(n + 1)] for j in range(m + 1)]
 
     length = 0
 

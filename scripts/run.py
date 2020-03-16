@@ -4,6 +4,7 @@ import argparse
 
 from tester import Tester
 
+
 def main():
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester')
     parser.add_argument('directories', type=str, metavar="dir", nargs='+', help='Directories with instances')

@@ -12,3 +12,6 @@ class ASTNode:
         self.depth = depth
         self.children = children
         self.production = None
+
+    def has_children(self):
+        return self.children is not None and len(self.children) > 0

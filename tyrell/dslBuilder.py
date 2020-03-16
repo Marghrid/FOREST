@@ -1,4 +1,5 @@
 import re
+
 import tyrell.spec as spec
 from tyrell.LCS import LCSubStr
 from tyrell.logger import get_logger
@@ -34,15 +35,15 @@ class DSLBuilder:
 
         if "integer" in val_type:
 
-            dsl += "enum Value {" + ", ".join([f'"{x}"' for x in self.get_values(int)]) + "}\n"
+            dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(int))) + "}\n"
 
         elif "real" in val_type:
-            dsl += "enum Value {" + ", ".join([f'"{x}"' for x in self.get_values(float)]) + "}\n"
+            dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(float))) + "}\n"
 
         elif "string" in val_type:
-            dsl += "enum Value {" + ",".join([f'"{x}"' for x in self.get_values(len)]) + "}\n"
-            dsl += "enum NumCopies {" + ",".join([f'"{x}"' for x in self.get_num_copies()]) + "}\n"
-            dsl += "enum Char {" + ",".join([f'"{x}"' for x in self.relevant_chars]) + "}\n"
+            dsl += "enum Value {" + ",".join(map(lambda x: f'"{x}"', self.get_values(len))) + "}\n"
+            dsl += "enum NumCopies {" + ",".join(map(lambda x: f'"{x}"', self.get_num_copies())) + "}\n"
+            dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.relevant_chars)) + "}\n"
 
         dsl += dsl_base
 
@@ -76,7 +77,7 @@ class DSLBuilder:
             relevant_chars.update(substrings)
             # remove substring occurrence from example
             for sub in substrings:
-                field = [field_in.replace(sub, "", 1) for field_in in field]
+                field = map(lambda f: f.replace(sub, "", 1), field)
             for ex in field:
                 for char in ex:
                     # This will not work for non-ASCII letters, such as accentuated letters.

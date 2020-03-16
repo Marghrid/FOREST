@@ -193,8 +193,7 @@ class Optimizer:
             self.solver.add(self.var_occurs[production.id] == 1)
 
     def isSubsetSum(self, set, n, sum):
-        subset = ([[False for i in range(sum + 1)]
-                   for i in range(n + 1)])
+        subset = ([[False for i in range(sum + 1)] for i in range(n + 1)])
 
         # If sum is 0, then answer is true
         for i in range(n + 1):

@@ -2,9 +2,7 @@ import re
 from typing import (
     Tuple,
     Mapping,
-    MutableMapping,
-    Any,
-    Callable
+    MutableMapping
 )
 
 from .example_base_decider import Example, ExampleDecider

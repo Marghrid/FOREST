@@ -1,2 +1,2 @@
-from .singleSynthesizer import SingleSynthesizer
 from .multipleSynthesizer import MultipleSynthesizer
+from .singleSynthesizer import SingleSynthesizer
