@@ -56,7 +56,7 @@ class ValidationDecider(ExampleDecider):
             child = concat_node.children[0]
             regex = self.interpreter.eval(child, valid_exs[0])
             # re.match() is not None if zero or more characters at the beginning of string match this regular expression
-            matches = [re.match(regex, ex.input[0]) is not None for ex in valid_exs]
+            matches = map(lambda ex: re.match(regex, ex.input[0]) is not None, valid_exs)
 
             if not all(matches):
                 new_predicate = Predicate("block_first_tree", [child])
@@ -65,7 +65,7 @@ class ValidationDecider(ExampleDecider):
             for child in concat_node.children:
                 # if one child has no match in one of the inputs, then it cannot happen as a direct top concat node
                 regex = self.interpreter.eval(child, valid_exs[0])
-                matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
+                matches = map(lambda ex: re.search(regex, ex.input[0]) is not None, valid_exs)
 
                 if not all(matches):
                     new_predicate = Predicate("block_tree", [child])
@@ -73,37 +73,25 @@ class ValidationDecider(ExampleDecider):
 
         elif node.production.id == self._spec.get_function_production("concat").id:
             regex = self.interpreter.eval(node, valid_exs[0])
-            matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
-            no_match = not any(matches)
+            self.check_matches(new_predicates, node, regex, valid_exs)
 
-            if no_match:
-                new_predicate = Predicate("do_not_concat", [node])
-                new_predicates.append(new_predicate)
-
-        elif self._spec.get_function_production("copies") is not None \
-                and node.production.id == self._spec.get_function_production("copies").id:
+        elif node.production.id == self._spec.get_function_production("copies").id:
             regex = self.interpreter.eval(node, valid_exs[0])
-
-            matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
-            no_match = not any(matches)
-
-            if no_match:
-                new_predicate = Predicate("do_not_copies", [node])
-                new_predicates.append(new_predicate)
+            self.check_matches(new_predicates, node, regex, valid_exs)
 
         elif node.production.id == self._spec.get_function_production("kleene").id \
             or node.production.id == self._spec.get_function_production("posit").id:
             regex = self.interpreter.eval(node.children[0], valid_exs[0])
-
             regex = regex + regex
+            self.check_matches(new_predicates, node, regex, valid_exs)
 
-            matches = [re.search(regex, ex.input[0]) is not None for ex in valid_exs]
-            no_match = not any(matches)
-
-            if no_match:
-                new_predicate = Predicate("do_not_kleene", [node])
-                new_predicates.append(new_predicate)
-                new_predicate = Predicate("do_not_posit", [node])
+        elif node.production.id == self._spec.get_function_production("option").id:
+            atom = self.interpreter.eval(node.children[0], valid_exs[0])
+            # if all examples have 'atom' then it should not be option'd
+            matches = map(lambda ex: re.search(atom, ex.input[0]) is not None, valid_exs)
+            # if they are all true, emit predicate
+            if all(matches):
+                new_predicate = Predicate("block_subtree", [node])
                 new_predicates.append(new_predicate)
 
         if node.children is not None and len(node.children) > 0:
@@ -111,3 +99,10 @@ class ValidationDecider(ExampleDecider):
                 return self.traverse_program(child, examples) + new_predicates
         else:
             return new_predicates
+
+    def check_matches(self, new_predicates, node, regex, valid_exs):
+        matches = map(lambda ex: re.search(regex, ex.input[0]) is not None, valid_exs)
+        no_match = not any(matches)
+        if no_match:
+            new_predicate = Predicate("block_subtree", [node])
+            new_predicates.append(new_predicate)
