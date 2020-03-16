@@ -16,9 +16,9 @@ class Instance:
     def add_task(self, task):
         self.tasks.append(task)
 
-    def kill_tasks(self):
+    def terminate_tasks(self):
         for t in self.tasks:
-            t.kill()
+            t.terminate()
 
     def __str__(self):
         return self.name
@@ -44,19 +44,19 @@ class Task:
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.start_time = time.time()
 
-    def kill(self):
+    def terminate(self):
         if self.process is not None:
-            self.process.kill()
+            self.process.terminate()
 
     def wait(self, show_output):
-        print(colored(f"Waiting for {self.instance}.", "cyan"))
         elapsed = time.time() - self.start_time
-        current_timeout = max(0.1, self.timeout - elapsed)
+        current_timeout = round(max(1, self.timeout - elapsed))
+        print(colored(f"Waiting {current_timeout}s for {self.instance}.", "cyan"))
         try:
             self.process.wait(timeout=current_timeout)
         except subprocess.TimeoutExpired:
             print(colored(f"{self.instance} timed out.", "red"))
-            self.instance.kill_tasks()
+            self.instance.terminate_tasks()
             return
 
         po, pe = self.process.communicate()
@@ -74,7 +74,7 @@ class Task:
                 regex = "(\\d+) attempts"
                 self.enumerated = int(re.search(regex, l)[1])
             if "interactions" in l:
-                regex = "(\\d+) interactions"
+                regex = "interactions: (\\d+)"
                 self.interactions = int(re.search(regex, l)[1])
             if "Solution:" in l:
                 self.solution = l.replace("[info] Solution: ", "", 1)
@@ -88,9 +88,9 @@ class Tester:
         self.instances = []
         self.num_processes = num_processes
         if runsolver:
-            command_base = ["runsolver", "-W", str(timeout), "python3", "validate.py", "-d", "-f"]
+            command_base = ["runsolver", "-W", str(timeout), "python3", "validate.py", "-f"]
         else:
-            command_base = ["python3", "validate.py", "-d", "-f"]
+            command_base = ["python3", "validate.py", "-f"]
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")

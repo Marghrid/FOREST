@@ -109,7 +109,7 @@ def funnySynthesize(examples_file):
 
             if program is not None:
                 logger.info(colored('Solution: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]), "green"))
-                logger.info(f'depth: {dep}, length: {leng}, elapsed: {round(time.time() - start_time)} seconds.')
+                logger.info(f'depth: {dep}, length: {leng}, interactions: {synthesizer.num_interactions}, elapsed: {round(time.time() - start_time)} seconds.')
                 break
         if program is not None:
             break
