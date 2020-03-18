@@ -101,6 +101,7 @@ class Tester:
                 self.instances.append(Instance(inst_name, inst_path))
 
         # instances are sorted by name
+        print(colored(f"Found {len(self.instances)} instances.", "magenta"))
         self.instances = sorted(self.instances, key=lambda i: i.name)
 
         for inst in self.instances:

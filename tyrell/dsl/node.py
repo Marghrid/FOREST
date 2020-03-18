@@ -73,7 +73,7 @@ class LeafNode(Node):
 
 
 class AtomNode(LeafNode):
-    '''Leaf AST node that holds string data'''
+    """Leaf AST node that holds string data"""
 
     def __init__(self, prod: Production):
         if not prod.is_enum():

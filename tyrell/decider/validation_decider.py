@@ -25,6 +25,7 @@ class ValidationDecider(ExampleDecider):
                  interpreter: Interpreter,
                  examples: List[Example]):
         super().__init__(interpreter, examples)
+        self.already_must_occur = set()
         self._spec = spec
 
     def analyze(self, program):
@@ -44,11 +45,21 @@ class ValidationDecider(ExampleDecider):
         if self._spec.get_function_production("concat") is None: return []
         new_predicates = []
         valid_exs = list(filter(lambda ex: ex.output == True, examples))
+
         if node.production.id == self._spec.get_function_production("match").id and node.has_children() \
                 and node.children[0].production.id == self._spec.get_function_production("concat").id:
             # Top-level concat
             concat_node = node.children[0]
             assert concat_node.has_children()
+
+            for child in concat_node.children:
+                # if one child has no match in one of the inputs, then it cannot happen as a direct top concat node
+                regex = self.interpreter.eval(child, valid_exs[0])
+                matches = map(lambda ex: re.search(regex, ex.input[0]) is not None, valid_exs)
+
+                if not all(matches):
+                    new_predicate = Predicate("block_tree", [child])
+                    new_predicates.append(new_predicate)
 
             # first child must occur in the beginning of the examples:
             child = concat_node.children[0]
@@ -60,28 +71,25 @@ class ValidationDecider(ExampleDecider):
                 new_predicate = Predicate("block_first_tree", [child])
                 new_predicates.append(new_predicate)
 
-            for child in concat_node.children:
-                # if one child has no match in one of the inputs, then it cannot happen as a direct top concat node
-                regex = self.interpreter.eval(child, valid_exs[0])
-                matches = map(lambda ex: re.search(regex, ex.input[0]) is not None, valid_exs)
-
-                if not all(matches):
-                    new_predicate = Predicate("block_tree", [child])
-                    new_predicates.append(new_predicate)
-
         elif node.production.id == self._spec.get_function_production("concat").id:
             regex = self.interpreter.eval(node, valid_exs[0])
-            self.check_matches(new_predicates, node, regex, valid_exs)
+            new_predicate = self.check_matches(node, regex, valid_exs)
+            if new_predicate:
+                new_predicates.append(new_predicate)
 
         elif node.production.id == self._spec.get_function_production("copies").id:
             regex = self.interpreter.eval(node, valid_exs[0])
-            self.check_matches(new_predicates, node, regex, valid_exs)
+            new_predicate = self.check_matches(node, regex, valid_exs)
+            if new_predicate:
+                new_predicates.append(new_predicate)
 
         elif node.production.id == self._spec.get_function_production("kleene").id \
-            or node.production.id == self._spec.get_function_production("posit").id:
+                or node.production.id == self._spec.get_function_production("posit").id:
             regex = self.interpreter.eval(node.children[0], valid_exs[0])
             regex = regex + regex
-            self.check_matches(new_predicates, node, regex, valid_exs)
+            new_predicate = self.check_matches(node, regex, valid_exs)
+            if new_predicate:
+                new_predicates.append(new_predicate)
 
         elif node.production.id == self._spec.get_function_production("option").id:
             atom = self.interpreter.eval(node.children[0], valid_exs[0])
@@ -92,15 +100,25 @@ class ValidationDecider(ExampleDecider):
                 new_predicate = Predicate("block_subtree", [node])
                 new_predicates.append(new_predicate)
 
-        if node.children is not None and len(node.children) > 0:
+        elif node.production.id == self._spec.get_function_production("re").id:
+            char_node = node.children[0]
+            assert (char_node.is_enum() and char_node.type == self._spec.get_type("Char"))
+            st = str(char_node.data)
+            if all(map(lambda x: re.search(st, x.input[0]) is not None, valid_exs)) \
+                    and '[' not in st and st not in self.already_must_occur:
+                self.already_must_occur.add(st)
+                new_predicate = Predicate("char_must_occur", [char_node])
+                new_predicates.append(new_predicate)
+
+        if node.has_children():
             for child in node.children:
                 return self.traverse_program(child, examples) + new_predicates
         else:
             return new_predicates
 
-    def check_matches(self, new_predicates, node, regex, valid_exs):
+    def check_matches(self, node, regex, valid_exs):
         matches = map(lambda ex: re.search(regex, ex.input[0]) is not None, valid_exs)
         no_match = not any(matches)
         if no_match:
             new_predicate = Predicate("block_subtree", [node])
-            new_predicates.append(new_predicate)
+            return new_predicate

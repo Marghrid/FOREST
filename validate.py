@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse
+import itertools
 import time
 
 from termcolor import colored
@@ -15,33 +16,34 @@ from tyrell.type_checker import check_type
 
 logger = get_logger('tyrell')
 
+
 def main():
     examples_file = read_cmd_args()
-    funnySynthesize(examples_file)
+    funny_synthesize(examples_file)
 
 
 def show(examples_file):
     valid_examples, invalid_examples = parse_file(examples_file)
     print("Valid examples:")
-    maxlen = max(map(lambda x: len(x[0]), valid_examples))
-    maxlen = max(maxlen, 6)
+    max_len = max(map(lambda x: len(x[0]), valid_examples))
+    max_len = max(max_len, 6)
     for i, ex in enumerate(valid_examples):
-        print(colored(f'{ex[0]}'.center(maxlen), "blue"), end='  ')
-        if (i+1)%5 == 0:
+        print(colored(f'{ex[0]}'.center(max_len), "blue"), end='  ')
+        if (i + 1) % 5 == 0:
             print()
     print()
 
     print("Invalid examples:")
-    maxlen = max(map(lambda x: len(x[0]), invalid_examples))
-    maxlen = max(maxlen, 6)
+    max_len = max(map(lambda x: len(x[0]), invalid_examples))
+    max_len = max(max_len, 6)
     for i, ex in enumerate(invalid_examples):
-        print(colored(f'{ex[0]}'.center(maxlen), "red"), end='  ')
+        print(colored(f'{ex[0]}'.center(max_len), "red"), end='  ')
         if (i + 1) % 5 == 0:
             print()
     print()
 
 
-def synthesize(examples_file):
+def prepare_things(examples_file):
     logger.info("Parsing examples from file " + examples_file)
     valid, invalid = parse_file(examples_file)
     type_validation, valid, invalid = check_type(valid, invalid)
@@ -51,6 +53,11 @@ def synthesize(examples_file):
     dsl = builder.build()[0]
     # TODO: build() returns a list of DSLs for each different type of element. Now I'm just using the first element
     examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
+    return dsl, examples, type_validation
+
+
+def synthesize(examples_file):
+    dsl, examples, type_validation = prepare_things(examples_file)
     printer = ValidationPrinter()
     decider = ValidationDecider(
         spec=dsl,
@@ -71,22 +78,16 @@ def synthesize(examples_file):
         program = synthesizer.synthesize()
 
         if program is not None:
-            logger.info(colored('Solution: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]), "green"))
+            logger.info(
+                colored('Solution: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]), "green"))
             logger.info(f'depth: {dep}, elapsed: {round(time.time() - start_time)} seconds.')
             break
     if program is None:
         logger.info('Solution not found!')
 
-def funnySynthesize(examples_file):
-    logger.info("Parsing examples from file " + examples_file)
-    valid, invalid = parse_file(examples_file)
-    type_validation, valid, invalid = check_type(valid, invalid)
-    # logger.info("Assuming types: " + str(type_validation))
-    logger.debug("Remaining invalid examples:" + str(invalid))
-    builder = DSLBuilder(type_validation, valid, invalid)
-    dsl = builder.build()[0]
-    # TODO: build() returns a list of DSLs for each different type of element. Now I'm just using the first element
-    examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
+
+def funny_synthesize(examples_file):
+    dsl, examples, type_validation = prepare_things(examples_file)
     printer = ValidationPrinter()
     decider = ValidationDecider(
         spec=dsl,
@@ -96,9 +97,12 @@ def funnySynthesize(examples_file):
     maxdep = 6
     program = None
     start_time = time.time()
-    for dep in range(3, maxdep + 1):
-        for leng in range(1, 10):
-            logger.debug(f'Synthesizing programs of depth {dep} and length {leng}')
+    sizes = list(itertools.product(range(3, maxdep+1), range(1, 10)))
+    sizes.sort(key=lambda t: (2**t[0]-1)*t[1])
+    #for dep in range(3, maxdep + 1):
+    #   for leng in range(1, 10):
+    for dep, leng in sizes:
+            logger.info(f'Synthesizing programs of depth {dep} and length {leng} ({(2**dep-1)*leng} nodes)')
             enumerator = FunnyEnumerator(dsl, depth=dep, length=leng)
             synthesizer = MultipleSynthesizer(
                 enumerator=enumerator,
@@ -108,35 +112,28 @@ def funnySynthesize(examples_file):
             program = synthesizer.synthesize()
 
             if program is not None:
-                logger.info(colored('Solution: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]), "green"))
-                logger.info(f'depth: {dep}, length: {leng}, interactions: {synthesizer.num_interactions}, elapsed: {round(time.time() - start_time)} seconds.')
+                logger.info(
+                    colored(f'Solution: {type_validation[0]}(IN) /\\ {printer.eval(program, ["IN"])}', "green"))
+                logger.info(
+                    f'depth: {dep}, length: {leng}, '
+                    f'interactions: {synthesizer.num_interactions}, '
+                    f'elapsed: {round(time.time() - start_time)} seconds.')
                 break
-        if program is not None:
-            break
     if program is None:
         logger.info('Solution not found!')
 
 
-def singleSynthesize(examples_file):
-    logger.info("Parsing examples from file " + examples_file)
-    valid, invalid = parse_file(examples_file)
-    type_validation, valid, invalid = check_type(valid, invalid)
-    logger.info("Assuming types: " + str(type_validation))
-    logger.debug("Remaining invalid examples:" + str(invalid))
-    builder = DSLBuilder(type_validation, valid, invalid)
-    dsl = builder.build()[0]
-
-    # TODO: build() returns a list of DSLs for each different type of element. Now I'm just using the first element
-    examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
+def single_synthesize(examples_file):
+    dsl, examples, type_validation = prepare_things(examples_file)
     printer = ValidationPrinter()
     decider = ValidationDecider(
         spec=dsl,
         interpreter=ValidationInterpreter(),
         examples=examples
     )
-    maxdep = 6
+    max_dep = 6
 
-    for dep in range(3, maxdep + 1):
+    for dep in range(3, max_dep + 1):
         logger.info(f'Synthesizing programs of depth {dep}')
         enumerator = SmtEnumerator(dsl, depth=dep, loc=4)
         synthesizer = SingleSynthesizer(
@@ -152,6 +149,7 @@ def singleSynthesize(examples_file):
             return
 
     logger.info('Solution not found!')
+
 
 def read_cmd_args():
     parser = argparse.ArgumentParser(description='Validations Synthesizer')

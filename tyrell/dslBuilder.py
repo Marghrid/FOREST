@@ -42,12 +42,12 @@ class DSLBuilder:
 
         elif "string" in val_type:
             dsl += "enum Value {" + ",".join(map(lambda x: f'"{x}"', self.get_values(len))) + "}\n"
-            dsl += "enum NumCopies {" + ",".join(map(lambda x: f'"{x}"', self.get_num_copies())) + "}\n"
             dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.relevant_chars)) + "}\n"
+            dsl += "enum NumCopies {" + ",".join(map(lambda x: f'"{x}"', self.get_num_copies())) + "}\n"
 
         dsl += dsl_base
 
-        # logger.debug(dsl)
+        logger.debug(dsl)
 
         dsl = spec.parse(dsl)
 
@@ -130,7 +130,7 @@ class DSLBuilder:
                         # if all([(char in s) for s in field]):
                         #     relevant_chars.add(char)
                     elif char in self.special_chars:
-                        relevant_chars.add(f"'{char}'")
+                        relevant_chars.add(f"\{char}")
                     elif char == "'":
                         relevant_chars.add(f'"{char}"')
                     else:
@@ -145,12 +145,16 @@ class DSLBuilder:
     def get_num_copies(self):
         num_copies = set()
 
-        lens = map(lambda field: map(len, field), self.transposed_valid)
-        m = max(map(max, lens))
+        compressed = self.transposed_valid[0].copy()
+        for ss in self.substrings:
+            compressed = list(map(lambda x: x.replace(ss, '.'), compressed))
+
+
+        lens = map(len, compressed)
+        m = max(lens)
         num_copies.update(range(2, m))
 
         if 1 in num_copies: num_copies.remove(1) # 1 makes no sense for this operation
-        a = sorted(num_copies)
         return sorted(num_copies)
 
 
