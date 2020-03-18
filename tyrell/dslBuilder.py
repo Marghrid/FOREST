@@ -1,7 +1,7 @@
 import re
 
 import tyrell.spec as spec
-from tyrell.LCS import LCSubStr
+from tyrell.common_substrings import find_all_cs
 from tyrell.logger import get_logger
 
 logger = get_logger('tyrell.synthesizer')
@@ -47,7 +47,7 @@ class DSLBuilder:
 
         dsl += dsl_base
 
-        logger.debug(dsl)
+        # logger.debug(dsl)
 
         dsl = spec.parse(dsl)
 
@@ -73,7 +73,7 @@ class DSLBuilder:
         substrings = set()
 
         for field in self.transposed_valid:
-            substrings.update(LCSubStr(field))
+            substrings.update(find_all_cs(field))
             relevant_chars.update(substrings)
             # remove substring occurrence from example
             for sub in substrings:

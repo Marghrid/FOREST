@@ -7,7 +7,7 @@ from termcolor import colored
 from tyrell.decider import ValidationDecider, Example
 from tyrell.dslBuilder import DSLBuilder
 from tyrell.enumerator import SmtEnumerator, FunnyEnumerator
-from tyrell.examples_parser import parse_file
+from tyrell.parse_examples import parse_file
 from tyrell.interpreter import ValidationInterpreter, ValidationPrinter
 from tyrell.logger import get_logger
 from tyrell.synthesizer import MultipleSynthesizer, SingleSynthesizer
