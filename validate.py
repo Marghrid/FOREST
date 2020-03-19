@@ -47,6 +47,8 @@ def prepare_things(examples_file):
     logger.info("Parsing examples from file " + examples_file)
     valid, invalid = parse_file(examples_file)
     type_validation, valid, invalid = check_type(valid, invalid)
+    if "AlphaRegex" in examples_file:
+        type_validation = ["is_string"]
     # logger.info("Assuming types: " + str(type_validation))
     logger.debug("Remaining invalid examples:" + str(invalid))
     builder = DSLBuilder(type_validation, valid, invalid)
@@ -99,8 +101,6 @@ def funny_synthesize(examples_file):
     start_time = time.time()
     sizes = list(itertools.product(range(3, maxdep+1), range(1, 10)))
     sizes.sort(key=lambda t: (2**t[0]-1)*t[1])
-    #for dep in range(3, maxdep + 1):
-    #   for leng in range(1, 10):
     for dep, leng in sizes:
             logger.info(f'Synthesizing programs of depth {dep} and length {leng} ({(2**dep-1)*leng} nodes)')
             enumerator = FunnyEnumerator(dsl, depth=dep, length=leng)
