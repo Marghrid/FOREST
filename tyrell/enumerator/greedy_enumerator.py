@@ -13,11 +13,11 @@ logger = get_logger('tyrell.enumerator.smt')
 
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
-class FunnyEnumerator(Enumerator):
+class GreedyEnumerator(Enumerator):
     z3_solver = z3.Solver()
 
-    # productions that are leaf
-    leaf_productions = []
+    main_dsl: TyrellSpec
+    tree_dsls: List[TyrellSpec]
 
     # z3 variables for each production node
     variables = {}
@@ -29,21 +29,21 @@ class FunnyEnumerator(Enumerator):
 
     trees: List[AST]
 
-    def __init__(self, spec: TyrellSpec, depth=None, length=None):
+    def __init__(self, main_dsl: TyrellSpec, tree_dsls: List[TyrellSpec], depth):
         super().__init__()
         self.z3_solver = z3.Solver()
-        self.leaf_productions = []
         self.variables = {}
         self.variables_fun = []
-        self.spec = spec
+        self.main_dsl = main_dsl
+        self.tree_dsls = tree_dsls
+
+        assert len(tree_dsls) > 0
+
+        self.length = len(tree_dsls)
         if depth < 2:
             raise ValueError(
                 f'Depth must be larger or equal to 2: {depth}')
         self.depth = depth
-        if length < 1:
-            raise ValueError(
-                f'Length must be larger or equal to 1: {length}')
-        self.length = length
 
         self.max_children = self.max_children()
         self.trees = []
@@ -54,88 +54,104 @@ class FunnyEnumerator(Enumerator):
             self.trees.append(tree)
             self.nodes.extend(tree.nodes)
 
+        assert len(self.trees) == self.length
+        assert len(self.nodes) == (2 ** self.depth - 1) * self.length
+
         self.model = None
-        self.init_leaf_productions()
+
         self.create_variables(self.z3_solver)
         self.create_output_constraints(self.z3_solver)
         self.create_leaf_constraints(self.z3_solver)
         self.create_children_constraints(self.z3_solver)
         self.create_union_constraints()
-        self.resolve_predicates(self.spec.predicates())
+        self.resolve_predicates(self.main_dsl.predicates())
 
         logger.debug(f"New enumerator: depth {self.depth}, length {self.length}, variables {len(self.variables)}")
 
-    def init_leaf_productions(self):
-        for p in self.spec.productions():
-            if (not p.is_function()) or str(p).find('Empty') != -1:
-                self.leaf_productions.append(p)
-
     def create_variables(self, solver):
         """ Create one n-variable per node. """
-        for node in self.nodes:
-            v = z3.Int(self._get_n_var_name(node))
-            self.variables[node] = v
-            solver.add(z3.And(v >= 0, v < self.spec.num_productions()))
+        for tree in self.trees:
+            dsl = self.tree_dsls[tree.id - 1]
+            for node in tree.nodes:
+                v = z3.Int(self._get_n_var_name(node))
+                self.variables[node] = v
+                solver.add(z3.And(v >= 0, v < dsl.num_productions()))
+
+        assert len(self.variables) == len(self.nodes)
 
     def create_output_constraints(self, solver):
         """ The output production matches the output type """
         # the head of each tree must be a regex
+        assert all(map(lambda d: d.output == self.tree_dsls[0].output, self.tree_dsls))
         for tree in self.trees:
             head_var = self.variables[tree.head]
-            big_or = list(map(lambda p: head_var == p.id, self.spec.get_productions_with_lhs("Regex")))
+            dsl = self.tree_dsls[tree.id - 1]
+            output_productions = dsl.get_productions_with_lhs(dsl.output)
+            big_or = list(map(lambda p: head_var == p.id, output_productions))
             solver.add(z3.Or(big_or))
 
     def create_leaf_constraints(self, solver):
         """ Leaf productions correspond to leaf nodes """
-        for node in self.nodes:
-            if node.children is None:
-                big_or = list(map(lambda lp: self.variables[node] == lp.id, self.leaf_productions))
-                solver.add(z3.Or(big_or))
+
+        for tree in self.trees:
+            leaf_productions = []
+            dsl = self.tree_dsls[tree.id - 1]
+            for p in dsl.productions():
+                if (not p.is_function()) or str(p).find('Empty') != -1:
+                    leaf_productions.append(p)
+
+            for node in tree.nodes:
+                if node.children is None:
+                    big_or = list(map(lambda l: self.variables[node] == l.id, leaf_productions))
+                    solver.add(z3.Or(big_or))
 
     def create_children_constraints(self, solver):
-        for parent in self.nodes:
-            if parent.children is not None:
-                # the node has children
-                for prod in self.spec.productions():
-                    for child_idx in range(0, len(parent.children)):
-                        child_type = 'Empty'
-                        if prod.is_function() and child_idx < len(prod.rhs):
-                            child_type = str(prod.rhs[child_idx])
-                        big_or = []
-                        for ty in self.spec.get_productions_with_lhs(child_type):
-                            big_or.append(self.variables[parent.children[child_idx]] == ty.id)
-                            big_or.append(self.variables[parent] != prod.id)
-                            pass
-                        solver.add(z3.Or(big_or))
+        for tree in self.trees:
+            dsl = self.tree_dsls[tree.id - 1]
+            for parent in tree.nodes:
+                if parent.has_children():
+                    for prod in dsl.productions():
+                        for child_idx in range(0, len(parent.children)):
+                            child_type = 'Empty'
+                            if prod.is_function() and child_idx < len(prod.rhs):
+                                child_type = str(prod.rhs[child_idx])
+                            big_or = []
+                            for ty in dsl.get_productions_with_lhs(child_type):
+                                big_or.append(self.variables[parent.children[child_idx]] == ty.id)
+                                big_or.append(self.variables[parent] != prod.id)
+                                pass
+                            solver.add(z3.Or(big_or))
 
     def create_union_constraints(self):
         """ Prevent union of twice the same subtree: (A|B) """
-        for node in self.nodes:
-            if node.children is None or len(node.children) == 0:
-                continue
-            test2 = node.children[0].children is None or len(node.children[0].children) == 0
-            test3 = node.children[1].children is None or len(node.children[1].children) == 0
-            if test2 or test3: continue
+        for tree in self.trees:
+            dsl = self.tree_dsls[tree.id - 1]
+            for node in tree.nodes:
+                if node.children is None or len(node.children) == 0:
+                    continue
+                test2 = node.children[0].children is None or len(node.children[0].children) == 0
+                test3 = node.children[1].children is None or len(node.children[1].children) == 0
+                if test2 or test3: continue
 
-            node_var = self.variables[node]
-            if self.spec.get_function_production("union") is None: return
-            union_id = self.spec.get_function_production("union").id
-            node_is_union = node_var == z3.IntVal(union_id)
+                node_var = self.variables[node]
+                if dsl.get_function_production("union") is None: return
+                union_id = dsl.get_function_production("union").id
+                node_is_union = node_var == z3.IntVal(union_id)
 
-            subtree0, subtree1 = self.get_subtree(node.children[0]), \
-                                 self.get_subtree(node.children[1])
+                subtree0, subtree1 = self.get_subtree(node.children[0]), \
+                                     self.get_subtree(node.children[1])
 
-            bigOr = []
-            for i in range(len(subtree0)):
-                var_i0 = self.variables[subtree0[i]]
-                var_i1 = self.variables[subtree1[i]]
-                bigOr.append(var_i0 != var_i1)
+                bigOr = []
+                for i in range(len(subtree0)):
+                    var_i0 = self.variables[subtree0[i]]
+                    var_i1 = self.variables[subtree1[i]]
+                    bigOr.append(var_i0 != var_i1)
 
-            self.z3_solver.add(z3.Implies(node_is_union, z3.Or(bigOr)))
+                self.z3_solver.add(z3.Implies(node_is_union, z3.Or(bigOr)))
 
     def max_children(self) -> int:
         """Finds the maximum number of children in the productions"""
-        return max(map(lambda p: len(p.rhs), self.spec.productions()))
+        return max(map(lambda p: len(p.rhs), self.main_dsl.productions()))
 
     def build_k_tree(self, children, depth, tree_id):
         """Builds a K-tree that will contain the program"""
@@ -172,63 +188,72 @@ class FunnyEnumerator(Enumerator):
 
     def _resolve_is_not_parent_predicate(self, pred):
         self._check_arg_types(pred, [str, str])
-        parent = self.spec.get_function_production_or_raise(pred.args[0])
-        child = self.spec.get_function_production_or_raise(pred.args[1])
-        child_pos = []
-        # find positions that type-check between parent and child
-        for x in range(0, len(parent.rhs)):
-            if child.lhs == parent.rhs[x]:
-                child_pos.append(x)
 
-        for node in self.nodes:
-            # not a leaf node
-            if node.children is not None:
-                ctr_children = []
-                for p in range(0, len(child_pos)):
-                    ctr_children.append(
-                        self.variables[node.children[p]] == child.id)
 
-                self.z3_solver.add(
-                    z3.Implies(z3.Or(ctr_children),
-                               self.variables[node] != parent.id))
+        for tree in self.trees:
+            dsl = self.tree_dsls[tree.id-1]
+
+            parent = dsl.get_function_production_or_raise(pred.args[0])
+            child = dsl.get_function_production_or_raise(pred.args[1])
+            child_pos = []
+            # find positions that type-check between parent and child
+            for x in range(0, len(parent.rhs)):
+                if child.lhs == parent.rhs[x]:
+                    child_pos.append(x)
+
+            for node in tree.nodes:
+                # not a leaf node
+                if node.children is not None:
+                    ctr_children = []
+                    for p in range(0, len(child_pos)):
+                        ctr_children.append(
+                            self.variables[node.children[p]] == child.id)
+
+                    self.z3_solver.add(
+                        z3.Implies(z3.Or(ctr_children),
+                                   self.variables[node] != parent.id))
 
     def _resolve_block_subtree_predicate(self, pred):
-        self._check_arg_types(pred, [Node])
+        self._check_arg_types(pred, [Node, int])
         program = pred.args[0]
+        tree_idx = pred.args[1]
 
-        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
+        # We want to run block_subtree only for nodes in the tree in which the program originally occurred.
+        for node in self.nodes_until_depth(self.depth - program.depth() + 1, tree_idx):
             self.block_subtree(node, program)
 
     def _resolve_block_tree_predicate(self, pred):
-        self._check_arg_types(pred, [Node])
+        self._check_arg_types(pred, [Node, int])
         program = pred.args[0]
+        tree_idx = pred.args[1]
 
         if self.depth < program.depth():
             return
-        for tree in self.trees:
-            node = tree.head
-            self.block_subtree(node, program)
+
+        self.block_subtree(self.trees[tree_idx].head, program)
 
     def _resolve_block_first_tree_predicate(self, pred):
-        self._check_arg_types(pred, [Node])
+        self._check_arg_types(pred, [Node, int])
         program = pred.args[0]
+        tree_idx = pred.args[1]
         if self.depth < program.depth():
             return
         node = self.trees[0].head
         self.block_subtree(node, program)
 
     def _resolve_char_must_occur_predicate(self, pred):
-        self._check_arg_types(pred, [Node])
+        self._check_arg_types(pred, [Node, int])
         program = pred.args[0]
+        tree_idx = pred.args[1]
 
         big_or = []
-        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
+        for node in self.nodes_until_depth(self.depth - program.depth() + 1, tree_idx):
             big_or.append(self.variables[node] == z3.IntVal(program.production.id))
 
         self.z3_solver.add(z3.Or(big_or))
 
     def resolve_predicates(self, predicates):
-        # try:
+        pass
         for pred in predicates:
             if pred.name == 'is_not_parent':
                 self._resolve_is_not_parent_predicate(pred)
@@ -244,9 +269,10 @@ class FunnyEnumerator(Enumerator):
                 logger.warning('Predicate not handled: {}'.format(pred))
 
     def get_subtree(self, node: ASTNode):
-        if node.children is None or len(node.children) < 2:
+        if not node.has_children():
             return [node]
         else:
+            assert len(node.children) == 2
             return [node] + self.get_subtree(node.children[0]) + self.get_subtree(node.children[1])
 
     def block_model(self):
@@ -256,35 +282,35 @@ class FunnyEnumerator(Enumerator):
 
         # Find out if some commutative operation was used.
         # FIXME: union is hardcoded as commutative operation!
-        if self.spec.get_function_production("union") is None: return
-        union_id = self.spec.get_function_production("union").id
+        # if self.main_dsl.get_function_production("union") is None: return
+        # union_id = self.main_dsl.get_function_production("union").id
         # commutative_op_nodes contains the variables of all nodes that have id of a commutative operation (in this
         # case, it is only union)
-        commutative_op_nodes = filter(lambda x: int(str(self.model[x])) == union_id, self.variables)
-
-        for x in commutative_op_nodes:
-            tree_id, node_id = x.tree_id, x.id
-            subtree0, subtree1 = self.get_subtree(self.trees[tree_id - 1].nodes[node_id - 1].children[0]), \
-                                 self.get_subtree(self.trees[tree_id - 1].nodes[node_id - 1].children[1])
-            # block model with subtrees swapped:
-
-            block2 = []
-            unblocked = set(self.variables.keys())
-            for i, node in enumerate(subtree0):
-                node_x = self.variables[node]
-                other_node = subtree1[i]
-                block2.append(node_x != self.model[other_node])
-                unblocked.remove(node)
-
-            for i, node in enumerate(subtree1):
-                node_x = self.variables[node]
-                other_node = subtree0[i]
-                block2.append(node_x != self.model[other_node])
-                unblocked.remove(node)
-
-            block2 += list(map(lambda x: self.variables[x] != self.model[x], unblocked))
-
-            self.z3_solver.add(z3.Or(block2))
+        # commutative_op_nodes = filter(lambda x: int(str(self.model[x])) == union_id, self.variables)
+        #
+        # for x in commutative_op_nodes:
+        #     tree_id, node_id = x.tree_id, x.id
+        #     subtree0, subtree1 = self.get_subtree(self.trees[tree_id - 1].nodes[node_id - 1].children[0]), \
+        #                          self.get_subtree(self.trees[tree_id - 1].nodes[node_id - 1].children[1])
+        #     # block model with subtrees swapped:
+        #
+        #     block2 = []
+        #     unblocked = set(self.variables.keys())
+        #     for i, node in enumerate(subtree0):
+        #         node_x = self.variables[node]
+        #         other_node = subtree1[i]
+        #         block2.append(node_x != self.model[other_node])
+        #         unblocked.remove(node)
+        #
+        #     for i, node in enumerate(subtree1):
+        #         node_x = self.variables[node]
+        #         other_node = subtree0[i]
+        #         block2.append(node_x != self.model[other_node])
+        #         unblocked.remove(node)
+        #
+        #     block2 += list(map(lambda x: self.variables[x] != self.model[x], unblocked))
+        #
+        #     self.z3_solver.add(z3.Or(block2))
 
     def update(self, predicates=None):
         """
@@ -292,8 +318,8 @@ class FunnyEnumerator(Enumerator):
         """
         if predicates is not None:
             self.resolve_predicates(predicates)
-            for pred in predicates:
-                self.spec.add_predicate(pred.name, pred.args)
+            # for pred in predicates:
+            #     self.main_dsl.add_predicate(pred.name, pred.args)
         # else:
         self.block_model()
 
@@ -310,13 +336,14 @@ class FunnyEnumerator(Enumerator):
         for t_idx in range(len(self.trees)):
             tree = self.trees[t_idx]
             for n in tree.nodes:
-                prod = self.spec.get_production_or_raise(result[t_idx][n.id - 1])
+                prod = self.tree_dsls[t_idx].get_production_or_raise(result[t_idx][n.id - 1])
                 productions[t_idx].append(prod)
 
-        builder = Builder(self.spec)
         head_nodes = []
         assert len(self.trees) == len(productions)
         for tree_idx, tree in enumerate(self.trees):
+            dsl = self.tree_dsls[tree_idx]
+            builder = Builder(dsl)
             prod_tree = productions[tree_idx]
             builder_nodes = [None] * len(prod_tree)
             assert len(prod_tree) == len(tree.nodes), f"{len(prod_tree)} != {len(tree.nodes)}"
@@ -330,13 +357,15 @@ class FunnyEnumerator(Enumerator):
                     builder_nodes[y] = builder.make_node(prod_tree[y].id, children)
             head_nodes.append(builder_nodes[0])
 
-        concat_prod = self.spec.get_function_production("concat")
+        builder = Builder(self.main_dsl)
+
+        concat_prod = self.main_dsl.get_function_production("concat")
         concat_node = builder.make_node(concat_prod, head_nodes)
 
-        param0_prod = self.spec.get_param_production(0)
+        param0_prod = self.main_dsl.get_param_production(0)
         param0_node = builder.make_node(param0_prod, [])
 
-        match_prod = self.spec.get_function_production("match")
+        match_prod = self.main_dsl.get_function_production("match")
         match_node = builder.make_node(match_prod, [concat_node, param0_node])
 
         return match_node
@@ -355,12 +384,9 @@ class FunnyEnumerator(Enumerator):
             logger.debug(f'Enumerator exhausted for depth {self.depth} and length {self.length}.')
             return None
 
-    def nodes_until_depth(self, depth: int):
+    def nodes_until_depth(self, depth: int, tree_idx):
         last_node = 2 ** depth - 1
-        ret = []
-        for tree in self.trees:
-            ret.extend(filter(lambda n: n.id <= last_node, tree.nodes))
-
+        ret = filter(lambda n: n.id <= last_node, self.trees[tree_idx].nodes)
         return ret
 
     def block_subtree_rec(self, subtree: ASTNode, program: Node):

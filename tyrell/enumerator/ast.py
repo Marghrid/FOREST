@@ -1,12 +1,12 @@
 class AST:
-    def __init__(self, id = 0):
+    def __init__(self, tree_id=0):
         self.head = None
-        self.id = id
+        self.id = tree_id
         self.nodes = []
 
 
 class ASTNode:
-    def __init__(self, nb=None, depth=None, children=None, tree_id = 0):
+    def __init__(self, nb=None, depth=None, children=None, tree_id=0):
         self.id = nb
         self.tree_id = tree_id
         self.depth = depth

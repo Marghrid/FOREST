@@ -5,3 +5,4 @@ from .from_iterator import FromIteratorEnumerator, make_empty_enumerator, make_s
 from .funny_enumerator import FunnyEnumerator
 from .random import RandomEnumerator
 from .smt_enumerator import SmtEnumerator
+from .greedy_enumerator import GreedyEnumerator

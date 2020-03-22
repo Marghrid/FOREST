@@ -6,10 +6,10 @@ from .type import Type, EnumType, ValueType
 
 
 class Production(ABC):
-    '''
+    """
     This class represent a CFG production rule for our DSL.
     Each production rule is uniquely identified by its ID in a given spec.
-    '''
+    """
 
     _id: int
     _lhs: Type
