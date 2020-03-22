@@ -68,14 +68,17 @@ class Task:
             # print(l)
             if re.search("[\w+]", l) is not None and show_output:
                 print(" ", l)
-            if "elapsed" in l:
-                regex = r"elapsed: (\d+) seconds"
+            if "seconds" in l:
+                regex = r"(\d+) seconds"
                 self.time = int(re.search(regex, l)[1])
             if "attempts" in l:
                 regex = "(\\d+) attempts"
                 self.enumerated = int(re.search(regex, l)[1])
             if "interactions" in l:
-                regex = "interactions: (\\d+)"
+                regex = "(\\d+) interactions"
+                match = re.search(regex, l)
+                if match is None:
+                    print(l)
                 self.interactions = int(re.search(regex, l)[1])
             if "Solution:" in l:
                 self.solution = l.replace("[info] Solution: ", "", 1)
@@ -89,9 +92,9 @@ class Tester:
         self.instances = []
         self.num_processes = num_processes
         if runsolver:
-            command_base = ["runsolver", "-W", str(timeout), "python3", "validate.py", "-f"]
+            command_base = ["runsolver", "-W", str(timeout), "python3", "validate.py"]
         else:
-            command_base = ["python3", "validate.py", "-f"]
+            command_base = ["python3", "validate.py"]
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")
@@ -138,7 +141,7 @@ class Tester:
             enumerated = map(lambda t: t.enumerated, inst.tasks)
             interactions = map(lambda t: t.interactions, inst.tasks)
 
-            times = list(filter(lambda x: x > 0, times))
+            times = list(filter(lambda x: x >= 0, times))
             enumerated = list(filter(lambda x: x > 0, enumerated))
             interactions = list(filter(lambda x: x >= 0, interactions))
 
