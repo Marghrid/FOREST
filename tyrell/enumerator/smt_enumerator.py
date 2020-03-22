@@ -4,7 +4,6 @@ import z3
 
 from .ast import AST, ASTNode
 from .enumerator import Enumerator
-from .optimizer import Optimizer
 from .. import dsl as D
 from ..dsl import Node
 from ..logger import get_logger
@@ -167,9 +166,25 @@ class SmtEnumerator(Enumerator):
 
     def _resolve_is_not_parent_predicate(self, pred):
         self._check_arg_types(pred, [str, str])
-        prod0 = self.spec.get_function_production_or_raise(pred.args[0])
-        prod1 = self.spec.get_function_production_or_raise(pred.args[1])
-        self.optimizer.mk_is_not_parent(prod0, prod1, 100)
+        parent = self.spec.get_function_production_or_raise(pred.args[0])
+        child = self.spec.get_function_production_or_raise(pred.args[1])
+
+        child_pos = []
+        # find positions that type-check between parent and child
+        for x in range(0, len(parent.rhs)):
+            if child.lhs == parent.rhs[x]:
+                child_pos.append(x)
+
+        for node in self.nodes:
+            # not a leaf node
+            if node.children != None:
+                ctr_children = []
+                for p in range(0, len(child_pos)):
+                    ctr_children.append(
+                        self.variables[node.children[p].id - 1] == child.id)
+
+                self.solver.add(
+                    Implies(Or(ctr_children), self.variables[node.id - 1] != parent.id))
 
     def _resolve_block_predicate(self, pred):
         self._check_arg_types(pred, [Node])
@@ -221,8 +236,6 @@ class SmtEnumerator(Enumerator):
         self.createLeafConstraints(self.z3_solver)
         self.createChildrenConstraints(self.z3_solver)
         self.createUnionConstraints(self.z3_solver)
-        self.optimizer = Optimizer(
-            self.z3_solver, spec, self.variables, self.nodes)
         self.resolve_predicates(self.spec.predicates())
 
     def get_subtree(self, node: ASTNode):
