@@ -6,22 +6,13 @@ from ..distinguisher import Distinguisher
 from ..enumerator import Enumerator
 from ..interpreter import Interpreter
 from ..logger import get_logger
+from ..utils import nice_time
 
 logger = get_logger('tyrell.synthesizer')
 
-yes_values = {"yes","valid", "true", "1","+","v","y","t"}
-no_values  = {"no","invalid","false","0","-","i","n","f"}
+yes_values = {"yes", "valid", "true", "1", "+", "v", "y", "t"}
+no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
-def nice_time(seconds):
-    m, s = divmod(seconds, 60)
-    h, m = divmod(m, 60)
-    ret = ''
-    if h > 0:
-        ret += f'{h}h'
-    if m > 0:
-        ret += f'{m}m'
-    ret += f'{s}s'
-    return ret
 
 class MultipleSynthesizer(ABC):
     _enumerator: Enumerator
@@ -38,6 +29,7 @@ class MultipleSynthesizer(ABC):
         self.num_attempts = 0
         self.num_interactions = 0
         self.programs = []
+        self.start_time = None
 
     @property
     def enumerator(self):
@@ -56,8 +48,9 @@ class MultipleSynthesizer(ABC):
 
             res = self._decider.analyze(program)
 
-            if res.is_ok():    # program satisfies I/O examples
-                logger.info(f'Program accepted after {self.num_attempts} attempts and {round(time.time() - self.start_time)} seconds:')
+            if res.is_ok():  # program satisfies I/O examples
+                logger.info(
+                    f'Program accepted after {self.num_attempts} attempts and {round(time.time() - self.start_time)} seconds:')
                 logger.info(self._printer.eval(program, ["IN"]))
                 self.programs.append(program)
                 if len(self.programs) > 1:
@@ -72,9 +65,9 @@ class MultipleSynthesizer(ABC):
             self._enumerator.update(new_predicates)
             program = self.enumerate()
         logger.debug(f'Synthesizer done after\n'
-                    f'  {self.num_attempts} attempts,\n'
-                    f'  {self.num_interactions} interactions,\n'
-                    f'  and {round(time.time() - self.start_time)} seconds')
+                     f'  {self.num_attempts} attempts,\n'
+                     f'  {self.num_interactions} interactions,\n'
+                     f'  and {round(time.time() - self.start_time)} seconds')
         if len(self.programs) > 0:
             return self.programs[0]
         else:
@@ -120,7 +113,8 @@ class MultipleSynthesizer(ABC):
             logger.debug(f'Enumerator generated: {program}')
 
         if self.num_attempts > 0 and self.num_attempts % 1000 == 0:
-            logger.info(f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')
+            logger.info(
+                f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')
             logger.info(f'DSL has {len(self._enumerator.spec.predicates())} predicates.')
 
         return program
