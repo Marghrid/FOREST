@@ -19,7 +19,7 @@ logger = get_logger('tyrell')
 
 def main():
     examples_file = read_cmd_args()
-    synth_19(examples_file)
+    greedy_synthesize(examples_file)
     # funny_synthesize(examples_file)
 
 
@@ -59,7 +59,7 @@ def prepare_things(examples_file):
     return dsl, valid, invalid, type_validation
 
 
-def synth_19(examples_file):
+def greedy_synthesize(examples_file):
     dsl, valid, invalid, type_validation = prepare_things(examples_file)
     examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
     if "string" not in type_validation[0]:
