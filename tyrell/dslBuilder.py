@@ -12,54 +12,56 @@ logger = get_logger('tyrell.synthesizer')
 class DSLBuilder:
 
     def __init__(self, type_validations, valid, invalid):
+        assert len(valid) > 0
+        assert len(type_validations) == len(valid[0])
+        assert all(map(lambda l: len(l) == len(valid[0]), valid))
+        assert len(invalid) == 0 or all(map(lambda l: len(l) == len(valid[0]), invalid))
         self.types = type_validations
         self.valid = valid
         self.transposed_valid = list(map(list, zip(*valid)))
         self.invalid = invalid
         self.transposed_invalid = list(map(list, zip(*invalid)))
-
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')', '{', '}', '[', ']', '"'}
-        self.letters = set()
-        self.numbers = set()
-        self.substrings = set()
-        self.char_classes = set()
-        self.relevant_chars = set()
-        self.compute_chars()
 
     def build(self):
         dsls = []
-        for ty in self.types:
-            dsls.append(self.build_dsl(ty))
+        for idx, ty in enumerate(self.types):
+            dsls.append(self.build_dsl(ty, self.transposed_valid[idx]))
+
 
         return dsls
 
-    def build_dsl(self, val_type):
+    def build_dsl(self, val_type, valid):
         dsl = ''
         with open("DSLs/" + re.sub('^is_', '', val_type) + "DSL.tyrell", "r") as dsl_file:
             dsl_base = dsl_file.read()
 
         if "integer" in val_type:
 
-            dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(int))) + "}\n"
+            dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(int, valid))) + "}\n"
 
         elif "real" in val_type:
-            dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(float))) + "}\n"
+            dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(float, valid))) + "}\n"
 
         elif "string" in val_type:
-            dsl += "enum Value {" + ",".join(map(lambda x: f'"{x}"', self.get_values(len))) + "}\n"
-            dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.relevant_chars)) + "}\n"
-            dsl += "enum NumCopies {" + ",".join(map(lambda x: f'"{x}"', self.get_num_copies())) + "}\n"
+            dsl += "enum Value {" + ",".join(map(lambda x: f'"{x}"', self.get_values(len, valid))) + "}\n"
+            dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.get_relevant_chars(valid))) + "}\n"
+            dsl += "enum NumCopies {" + ",".join(map(lambda x: f'"{x}"', self.get_num_copies(valid))) + "}\n"
+
+        elif "regex" in val_type:
+            dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.get_relevant_chars(valid))) + "}\n"
+            dsl += "enum NumCopies {" + ",".join(map(lambda x: f'"{x}"', self.get_num_copies(valid))) + "}\n"
+
+        logger.debug("\n" + dsl)
 
         dsl += dsl_base
-
-        logger.debug(dsl)
 
         dsl = spec.parse(dsl)
 
         return dsl
 
-    def get_values(self, func):
-        values_list = list(map(lambda f: map(func, f), self.transposed_valid))
+    def get_values(self, func, valid):
+        values_list = list(map(lambda f: map(func, f), valid))
         values = set()
         for field in values_list:
             field = list(field)
@@ -67,73 +69,82 @@ class DSLBuilder:
             values.add(max(field))
         return sorted(values)
 
-    def compute_chars(self):
+    def get_relevant_chars(self, valid):
         # IDEA: add chars that occur in many examples. Counterargument: I needed to forcefully add a date that did not
         #  contain a 1, and yet a 1 is not a requirement for a date.
         # IDEA: Add individual chars if not all (or almost all) chars occur.
         relevant_chars = set()
+        substrings = set()
+        char_classes = set()
+        letters = set()
+        numbers = set()
 
-        for field in self.transposed_valid:
-            self.substrings.update(find_all_cs(field))
-            relevant_chars.update(self.substrings)
-            # remove substring occurrence from example
-            for sub in self.substrings:
-                field = map(lambda f: f.replace(sub, "", 1), field)
-            for ex in field:
-                for char in ex:
-                    # This will not work for non-ASCII letters, such as accentuated letters.
-                    # To counteract this, consider using python's "\w" instead of just the [A-Z] range.
-                    if 'A' <= char <= 'Z':
-                        self.char_classes.add('[A-Z]')
-                        self.letters.add(char)
-                        if '[a-z]' in self.char_classes:
-                            self.char_classes.add('[A-Za-z]')
-                        if '[0-9]' in self.char_classes:
-                            self.char_classes.add('[0-9A-Z]')
-                        if '[a-z]' in self.char_classes and '[0-9]' in self.char_classes:
-                            self.char_classes.add('[0-9A-Za-z]')
-                    elif 'a' <= char <= 'z':
-                        self.letters.add(char)
-                        self.char_classes.add('[a-z]')
-                        if '[A-Z]' in self.char_classes:
-                            self.char_classes.add('[A-Za-z]')
-                        if '[0-9]' in self.char_classes:
-                            self.char_classes.add('[0-9a-z]')
-                        if '[A-Z]' in self.char_classes and '[0-9]' in self.char_classes:
-                            self.char_classes.add('[0-9A-Za-z]')
-                    elif '0' <= char <= '9':
-                        self.numbers.add(char)
-                        self.char_classes.add('[0-9]')
-                        if '[A-Z]' in self.char_classes:
-                            self.char_classes.add('[0-9A-Z]')
-                        if '[a-z]' in self.char_classes:
-                            self.char_classes.add('[0-9a-z]')
-                        if '[a-z]' in self.char_classes and '[A-Z]' in self.char_classes:
-                            self.char_classes.add('[0-9A-Za-z]')
-                    elif char in self.special_chars:
-                        relevant_chars.add(f"\\{char}")
-                    elif char == "'":
-                        relevant_chars.add(f'"{char}"')
-                    else:
-                        relevant_chars.add(char)
+        substrings.update(find_all_cs(valid))
+        relevant_chars.update(substrings)
+        # remove substring occurrence from example
+        for sub in substrings:
+            valid = map(lambda f: f.replace(sub, "", 1), valid)
+        for ex in valid:
+            for char in ex:
+                # This will not work for non-ASCII letters, such as accentuated letters.
+                # To counteract this, consider using python's "\w" instead of just the [A-Z] range.
+                if 'A' <= char <= 'Z':
+                    char_classes.add('[A-Z]')
+                    letters.add(char)
+                    if '[a-z]' in char_classes:
+                        char_classes.add('[A-Za-z]')
+                    if '[0-9]' in char_classes:
+                        char_classes.add('[0-9A-Z]')
+                    if '[a-z]' in char_classes and '[0-9]' in char_classes:
+                        char_classes.add('[0-9A-Za-z]')
+                elif 'a' <= char <= 'z':
+                    letters.add(char)
+                    char_classes.add('[a-z]')
+                    if '[A-Z]' in char_classes:
+                        char_classes.add('[A-Za-z]')
+                    if '[0-9]' in char_classes:
+                        char_classes.add('[0-9a-z]')
+                    if '[A-Z]' in char_classes and '[0-9]' in char_classes:
+                        char_classes.add('[0-9A-Za-z]')
+                elif '0' <= char <= '9':
+                    numbers.add(char)
+                    char_classes.add('[0-9]')
+                    if '[A-Z]' in char_classes:
+                        char_classes.add('[0-9A-Z]')
+                    if '[a-z]' in char_classes:
+                        char_classes.add('[0-9a-z]')
+                    if '[a-z]' in char_classes and '[A-Z]' in char_classes:
+                        char_classes.add('[0-9A-Za-z]')
+                elif char in self.special_chars:
+                    relevant_chars.add(f"\\{char}")
+                elif char == "'":
+                    relevant_chars.add(f'"{char}"')
+                else:
+                    relevant_chars.add(char)
 
-        if len(self.letters) < 5:
-            relevant_chars.update(self.letters)
-        if len(self.numbers) < 5:
-            relevant_chars.update(self.numbers)
-        relevant_chars.update(self.char_classes)
+        if len(letters) < 5:
+            relevant_chars.update(letters)
+        if len(numbers) < 5:
+            relevant_chars.update(numbers)
+        relevant_chars.update(char_classes)
 
-        self.relevant_chars = sorted(relevant_chars)
+        return sorted(relevant_chars)
 
-    def get_num_copies(self):
+    def get_num_copies(self, valid):
         num_copies = set()
 
-        compressed = self.transposed_valid[0].copy()
-        for ss in self.substrings:
+        compressed = valid.copy()
+
+        substrings = set()
+        for field in valid:
+            substrings.update(find_all_cs(field))
+
+        for ss in substrings:
             compressed = list(map(lambda x: x.replace(ss, '.'), compressed))
 
         lens = map(len, compressed)
-        m = max(lens)
+        m = max(lens) + 1
+        m = max(m, 3)
         num_copies.update(range(2, m))
 
         return sorted(num_copies)
