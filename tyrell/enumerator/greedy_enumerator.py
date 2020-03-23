@@ -14,20 +14,6 @@ logger = get_logger('tyrell.enumerator.smt')
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class GreedyEnumerator(Enumerator):
-    z3_solver = z3.Solver()
-
-    main_dsl: TyrellSpec
-    tree_dsls: List[TyrellSpec]
-
-    # z3 variables for each production node
-    variables = {}
-
-    # z3 variables to denote if a node is a function or not
-    variables_fun = []
-
-    nodes: List[ASTNode]
-
-    trees: List[AST]
 
     def __init__(self, main_dsl: TyrellSpec, tree_dsls: List[TyrellSpec], depth):
         super().__init__()
@@ -38,13 +24,11 @@ class GreedyEnumerator(Enumerator):
         self.tree_dsls = tree_dsls
 
         assert len(tree_dsls) > 0
-
         self.length = len(tree_dsls)
         if depth < 2:
             raise ValueError(
                 f'Depth must be larger or equal to 2: {depth}')
         self.depth = depth
-
         self.max_children = self.max_children()
         self.trees = []
         self.nodes = []
@@ -58,7 +42,6 @@ class GreedyEnumerator(Enumerator):
         assert len(self.nodes) == (2 ** self.depth - 1) * self.length
 
         self.model = None
-
         self.create_variables(self.z3_solver)
         self.create_output_constraints(self.z3_solver)
         self.create_leaf_constraints(self.z3_solver)
@@ -106,6 +89,7 @@ class GreedyEnumerator(Enumerator):
                     solver.add(z3.Or(big_or))
 
     def create_children_constraints(self, solver):
+        """ Children have the correct type according to parent's specification """
         for tree in self.trees:
             dsl = self.tree_dsls[tree.id - 1]
             for parent in tree.nodes:
@@ -123,11 +107,11 @@ class GreedyEnumerator(Enumerator):
                             solver.add(z3.Or(big_or))
 
     def create_union_constraints(self):
-        """ Prevent union of twice the same subtree: (A|B) """
+        """ Prevent union of twice the same subtree: (A|A) """
         for tree in self.trees:
             dsl = self.tree_dsls[tree.id - 1]
             for node in tree.nodes:
-                if node.children is None or len(node.children) == 0:
+                if not node.has_children():
                     continue
                 test2 = node.children[0].children is None or len(node.children[0].children) == 0
                 test3 = node.children[1].children is None or len(node.children[1].children) == 0
@@ -141,20 +125,21 @@ class GreedyEnumerator(Enumerator):
                 subtree0, subtree1 = self.get_subtree(node.children[0]), \
                                      self.get_subtree(node.children[1])
 
-                bigOr = []
+                big_or = []
                 for i in range(len(subtree0)):
                     var_i0 = self.variables[subtree0[i]]
                     var_i1 = self.variables[subtree1[i]]
-                    bigOr.append(var_i0 != var_i1)
+                    big_or.append(var_i0 != var_i1)
 
-                self.z3_solver.add(z3.Implies(node_is_union, z3.Or(bigOr)))
+                self.z3_solver.add(z3.Implies(node_is_union, z3.Or(big_or)))
 
     def max_children(self) -> int:
-        """Finds the maximum number of children in the productions"""
+        """ Finds the maximum number of children in the productions """
         return max(map(lambda p: len(p.rhs), self.main_dsl.productions()))
 
-    def build_k_tree(self, children, depth, tree_id):
-        """Builds a K-tree that will contain the program"""
+    @staticmethod
+    def build_k_tree(children, depth, tree_id):
+        """ Builds a K-tree that will contain the program """
         tree = AST(tree_id)
         root = ASTNode(1, 1, None, tree_id)
         nb = 1
@@ -189,9 +174,8 @@ class GreedyEnumerator(Enumerator):
     def _resolve_is_not_parent_predicate(self, pred):
         self._check_arg_types(pred, [str, str])
 
-
         for tree in self.trees:
-            dsl = self.tree_dsls[tree.id-1]
+            dsl = self.tree_dsls[tree.id - 1]
 
             parent = dsl.get_function_production_or_raise(pred.args[0])
             child = dsl.get_function_production_or_raise(pred.args[1])
@@ -217,6 +201,7 @@ class GreedyEnumerator(Enumerator):
         self._check_arg_types(pred, [Node, int])
         program = pred.args[0]
         tree_idx = pred.args[1]
+        self.tree_dsls[tree_idx].add_predicate(pred.name, pred.args)
 
         # We want to run block_subtree only for nodes in the tree in which the program originally occurred.
         for node in self.nodes_until_depth(self.depth - program.depth() + 1, tree_idx):
@@ -226,6 +211,7 @@ class GreedyEnumerator(Enumerator):
         self._check_arg_types(pred, [Node, int])
         program = pred.args[0]
         tree_idx = pred.args[1]
+        self.tree_dsls[tree_idx].add_predicate(pred.name, pred.args)
 
         if self.depth < program.depth():
             return
@@ -236,6 +222,8 @@ class GreedyEnumerator(Enumerator):
         self._check_arg_types(pred, [Node, int])
         program = pred.args[0]
         tree_idx = pred.args[1]
+        self.tree_dsls[0].add_predicate(pred.name, pred.args)
+
         if self.depth < program.depth():
             return
         node = self.trees[0].head
@@ -245,6 +233,7 @@ class GreedyEnumerator(Enumerator):
         self._check_arg_types(pred, [Node, int])
         program = pred.args[0]
         tree_idx = pred.args[1]
+        self.tree_dsls[tree_idx].add_predicate(pred.name, pred.args)
 
         big_or = []
         for node in self.nodes_until_depth(self.depth - program.depth() + 1, tree_idx):
@@ -282,35 +271,39 @@ class GreedyEnumerator(Enumerator):
 
         # Find out if some commutative operation was used.
         # FIXME: union is hardcoded as commutative operation!
-        # if self.main_dsl.get_function_production("union") is None: return
-        # union_id = self.main_dsl.get_function_production("union").id
-        # commutative_op_nodes contains the variables of all nodes that have id of a commutative operation (in this
-        # case, it is only union)
-        # commutative_op_nodes = filter(lambda x: int(str(self.model[x])) == union_id, self.variables)
-        #
-        # for x in commutative_op_nodes:
-        #     tree_id, node_id = x.tree_id, x.id
-        #     subtree0, subtree1 = self.get_subtree(self.trees[tree_id - 1].nodes[node_id - 1].children[0]), \
-        #                          self.get_subtree(self.trees[tree_id - 1].nodes[node_id - 1].children[1])
-        #     # block model with subtrees swapped:
-        #
-        #     block2 = []
-        #     unblocked = set(self.variables.keys())
-        #     for i, node in enumerate(subtree0):
-        #         node_x = self.variables[node]
-        #         other_node = subtree1[i]
-        #         block2.append(node_x != self.model[other_node])
-        #         unblocked.remove(node)
-        #
-        #     for i, node in enumerate(subtree1):
-        #         node_x = self.variables[node]
-        #         other_node = subtree0[i]
-        #         block2.append(node_x != self.model[other_node])
-        #         unblocked.remove(node)
-        #
-        #     block2 += list(map(lambda x: self.variables[x] != self.model[x], unblocked))
-        #
-        #     self.z3_solver.add(z3.Or(block2))
+        if self.main_dsl.get_function_production("union") is None: return
+
+        # commutative_op_nodes contains the variables of all nodes that have id
+        # of a commutative operation (in this case, it is only union)
+        commutative_op_nodes = []
+        for tree in self.trees:
+            dsl = self.tree_dsls[tree.id-1]
+            union_id = dsl.get_function_production("union").id
+            commutative_op_nodes.extend(filter(
+                lambda n: int(str(self.model[n])) == union_id, tree.nodes))
+
+        for x in commutative_op_nodes:
+            tree_id, node_id = x.tree_id, x.id
+            subtree0, subtree1 = self.get_subtree(self.trees[tree_id - 1].nodes[node_id - 1].children[0]), \
+                                 self.get_subtree(self.trees[tree_id - 1].nodes[node_id - 1].children[1])
+
+            # block model with subtrees swapped:
+            block2 = []
+            unblocked = set(self.variables.keys())
+            for i, node in enumerate(subtree0):
+                node_x = self.variables[node]
+                other_node = subtree1[i]
+                block2.append(node_x != self.model[other_node])
+                unblocked.remove(node)
+
+            for i, node in enumerate(subtree1):
+                node_x = self.variables[node]
+                other_node = subtree0[i]
+                block2.append(node_x != self.model[other_node])
+                unblocked.remove(node)
+
+            block2 += list(map(lambda x: self.variables[x] != self.model[x], unblocked))
+            self.z3_solver.add(z3.Or(block2))
 
     def update(self, predicates=None):
         """
@@ -318,12 +311,9 @@ class GreedyEnumerator(Enumerator):
         """
         if predicates is not None:
             self.resolve_predicates(predicates)
-            # for pred in predicates:
-            #     self.main_dsl.add_predicate(pred.name, pred.args)
-        # else:
         self.block_model()
 
-    def buildProgram(self):
+    def build_program(self):
         result = [[] for i in range(len(self.trees))]
         for i in range(len(self.trees)):
             result[i] = [-1] * len(self.trees[i].nodes)
@@ -379,7 +369,7 @@ class GreedyEnumerator(Enumerator):
         else:
             self.model = None
         if self.model is not None:
-            return self.buildProgram()
+            return self.build_program()
         else:
             logger.debug(f'Enumerator exhausted for depth {self.depth} and length {self.length}.')
             return None
@@ -408,5 +398,6 @@ class GreedyEnumerator(Enumerator):
         block = self.block_subtree_rec(subtree, program)
         self.z3_solver.add(z3.Or(block))
 
-    def _get_n_var_name(self, node):
+    @staticmethod
+    def _get_n_var_name(node):
         return f'n{node.tree_id}_{node.id}'

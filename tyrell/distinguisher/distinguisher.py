@@ -9,6 +9,8 @@ class Distinguisher:
 
     def distinguish(self, prog1, prog2):
         solver = z3.Solver()
+        solver.set('random_seed', 0)
+        solver.set('sat.random_seed', 0)
         z3_prog1 = self._validation2z3.eval(prog1, ["IN"])
         z3_prog2 = self._validation2z3.eval(prog2, ["IN"])
 

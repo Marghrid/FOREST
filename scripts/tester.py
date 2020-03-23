@@ -4,6 +4,7 @@ import re
 import subprocess
 import time
 import datetime
+import socket
 
 from termcolor import colored
 
@@ -135,7 +136,7 @@ class Tester:
         """ Print execution information for each instance (sorted by name) """
         maxl = max(map(lambda i: len(i.name), self.instances)) + 2
         now = datetime.datetime.now()
-        print(f"\n =====  RESULTS on {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
+        print(f"\n =====  RESULTS on {socket.gethostname()}, {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
         for inst in self.instances:
             times = map(lambda t: t.time, inst.tasks)
             enumerated = map(lambda t: t.enumerated, inst.tasks)

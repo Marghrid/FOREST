@@ -14,20 +14,6 @@ logger = get_logger('tyrell.enumerator.smt')
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class FunnyEnumerator(Enumerator):
-    z3_solver = z3.Solver()
-
-    # productions that are leaf
-    leaf_productions = []
-
-    # z3 variables for each production node
-    variables = {}
-
-    # z3 variables to denote if a node is a function or not
-    variables_fun = []
-
-    nodes: List[ASTNode]
-
-    trees: List[AST]
 
     def __init__(self, spec: TyrellSpec, depth=None, length=None):
         super().__init__()

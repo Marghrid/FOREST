@@ -22,7 +22,7 @@ class ProductionVisitor(GenericVisitor):
 
 
 class Builder:
-    '''A factory class to build AST node'''
+    """ A factory class to build AST node """
 
     _spec: TyrellSpec
 
@@ -33,10 +33,10 @@ class Builder:
         return ProductionVisitor(children).visit(prod)
 
     def make_node(self, src: Union[int, Production], children: List[Node] = []) -> Node:
-        '''
+        """
         Create a node with the given production index and children.
         Raise `KeyError` or `ValueError` if an error occurs
-        '''
+        """
         if isinstance(src, int):
             return self._make_node(self._spec.get_production_or_raise(src), children)
         elif isinstance(src, Production):

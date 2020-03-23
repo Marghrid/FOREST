@@ -32,7 +32,6 @@ class OkResult(Result):
 
 
 class BadResult(Result):
-    _why: Any
 
     def __init__(self, why):
         super().__init__()

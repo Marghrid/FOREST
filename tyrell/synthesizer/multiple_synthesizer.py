@@ -15,10 +15,6 @@ no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 
 class MultipleSynthesizer(ABC):
-    _enumerator: Enumerator
-    _decider: ExampleDecider
-    _printer: Interpreter
-    _distinguisher: Distinguisher
 
     def __init__(self, enumerator: Enumerator, decider: ExampleDecider, printer=None):
         self._enumerator = enumerator

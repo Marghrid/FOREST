@@ -27,8 +27,6 @@ class DSLBuilder:
         dsls = []
         for idx, ty in enumerate(self.types):
             dsls.append(self.build_dsl(ty, self.transposed_valid[idx]))
-
-
         return dsls
 
     def build_dsl(self, val_type, valid):
@@ -80,7 +78,14 @@ class DSLBuilder:
         numbers = set()
 
         substrings.update(find_all_cs(valid))
-        relevant_chars.update(substrings)
+        for substring in substrings:
+            if substring in self.special_chars:
+                relevant_chars.add(f"\\{substring}")
+            elif substring == "'":
+                relevant_chars.add(f'"{substring}"')
+            else:
+                relevant_chars.add(substring)
+        
         # remove substring occurrence from example
         for sub in substrings:
             valid = map(lambda f: f.replace(sub, "", 1), valid)
@@ -91,30 +96,12 @@ class DSLBuilder:
                 if 'A' <= char <= 'Z':
                     char_classes.add('[A-Z]')
                     letters.add(char)
-                    if '[a-z]' in char_classes:
-                        char_classes.add('[A-Za-z]')
-                    if '[0-9]' in char_classes:
-                        char_classes.add('[0-9A-Z]')
-                    if '[a-z]' in char_classes and '[0-9]' in char_classes:
-                        char_classes.add('[0-9A-Za-z]')
                 elif 'a' <= char <= 'z':
                     letters.add(char)
                     char_classes.add('[a-z]')
-                    if '[A-Z]' in char_classes:
-                        char_classes.add('[A-Za-z]')
-                    if '[0-9]' in char_classes:
-                        char_classes.add('[0-9a-z]')
-                    if '[A-Z]' in char_classes and '[0-9]' in char_classes:
-                        char_classes.add('[0-9A-Za-z]')
                 elif '0' <= char <= '9':
                     numbers.add(char)
                     char_classes.add('[0-9]')
-                    if '[A-Z]' in char_classes:
-                        char_classes.add('[0-9A-Z]')
-                    if '[a-z]' in char_classes:
-                        char_classes.add('[0-9a-z]')
-                    if '[a-z]' in char_classes and '[A-Z]' in char_classes:
-                        char_classes.add('[0-9A-Za-z]')
                 elif char in self.special_chars:
                     relevant_chars.add(f"\\{char}")
                 elif char == "'":
@@ -126,8 +113,9 @@ class DSLBuilder:
             relevant_chars.update(letters)
         if len(numbers) < 5:
             relevant_chars.update(numbers)
-        relevant_chars.update(char_classes)
 
+        self.update_char_classes(char_classes)
+        relevant_chars.update(char_classes)
         return sorted(relevant_chars)
 
     def get_num_copies(self, valid):
@@ -148,3 +136,13 @@ class DSLBuilder:
         num_copies.update(range(2, m))
 
         return sorted(num_copies)
+
+    def update_char_classes(self, char_classes):
+        if '[0-9]' in char_classes and '[A-Z]' in char_classes:
+            char_classes.add('[0-9A-Z]')
+        if '[0-9]' in char_classes and '[a-z]' in char_classes:
+            char_classes.add('[0-9a-z]')
+        if '[A-Z]' in char_classes and '[a-z]' in char_classes:
+            char_classes.add('[A-Za-z]')
+        if '[0-9]' in char_classes and '[A-Z]' in char_classes and '[a-z]' in char_classes:
+            char_classes.add('[0-9A-Za-z]')

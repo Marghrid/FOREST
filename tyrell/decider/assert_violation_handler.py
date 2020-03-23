@@ -10,8 +10,6 @@ class AssertionViolationHandler:
     '''
     Automatically compute blames for dynamic type errors
     '''
-    _spec: TyrellSpec
-    _interp: Interpreter
 
     def __init__(self, spec: TyrellSpec, interpreter: Interpreter):
         self._spec = spec
