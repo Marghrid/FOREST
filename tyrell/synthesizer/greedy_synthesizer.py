@@ -1,3 +1,4 @@
+import itertools
 import re
 import time
 from abc import ABC
@@ -5,7 +6,7 @@ from ..common_substrings import find_all_cs
 from ..decider import ExampleDecider, ValidationDecider, Example
 from ..distinguisher import Distinguisher
 from ..dslBuilder import DSLBuilder
-from ..enumerator import GreedyEnumerator
+from ..enumerator import GreedyEnumerator, FunnyEnumerator
 from ..interpreter import Interpreter, ValidationInterpreter
 from ..logger import get_logger
 from ..utils import nice_time
@@ -68,43 +69,64 @@ class GreedySynthesizer(ABC):
         dsls = builder.build()
         self.start_time = time.time()
 
-        for depth in range(3,10):
-            logger.info(f'Synthesizing programs of depth {depth}...')
-            self._enumerator = GreedyEnumerator(self.main_dsl, dsls, depth)
+        if len(self.valid[0]) > 1:
+            logger.info("Using GreedyEnumerator.")
+            for depth in range(3,10):
+                logger.info(f'Synthesizing programs of depth {depth}...')
+                self._enumerator = GreedyEnumerator(self.main_dsl, dsls, depth)
 
-            program = self.enumerate()
+                self.try_for_depth()
 
-            while program is not None:
-                new_predicates = None
+                if len(self.programs) > 0:
+                    logger.info(f'Synthesizer done after\n'
+                                f'  {self.num_attempts} attempts,\n'
+                                f'  {self.num_interactions} interactions,\n'
+                                f'  and {round(time.time() - self.start_time)} seconds')
+                    return self.programs[0]
 
-                res = self._decider.analyze(program)
+        else:
+            logger.info("Using FunnyEnumerator.")
+            sizes = list(itertools.product(range(3, 10), range(1, 10)))
+            sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
+            for dep, leng in sizes:
+                logger.info(f'Synthesizing programs of depth {dep} and length {leng}...')
+                self._enumerator = FunnyEnumerator(self.main_dsl, depth=dep, length=leng)
 
-                if res.is_ok():  # program satisfies I/O examples
-                    logger.info(
-                        f'Program accepted after {self.num_attempts} attempts '
-                        f'and {round(time.time() - self.start_time)} seconds:')
-                    logger.info(self._printer.eval(program, ["IN"]))
-                    self.programs.append(program)
-                    if len(self.programs) > 1:
-                        self.distinguish()
-                else:
-                    new_predicates = res.why()
-                    if new_predicates is not None:
-                        for pred in new_predicates:
-                            pred_str = self._printer.eval(pred.args[0], ["IN"])
-                            logger.debug(f'New predicate: {pred.name} {pred_str}')
+                self.try_for_depth()
 
-                self._enumerator.update(new_predicates)
-                program = self.enumerate()
-
-            if len(self.programs) > 0:
-                logger.info(f'Synthesizer done after\n'
-                            f'  {self.num_attempts} attempts,\n'
-                            f'  {self.num_interactions} interactions,\n'
-                            f'  and {round(time.time() - self.start_time)} seconds')
-                return self.programs[0]
+                if len(self.programs) > 0:
+                    logger.info(f'Synthesizer done after\n'
+                                f'  {self.num_attempts} attempts,\n'
+                                f'  {self.num_interactions} interactions,\n'
+                                f'  and {round(time.time() - self.start_time)} seconds')
+                    return self.programs[0]
 
         return None
+
+    def try_for_depth(self):
+        program = self.enumerate()
+        while program is not None:
+            new_predicates = None
+
+            res = self._decider.analyze(program)
+
+            if res.is_ok():  # program satisfies I/O examples
+                logger.info(
+                    f'Program accepted after {self.num_attempts} attempts '
+                    f'and {round(time.time() - self.start_time)} seconds:')
+                logger.info(self._printer.eval(program, ["IN"]))
+                self.programs.append(program)
+                if len(self.programs) > 1:
+                    self.distinguish()
+            else:
+                new_predicates = res.why()
+                if new_predicates is not None:
+                    for pred in new_predicates:
+                        pred_str = self._printer.eval(pred.args[0], ["IN"])
+                        logger.debug(f'New predicate: {pred.name} {pred_str}')
+
+            self._enumerator.update(new_predicates)
+            program = self.enumerate()
 
     def distinguish(self):
         dist_input = self._distinguisher.distinguish(self.programs[0], self.programs[1])
