@@ -1,10 +1,5 @@
 import re
-from typing import (
-    Tuple,
-    Mapping,
-    MutableMapping
-)
-
+from typing import Tuple
 from .example_base_decider import Example, ExampleDecider
 from .result import ok, bad
 from ..dsl import Node
@@ -14,8 +9,6 @@ from ..spec import Production, TyrellSpec, Predicate
 from ..spec.expr import *
 
 logger = get_logger('tyrell.synthesizer.constraint')
-ImplyMap = Mapping[Tuple[Production, Expr], List[Production]]
-MutableImplyMap = MutableMapping[Tuple[Production, Expr], List[Production]]
 
 
 class ValidationDecider(ExampleDecider):
@@ -32,7 +25,7 @@ class ValidationDecider(ExampleDecider):
         if not self.has_failed_examples(program):
             return ok()
         else:
-
+            new_predicates = []
             if program.production.is_function() and program.production.name == "match":
                 new_predicates = self.traverse_regex(program.children[0])
             else:
@@ -84,14 +77,14 @@ class ValidationDecider(ExampleDecider):
                 if new_predicate is not None:
                     new_predicates.append(new_predicate)
 
-            elif production.name == "option":
-                atom = self.interpreter.eval(node.children[0], self.valid_exs[0])
-                # if all examples have 'atom' then it should not be option'd
-                matches = map(lambda ex: re.search(atom, ex.input[0]) is not None, self.valid_exs)
-                # if they are all true, emit predicate
-                if all(matches):
-                    new_predicate = Predicate("block_subtree", [node, tree_idx])
-                    new_predicates.append(new_predicate)
+            # elif production.name == "option":
+            #     atom = self.interpreter.eval(node.children[0], self.valid_exs[0])
+            #     # if all examples have 'atom' then it should not be option'd
+            #     matches = map(lambda ex: re.search(atom, ex.input[0]) is not None, self.valid_exs)
+            #     # if they are all true, emit predicate
+            #     if all(matches):
+            #         new_predicate = Predicate("block_subtree", [node, tree_idx])
+            #         new_predicates.append(new_predicate)
 
             elif production.name == "re":
                 char_node = node.children[0]

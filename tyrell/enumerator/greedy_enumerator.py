@@ -49,7 +49,7 @@ class GreedyEnumerator(Enumerator):
         self.create_union_constraints()
         self.resolve_predicates(self.main_dsl.predicates())
 
-        logger.debug(f"New enumerator: depth {self.depth}, length {self.length}, variables {len(self.variables)}")
+        logger.info(f"New enumerator: depth {self.depth}, length {self.length}, variables {len(self.variables)}")
 
     def create_variables(self, solver):
         """ Create one n-variable per node. """

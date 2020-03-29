@@ -20,7 +20,7 @@ logger = get_logger('tyrell')
 def main():
     examples_file = read_cmd_args()
     greedy_synthesize(examples_file)
-    # funny_synthesize(examples_file)
+    #funny_synthesize(examples_file)
 
 
 def show(examples_file):
@@ -147,7 +147,6 @@ def single_synthesize(examples_file):
     examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
     printer = ValidationPrinter()
     decider = ValidationDecider(
-        spec=dsl,
         interpreter=ValidationInterpreter(),
         examples=examples
     )

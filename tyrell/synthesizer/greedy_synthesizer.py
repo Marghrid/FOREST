@@ -45,22 +45,26 @@ class GreedySynthesizer(ABC):
         return self._decider
 
     def synthesize(self):
-
-        divided_valid, divided_invalid = self.divide_examples()
-
+        new_l = len(self.valid[0])
+        l = 0
+        while new_l != l:
+            l = new_l
+            self.divide_examples()
+            new_l = len(self.valid[0])
+            pass
         # divided_valid and divided_invalid are a list of lists. Each list is an example and the lists inside are
         # splits of examples. I want a DSL for each split, with alphabet and the rest computed accordingly.
+        self.remove_empties()
+        assert all(map(lambda l: len(l) == len(self.valid[0]), self.valid))
+        assert len(self.invalid) == 0 or all(map(lambda l: len(l) == len(self.valid[0]), self.invalid))
 
-        assert all(map(lambda l: len(l) == len(divided_valid[0]), divided_valid))
-        assert len(divided_invalid) == 0 or all(map(lambda l: len(l) == len(divided_valid[0]), divided_invalid))
-
-        transposed_divided_valid = list(map(list, zip(*divided_valid)))
-        assert all(map(lambda l: len(l) == len(transposed_divided_valid[0]), transposed_divided_valid))
-        transposed_divided_invalid = list(map(list, zip(*divided_invalid)))
+        transposed_valid = list(map(list, zip(*self.valid)))
+        assert all(map(lambda l: len(l) == len(transposed_valid[0]), transposed_valid))
+        transposed_divided_invalid = list(map(list, zip(*self.invalid)))
         assert all(map(lambda l: len(l) == len(transposed_divided_invalid[0]), transposed_divided_invalid))
 
-        type_validations = ['is_regex'] * len(transposed_divided_valid)
-        builder = DSLBuilder(type_validations, divided_valid, divided_invalid)
+        type_validations = ['is_regex'] * len(transposed_valid)
+        builder = DSLBuilder(type_validations, self.valid, self.invalid)
         dsls = builder.build()
         self.start_time = time.time()
 
@@ -100,89 +104,7 @@ class GreedySynthesizer(ABC):
                             f'  and {round(time.time() - self.start_time)} seconds')
                 return self.programs[0]
 
-
-
         return None
-
-    def divide_examples(self):
-        transposed_valid = list(map(list, zip(*self.valid)))
-        assert len(transposed_valid) == 1
-        transposed_valid = transposed_valid[0]
-
-        transposed_invalid = list(map(list, zip(*self.invalid)))
-        transposed_invalid = transposed_invalid[0]
-
-        substrings = find_all_cs(transposed_valid)
-        if len(substrings) == 0:
-            return self.valid, self.invalid
-
-        # substrings occur in all valid examples.
-        # how many times do they show up in the examples? is it always the same number of times?
-        dividing_substrings = []
-        for substr in substrings:
-            if substr == '.':
-                single_rgx = r'\.+|'
-            elif len(substr) == 1:
-                single_rgx = fr'({substr}+)'
-            else:
-                single_rgx = fr'((?:{substr})+)'
-            matches = list(map(lambda ex: re.findall(single_rgx, ex), transposed_valid))
-            if all(map(lambda m: len(m) == len(matches[0]), matches)):
-                # it appears the same number of times in each string
-                dividing_substrings.append(substr)
-
-            matches_valid = re.findall(single_rgx, transposed_valid[0])
-            self.invalid = list(filter(lambda x: len(matches_valid) == len(re.findall(single_rgx, x[0])), self.invalid))
-
-        if len(dividing_substrings) == 0:
-            return self.valid, self.invalid
-
-        all_substr_rgx = '('
-        for substr in dividing_substrings:
-            if substr == '.':
-                all_substr_rgx += r'\.+|'
-            elif len(substr) == 1:
-                all_substr_rgx += f'{substr}+|'
-            else:
-                all_substr_rgx += f'(?:{substr})+|'
-        all_substr_rgx = all_substr_rgx[:-1]
-        all_substr_rgx += ')'
-
-        divided_valid = []
-
-        for example in transposed_valid:
-            split = re.split(all_substr_rgx, example)
-            if len(split[0]) == 0:
-                split.pop(0)
-            if len(split[-1]) == 0:
-                split.pop(-1)
-            divided_valid.append(split)
-
-        for ss in dividing_substrings:
-            if ss == '.':
-                single_rgx = r'\.+|'
-            elif len(ss) == 1:
-                single_rgx = f'({ss}+)'
-            else:
-                single_rgx = f'((?:{ss})+)'
-
-            matches_valid = re.findall(single_rgx, transposed_valid[0])
-            self.invalid = list(filter(lambda x: len(matches_valid) == len(re.findall(single_rgx, x[0])), self.invalid))
-
-        if len(self.invalid) == 0:
-            return divided_valid, []
-
-        transposed_invalid = list(map(list, zip(*self.invalid)))
-        transposed_invalid = transposed_invalid[0]
-        divided_invalid = []
-        for example in transposed_invalid:
-            split = re.split(all_substr_rgx, example)
-            if len(split[0]) == 0 and split[1] == divided_valid[0][0]:
-                split.pop(0)
-            if len(split[-1]) == 0 and split[-2] == divided_valid[0][-1]:
-                split.pop(-1)
-            divided_invalid.append(split)
-        return divided_valid, divided_invalid
 
     def distinguish(self):
         dist_input = self._distinguisher.distinguish(self.programs[0], self.programs[1])
@@ -192,14 +114,14 @@ class GreedySynthesizer(ABC):
             valid_answer = False
             while not valid_answer:
                 x = input(f'Is "{dist_input}" valid?\n')
-                if x.lower() in yes_values:
+                if x.lower().rstrip() in yes_values:
                     valid_answer = True
                     self._decider.add_example([dist_input], True)
                     if self._decider.interpreter.eval(self.programs[0], [dist_input]):
                         self.programs = [self.programs[0]]
                     else:
                         self.programs = [self.programs[1]]
-                elif x.lower() in no_values:
+                elif x.lower().rstrip() in no_values:
                     valid_answer = True
                     self._decider.add_example([dist_input], False)
                     if not self._decider.interpreter.eval(self.programs[0], [dist_input]):
@@ -207,7 +129,8 @@ class GreedySynthesizer(ABC):
                     else:
                         self.programs = [self.programs[1]]
                 else:
-                    logger.info("Invalid answer! Please answer 'yes' or 'no'.")
+                    logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
+
         else:  # programs are indistinguishable
             logger.info("Programs are indistinguishable")
             p = min(self.programs, key=lambda p: len(self._printer.eval(p, ["IN"])))
@@ -227,3 +150,56 @@ class GreedySynthesizer(ABC):
                 f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')
 
         return program
+
+    def divide_examples(self):
+        transposed_valid = list(map(list, zip(*self.valid)))
+
+        for field_idx, field in enumerate(transposed_valid):
+            common_substrings = find_all_cs(field)
+            if len(common_substrings) == 1 and all(map(lambda f: len(f) == len(common_substrings[0]), field)):
+                continue
+            if len(common_substrings) > 0:
+                for cs in common_substrings:
+                    regex = self.build_regex(cs)
+                    matches = list(map(lambda ex: re.findall(regex, ex), field))
+                    if all(map(lambda m: len(m) == len(matches[0]), matches)):
+                        self.split_examples_on(cs, field_idx)
+
+    def build_regex(self, cs):
+        if isinstance(cs, str):
+            if cs == '.':
+                return r'(\.+)'
+            elif len(cs) == 1:
+                return fr'({cs}+)'
+            else:
+                return fr'((?:{cs})+)'
+        elif isinstance(cs, list):
+            pass
+
+    def split_examples_on(self, substring: str, field_idx: int):
+        for ex_idx, example in enumerate(self.valid):
+            field = example[field_idx]
+            rgx = self.build_regex(substring)
+            split = re.split(rgx, field, 1)
+            example = example[:field_idx] + split + example[field_idx+1:]
+            self.valid[ex_idx] = example
+            pass
+
+        remaining_invalid = []
+        for ex_idx, example in enumerate(self.invalid):
+            field = example[field_idx]
+            rgx = self.build_regex(substring)
+            split = re.split(rgx, field, 1)
+            example = example[:field_idx] + split + example[field_idx + 1:]
+            if len(example) == len(self.valid[0]):
+                remaining_invalid.append(example)
+        self.invalid = remaining_invalid
+
+    def remove_empties(self):
+        for field_idx, field in enumerate(self.valid[0]):
+            if len(field) == 0:
+                # ensure this field is the empty string on all examples
+                assert all(map(lambda ex: len(ex[field_idx]) == 0, self.valid + self.invalid))
+
+                for ex in self.valid + self.invalid:
+                    ex.pop(field_idx)

@@ -92,7 +92,7 @@ class MultipleSynthesizer(ABC):
                     else:
                         self.programs = [self.programs[1]]
                 else:
-                    logger.info("Invalid answer! Please answer 'yes' or 'no'.")
+                    logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
         else:  # programs are indistinguishable
             logger.info("Programs are indistinguishable")
             # FIXME: Dirty hack!! I'm keeping the "shorter" program :)
