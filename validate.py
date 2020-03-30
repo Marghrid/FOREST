@@ -81,10 +81,7 @@ def funny_synthesize(examples_file):
     if "string" not in type_validation[0]:
         raise Exception("FunnyEnumerator is only for strings.")
     printer = ValidationPrinter()
-    decider = ValidationDecider(
-        interpreter=ValidationInterpreter(),
-        examples=examples
-    )
+    decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=examples)
     maxdep = 6
     program = None
     start_time = time.time()
@@ -116,10 +113,7 @@ def synthesize(examples_file):
     dsl, valid, invalid, type_validation = prepare_things(examples_file)
     examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
     printer = ValidationPrinter()
-    decider = ValidationDecider(
-        interpreter=ValidationInterpreter(),
-        examples=examples
-    )
+    decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=examples)
     maxdep = 6
     program = None
     start_time = time.time()
@@ -146,10 +140,7 @@ def single_synthesize(examples_file):
     dsl, valid, invalid, type_validation = prepare_things(examples_file)
     examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
     printer = ValidationPrinter()
-    decider = ValidationDecider(
-        interpreter=ValidationInterpreter(),
-        examples=examples
-    )
+    decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=examples)
     max_dep = 6
 
     for dep in range(3, max_dep + 1):

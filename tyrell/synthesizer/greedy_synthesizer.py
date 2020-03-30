@@ -26,6 +26,8 @@ class GreedySynthesizer(ABC):
         self._printer = printer
         self.valid = valid_examples
         self.invalid = invalid_examples
+        self.examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
+
         self.main_dsl = main_dsl
         self._distinguisher = Distinguisher()
 
@@ -34,18 +36,6 @@ class GreedySynthesizer(ABC):
         self.programs = []
         self.start_time = None
 
-        examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
-
-        self._decider = ValidationDecider(
-            interpreter=ValidationInterpreter(),
-            examples=examples
-        )
-
-    @property
-    def decider(self):
-        return self._decider
-
-    def synthesize(self):
         new_l = len(self.valid[0])
         l = 0
         while new_l != l:
@@ -59,6 +49,13 @@ class GreedySynthesizer(ABC):
         assert all(map(lambda l: len(l) == len(self.valid[0]), self.valid))
         assert len(self.invalid) == 0 or all(map(lambda l: len(l) == len(self.valid[0]), self.invalid))
 
+
+    @property
+    def decider(self):
+        return self._decider
+
+    def synthesize(self):
+
         transposed_valid = list(map(list, zip(*self.valid)))
         assert all(map(lambda l: len(l) == len(transposed_valid[0]), transposed_valid))
         transposed_divided_invalid = list(map(list, zip(*self.invalid)))
@@ -71,6 +68,8 @@ class GreedySynthesizer(ABC):
 
         if len(self.valid[0]) > 1:
             logger.info("Using GreedyEnumerator.")
+            self._decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=self.examples,
+                                              split_valid=self.valid)
             for depth in range(3,10):
                 logger.info(f'Synthesizing programs of depth {depth}...')
                 self._enumerator = GreedyEnumerator(self.main_dsl, dsls, depth)
@@ -86,6 +85,7 @@ class GreedySynthesizer(ABC):
 
         else:
             logger.info("Using FunnyEnumerator.")
+            self._decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=self.examples)
             sizes = list(itertools.product(range(3, 10), range(1, 10)))
             sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
             for dep, leng in sizes:
