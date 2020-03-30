@@ -118,7 +118,8 @@ class Tester:
         # tasks are ordered randomly
         random.shuffle(self.tasks)
 
-    def chunks(self, lst, n):
+    @staticmethod
+    def chunks(lst, n):
         """ Yield successive n-sized chunks from lst. """
         for i in range(0, len(lst), n):
             yield lst[i:i + n]
@@ -156,3 +157,9 @@ class Tester:
                       f"avg int {round(sum(interactions) / len(interactions))},".ljust(11),
                       f"enum {enumerated[0]},".ljust(11),
                       f"sol {inst.tasks[0].solution}")
+
+    def terminate_all(self):
+        print(colored("Terminating all tasks", "red"))
+        while len(self.tasks) > 0 :
+            task = self.tasks.pop()
+            task.terminate()

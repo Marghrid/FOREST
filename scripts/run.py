@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
 
 import argparse
+from signal import signal, SIGINT
 
 from tester import Tester
 
+tester = None
+
+
+def handler(signal_received, frame):
+    # Handle any cleanup here
+    print('\nSIGINT or CTRL-C detected. Exiting gracefully')
+    if tester is not None:
+        tester.terminate_all()
+
 
 def main():
+    signal(SIGINT, handler)
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester')
     parser.add_argument('directories', type=str, metavar="dir", nargs='+', help='Directories with instances')
     parser.add_argument('-p', '--processes', metavar="P", type=int, help='Number of processes. Default: 1.', default=1)
@@ -20,6 +31,7 @@ def main():
     timeout = args.timeout
     show_output = args.out
 
+    global tester
     tester = Tester(args.directories, num_processes, run_each, timeout, False, show_output)
     tester.test()
     tester.print_results()
