@@ -12,26 +12,9 @@ from ..spec import TyrellSpec
 logger = get_logger('tyrell.enumerator.smt')
 
 
-# FIXME: Currently this enumerator requires an "Empty" production to function properly
-class SmtEnumerator(Enumerator):
-    # z3 solver
-    z3_solver = z3.Solver()
-    # z3_solver = z3.SolverFor("QF_FD")
-    # productions that are leaf
-    leaf_productions = []
-
-    # z3 variables for each production node
-    variables = []
-
-    # z3 variables to denote if a node is a function or not
-    variables_fun = []
-
-    # map from internal k-tree to nodes of program
-    program2tree = {}
-
+class KTreeEnumerator(Enumerator):
     def initLeafProductions(self):
         for p in self.spec.productions():
-            # FIXME: improve empty integration
             if (not p.is_function()) or str(p).find('Empty') != -1:
                 self.leaf_productions.append(p)
 
@@ -42,20 +25,16 @@ class SmtEnumerator(Enumerator):
             self.variables.append(v)
             # variable range constraints
             solver.add(z3.And(v >= 0, v < self.spec.num_productions()))
-            hname = 'h' + str(x + 1)
-            h = z3.Int(hname)
-            self.variables_fun.append(h)
-            # high variables range constraints
-            solver.add(z3.And(h >= 0, h <= 1))
+            # hname = 'h' + str(x + 1)
+            # h = z3.Int(hname)
+            # self.variables_fun.append(h)
+            # # high variables range constraints
+            # solver.add(z3.And(h >= 0, h <= 1))
 
     def createOutputConstraints(self, solver):
         '''The output production matches the output type'''
         big_or = list(map(lambda p: self.variables[0] == p.id, self.spec.get_productions_with_lhs(self.spec.output)))
         solver.add(z3.Or(big_or))
-
-    def createLocConstraints(self, solver):
-        '''Exactly k functions are used in the program'''
-        solver.add(self.loc == z3.Sum(self.variables_fun))
 
     def createInputConstraints(self, solver):
         '''Each input will appear at least once in the program'''
@@ -183,8 +162,8 @@ class SmtEnumerator(Enumerator):
                     ctr_children.append(
                         self.variables[node.children[p].id - 1] == child.id)
 
-                self.solver.add(
-                    Implies(Or(ctr_children), self.variables[node.id - 1] != parent.id))
+                self.z3_solver.add(
+                    z3.Implies(z3.Or(ctr_children), self.variables[node.id - 1] != parent.id))
 
     def _resolve_block_predicate(self, pred):
         self._check_arg_types(pred, [Node])
@@ -193,6 +172,16 @@ class SmtEnumerator(Enumerator):
         for node in self.nodes_until_depth(self.depth - program.depth() + 1):
             self.block_subtree(node, program)
 
+    def _resolve_char_must_occur_predicate(self, pred):
+        self._check_arg_types(pred, [Node, int])
+        program = pred.args[0]
+
+        big_or = []
+        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
+            big_or.append(self.variables[node.id - 1] == z3.IntVal(program.production.id))
+
+        self.z3_solver.add(z3.Or(big_or))
+
     def resolve_predicates(self, predicates):
         try:
             for pred in predicates:
@@ -200,6 +189,8 @@ class SmtEnumerator(Enumerator):
                     self._resolve_is_not_parent_predicate(pred)
                 elif pred.name == 'block_subtree':
                     self._resolve_block_predicate(pred)
+                elif pred.name == "char_must_occur":
+                    self._resolve_char_must_occur_predicate(pred)
                 elif pred.name == "block_first_tree" or pred.name == "block_tree":
                     pass
                 else:
@@ -209,30 +200,23 @@ class SmtEnumerator(Enumerator):
             msg = 'Failed to resolve predicates. {}'.format(e)
             raise RuntimeError(msg) from None
 
-    def __init__(self, spec: TyrellSpec, depth=None, loc=None):
+    def __init__(self, spec: TyrellSpec, depth):
         super().__init__()
         self.z3_solver = z3.Solver()
         self.leaf_productions = []
         self.variables = []
-        self.variables_fun = []
         self.spec = spec
         if depth <= 0:
             raise ValueError(
                 'Depth cannot be non-positive: {}'.format(depth))
         self.depth = depth
-        if loc <= 0:
-            raise ValueError(
-                f'LOC cannot be non-positive: {loc}')
-        self.loc = loc
         self.max_children = self.maxChildren()
         self.tree, self.nodes = self.buildKTree(self.max_children, self.depth)
         self.model = None
         self.initLeafProductions()
         self.createVariables(self.z3_solver)
         self.createOutputConstraints(self.z3_solver)
-        # self.createLocConstraints(self.z3_solver)
         self.createInputConstraints(self.z3_solver)
-        self.createFunctionConstraints(self.z3_solver)
         self.createLeafConstraints(self.z3_solver)
         self.createChildrenConstraints(self.z3_solver)
         self.createUnionConstraints(self.z3_solver)
