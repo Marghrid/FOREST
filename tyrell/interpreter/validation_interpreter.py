@@ -46,7 +46,11 @@ class ValidationInterpreter(PostOrderInterpreter):
 
     def eval_re(self, node, args):
         self.precedences[node.production.id] = 4
-        return fr'{args[0]}'
+        if len(args[0]) == 1 or '[' in args[0]:
+            return fr'{args[0]}'
+        else:
+            return fr'({args[0]})'
+
 
     def eval_unary_operator(self, arg, node, symbol):
         child_id = node.children[0].production.id

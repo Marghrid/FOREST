@@ -5,3 +5,4 @@ from .post_order import PostOrderInterpreter
 from .validation_interpreter import ValidationInterpreter
 from .validation_printer import ValidationPrinter
 from .validation_z3 import Validation_z3
+from .node_counter import NodeCounter

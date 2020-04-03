@@ -1,10 +1,10 @@
 import time
 from abc import ABC
 
-from ..decider import ExampleDecider
+from ..decider import ExampleDecider, ValidationDecider, Example
 from ..distinguisher import Distinguisher
-from ..enumerator import Enumerator
-from ..interpreter import Interpreter
+from ..enumerator import Enumerator, KTreeEnumerator
+from ..interpreter import Interpreter, ValidationInterpreter, ValidationPrinter, NodeCounter
 from ..logger import get_logger
 from ..utils import nice_time
 
@@ -16,11 +16,16 @@ no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 class MultipleSynthesizer(ABC):
 
-    def __init__(self, enumerator: Enumerator, decider: ExampleDecider, printer=None):
-        self._enumerator = enumerator
-        self._decider = decider
-        self._printer = printer
+    def __init__(self, valid_examples, invalid_examples, dsl):
+        self.max_depth = 6
+        self.examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
+        self.dsl = dsl
+        self._printer = ValidationPrinter()
         self._distinguisher = Distinguisher()
+        self._decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=self.examples)
+        self._node_counter = NodeCounter()
+        self.indistinguishable = 0
+        self.max_indistinguishable = 2
 
         self.num_attempts = 0
         self.num_interactions = 0
@@ -36,66 +41,61 @@ class MultipleSynthesizer(ABC):
         return self._decider
 
     def synthesize(self):
+        logger.info("Using FunnyEnumerator.")
         self.start_time = time.time()
-        program = self.enumerate()
 
-        while program is not None:
-            new_predicates = None
+        for dep in range(3, self.max_depth + 1):
+            logger.info(f'Synthesizing programs of depth {dep}...')
+            self._enumerator = KTreeEnumerator(self.dsl, depth=dep)
 
-            res = self._decider.analyze(program)
+            self.try_for_depth()
 
-            if res.is_ok():  # program satisfies I/O examples
-                logger.info(
-                    f'Program accepted after {self.num_attempts} attempts and {round(time.time() - self.start_time)} seconds:')
-                logger.info(self._printer.eval(program, ["IN"]))
-                self.programs.append(program)
-                if len(self.programs) > 1:
-                    self.distinguish()
-            else:
-                new_predicates = res.why()
-                if new_predicates is not None:
-                    for pred in new_predicates:
-                        pred_str = self._printer.eval(pred.args[0], ["IN"])
-                        logger.debug(f'New predicate: {pred.name} {pred_str}')
-
-            self._enumerator.update(new_predicates)
-            program = self.enumerate()
-        logger.debug(f'Synthesizer done after\n'
-                     f'  {self.num_attempts} attempts,\n'
-                     f'  {self.num_interactions} interactions,\n'
-                     f'  and {round(time.time() - self.start_time)} seconds')
-        if len(self.programs) > 0:
-            return self.programs[0]
-        else:
-            return None
+            if len(self.programs) > 0:
+                logger.info(f'Synthesizer done.\n'
+                            f'  Enumerator: {self._enumerator.__class__.__name__}\n'
+                            f'  Enumerated: {self.num_attempts}\n'
+                            f'  Interactions: {self.num_interactions}\n'
+                            f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n'
+                            f'  Solution: {self._printer.eval(self.programs[0], ["IN"])}\n'
+                            f'  Nodes: {self._node_counter.eval(self.programs[0], [0])}')
+                return self.programs[0]
 
     def distinguish(self):
+        start_distinguish = time.time()
         dist_input = self._distinguisher.distinguish(self.programs[0], self.programs[1])
         if dist_input is not None:
-            logger.info("Distinguishing input: " + dist_input)
+            logger.info(f'Distinguishing input "{dist_input}" in {round(time.time() - start_distinguish, 2)} seconds')
             self.num_interactions += 1
             valid_answer = False
+            # Do not count time spent waiting for user input: add waiting time to start_time.
+            interaction_start_time = time.time()
             while not valid_answer:
                 x = input(f'Is "{dist_input}" valid?\n')
-                if x.lower() in yes_values:
+                if x.lower().rstrip() in yes_values:
+                    logger.info(f'"{dist_input}" is valid.')
                     valid_answer = True
                     self._decider.add_example([dist_input], True)
                     if self._decider.interpreter.eval(self.programs[0], [dist_input]):
                         self.programs = [self.programs[0]]
                     else:
                         self.programs = [self.programs[1]]
-                elif x.lower() in no_values:
+                        self.indistinguishable = 0
+                elif x.lower().rstrip() in no_values:
+                    logger.info(f'"{dist_input}" is invalid.')
                     valid_answer = True
                     self._decider.add_example([dist_input], False)
                     if not self._decider.interpreter.eval(self.programs[0], [dist_input]):
                         self.programs = [self.programs[0]]
                     else:
                         self.programs = [self.programs[1]]
+                        self.indistinguishable = 0
                 else:
                     logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
+            self.start_time += time.time() - interaction_start_time
+
         else:  # programs are indistinguishable
             logger.info("Programs are indistinguishable")
-            # FIXME: Dirty hack!! I'm keeping the "shorter" program :)
+            self.indistinguishable += 1
             p = min(self.programs, key=lambda p: len(self._printer.eval(p, ["IN"])))
             self.programs = [p]
 
@@ -114,3 +114,31 @@ class MultipleSynthesizer(ABC):
             logger.info(f'DSL has {len(self._enumerator.spec.predicates())} predicates.')
 
         return program
+
+    def try_for_depth(self):
+        program = self.enumerate()
+        while program is not None:
+            new_predicates = None
+
+            res = self._decider.analyze(program)
+
+            if res.is_ok():  # program satisfies I/O examples
+                logger.info(
+                    f'Program accepted. {self._node_counter.eval(program, [0])} nodes. {self.num_attempts} attempts '
+                    f'and {round(time.time() - self.start_time, 2)} seconds:')
+                logger.info(self._printer.eval(program, ["IN"]))
+                self.programs.append(program)
+                if len(self.programs) > 1:
+                    self.distinguish()
+                if self.indistinguishable >= self.max_indistinguishable:
+                    break
+            else:
+                new_predicates = res.why()
+                if new_predicates is not None:
+                    for pred in new_predicates:
+                        pred_str = self._printer.eval(pred.args[0], ["IN"])
+                        logger.debug(f'New predicate: {pred.name} {pred_str}')
+
+            self._enumerator.update(new_predicates)
+            # self._enumerator.update(None)
+            program = self.enumerate()
