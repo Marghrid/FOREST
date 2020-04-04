@@ -1,23 +1,33 @@
 import datetime
+import time
 from abc import ABC
 
-from ..decider import Decider
-from ..enumerator import Enumerator
-from ..interpreter import InterpreterError, Interpreter
+from ..decider import Decider, ValidationDecider, Example
+from ..distinguisher import Distinguisher
+from ..enumerator import Enumerator, KTreeEnumerator
+from ..interpreter import Interpreter, ValidationPrinter, NodeCounter, ValidationInterpreter
 from ..logger import get_logger
+from ..utils import nice_time
 
 logger = get_logger('tyrell.synthesizer')
 
 
 class SingleSynthesizer(ABC):
-    _enumerator: Enumerator
-    _decider: Decider
-    _printer: Interpreter
 
-    def __init__(self, enumerator: Enumerator, decider: Decider, printer=None):
-        self._enumerator = enumerator
-        self._decider = decider
-        self._printer = printer
+    def __init__(self, valid_examples, invalid_examples, dsl):
+        self.max_depth = 6
+        self.examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
+        self.dsl = dsl
+        self._printer = ValidationPrinter()
+        self._distinguisher = Distinguisher()
+        self._decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=self.examples)
+        self._node_counter = NodeCounter()
+        self.indistinguishable = 0
+
+        self.num_attempts = 0
+        self.num_interactions = 0
+        self.program = None
+        self.start_time = None
 
     @property
     def enumerator(self):
@@ -28,41 +38,62 @@ class SingleSynthesizer(ABC):
         return self._decider
 
     def synthesize(self):
-        '''
-        A convenient method to enumerate ASTs until the result passes the analysis.
-        Returns the synthesized program, or `None` if the synthesis failed.
-        '''
-        num_attempts = 0
-        program = self._enumerator.next()
-        while program is not None:
-            num_attempts += 1
-            if self._printer is not None:
-                logger.debug('Enumerator generated: ' + self._printer.eval(program, ["IN"]))
-            else:
-                logger.debug(f'Enumerator generated: {program}')
+        logger.info("Using FunnyEnumerator.")
+        self.start_time = time.time()
 
-            if num_attempts % 1000 == 0:
-                currentDT = datetime.datetime.now()
-                logger.info(f'Enumerated {num_attempts} programs at {currentDT.strftime("%H:%M:%S")}.')
-            try:
-                res = self._decider.analyze(program)
-                if res.is_ok():
-                    logger.info(f'Program accepted after {num_attempts} attempts')
-                    return program
-                else:
-                    new_predicates = res.why()
-                    # logger.debug('Program rejected.')
-                    if new_predicates is not None:
-                        for pred in new_predicates:
-                            pred_str = self._printer.eval(pred.args[0], ["IN"])
-                            logger.debug(f'New predicate: block {pred_str}')
-                    self._enumerator.update(new_predicates)
-                    program = self._enumerator.next()
-            except InterpreterError as e:
-                new_predicates = self._decider.analyze_interpreter_error(e)
-                logger.debug('Interpreter {} failed. Exception: {}. Reason: {}'.format(self._decider.interpreter().__class__.__name__, e.__class__.__name__, new_predicates))
-                self._enumerator.update(new_predicates)
-                program = self._enumerator.next()
-        logger.info(
-            'Enumerator is exhausted after {} attempts'.format(num_attempts))
-        return None
+        for dep in range(3, self.max_depth + 1):
+            logger.info(f'Synthesizing programs of depth {dep}...')
+            self._enumerator = KTreeEnumerator(self.dsl, depth=dep)
+
+            self.program = self.try_for_depth()
+
+            if self.program is not None:
+                logger.info(f'Synthesizer done.\n'
+                            f'  Enumerator: {self._enumerator.__class__.__name__}\n'
+                            f'  Enumerated: {self.num_attempts}\n'
+                            f'  Interactions: {self.num_interactions}\n'
+                            f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n'
+                            f'  Solution: {self._printer.eval(self.program, ["IN"])}\n'
+                            f'  Nodes: {self._node_counter.eval(self.program, [0])}')
+                return self.program
+
+    def enumerate(self):
+        self.num_attempts += 1
+        program = self._enumerator.next()
+        if program is None: return
+        if self._printer is not None:
+            logger.debug(f'Enumerator generated: {self._printer.eval(program, ["IN"])}')
+        else:
+            logger.debug(f'Enumerator generated: {program}')
+
+        if self.num_attempts > 0 and self.num_attempts % 1000 == 0:
+            logger.info(
+                f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')
+            logger.info(f'DSL has {len(self._enumerator.spec.predicates())} predicates.')
+
+        return program
+
+    def try_for_depth(self):
+        program = self.enumerate()
+        while program is not None:
+            new_predicates = None
+
+            res = self._decider.analyze(program)
+
+            if res.is_ok():  # program satisfies I/O examples
+                logger.info(
+                    f'Program accepted. {self._node_counter.eval(program, [0])} nodes. {self.num_attempts} attempts '
+                    f'and {round(time.time() - self.start_time, 2)} seconds:')
+                logger.info(self._printer.eval(program, ["IN"]))
+                return program
+
+            else:
+                new_predicates = res.why()
+                if new_predicates is not None:
+                    for pred in new_predicates:
+                        pred_str = self._printer.eval(pred.args[0], ["IN"])
+                        logger.debug(f'New predicate: {pred.name} {pred_str}')
+
+            self._enumerator.update(new_predicates)
+            # self._enumerator.update(None)
+            program = self.enumerate()

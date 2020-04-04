@@ -22,6 +22,7 @@ def main():
     greedy_synthesize(examples_file)
     # greedy_synthesize_valid(examples_file)
     # synthesize(examples_file)
+    # single_synthesize(examples_file)
 
 
 def show(examples_file):
@@ -77,8 +78,8 @@ def greedy_synthesize_valid(examples_file):
     dsl, valid, _, type_validation = prepare_things(examples_file)
     if "string" not in type_validation[0]:
         raise Exception("Synth-19 is only for strings.")
-    printer = ValidationPrinter()
     synthesizer = GreedySynthesizer(valid, [], dsl)
+    printer = ValidationPrinter()
     program = synthesizer.synthesize()
     if program is not None:
         logger.info(
@@ -88,8 +89,8 @@ def greedy_synthesize_valid(examples_file):
 
 def synthesize(examples_file):
     dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    printer = ValidationPrinter()
     synthesizer = MultipleSynthesizer(valid, invalid, dsl)
+    printer = ValidationPrinter()
     program = synthesizer.synthesize()
     if program is not None:
         logger.info(
@@ -100,27 +101,14 @@ def synthesize(examples_file):
 
 def single_synthesize(examples_file):
     dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    examples = [Example(x, True) for x in valid] + [Example(x, False) for x in invalid]
+    synthesizer = SingleSynthesizer(valid, invalid, dsl)
     printer = ValidationPrinter()
-    decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=examples)
-    max_dep = 6
-
-    for dep in range(3, max_dep + 1):
-        logger.info(f'Synthesizing programs of depth {dep}')
-        enumerator = KTreeEnumerator(dsl, depth=dep)
-        synthesizer = SingleSynthesizer(
-            enumerator=enumerator,
-            decider=decider,
-            printer=printer
-        )
-        program = synthesizer.synthesize()
-
-        if program is not None:
-            logger.info('Solution found: ' + type_validation[0] + "(IN) /\\ " + printer.eval(program, ["IN"]))
-            logger.info(f'depth: {dep}')
-            return
-
-    logger.info('Solution not found!')
+    program = synthesizer.synthesize()
+    if program is not None:
+        logger.info(
+            colored(f'Solution: {type_validation[0]}(IN) /\\ {printer.eval(program, ["IN"])}', "green"))
+    else:
+        logger.info('Solution not found!')
 
 
 def read_cmd_args():

@@ -25,7 +25,7 @@ class MultipleSynthesizer(ABC):
         self._decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=self.examples)
         self._node_counter = NodeCounter()
         self.indistinguishable = 0
-        self.max_indistinguishable = 2
+        self.max_indistinguishable = 3
 
         self.num_attempts = 0
         self.num_interactions = 0
@@ -79,7 +79,7 @@ class MultipleSynthesizer(ABC):
                         self.programs = [self.programs[0]]
                     else:
                         self.programs = [self.programs[1]]
-                        self.indistinguishable = 0
+                        # self.indistinguishable = 0
                 elif x.lower().rstrip() in no_values:
                     logger.info(f'"{dist_input}" is invalid.')
                     valid_answer = True
@@ -88,7 +88,7 @@ class MultipleSynthesizer(ABC):
                         self.programs = [self.programs[0]]
                     else:
                         self.programs = [self.programs[1]]
-                        self.indistinguishable = 0
+                        # self.indistinguishable = 0
                 else:
                     logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
             self.start_time += time.time() - interaction_start_time

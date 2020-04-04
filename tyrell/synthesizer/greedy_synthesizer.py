@@ -20,7 +20,7 @@ no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 class GreedySynthesizer(ABC):
 
     def __init__(self, valid_examples, invalid_examples, main_dsl):
-        self.max_indistinguishable = 2
+        self.max_indistinguishable = 3
         self.indistinguishable = 0
         self._printer = ValidationPrinter()
         self._node_counter = NodeCounter()
@@ -154,7 +154,7 @@ class GreedySynthesizer(ABC):
                         self.programs = [self.programs[0]]
                     else:
                         self.programs = [self.programs[1]]
-                        self.indistinguishable = 0
+                        # self.indistinguishable = 0
                 elif x.lower().rstrip() in no_values:
                     logger.info(f'"{dist_input}" is invalid.')
                     valid_answer = True
@@ -163,7 +163,7 @@ class GreedySynthesizer(ABC):
                         self.programs = [self.programs[0]]
                     else:
                         self.programs = [self.programs[1]]
-                        self.indistinguishable = 0
+                        # self.indistinguishable = 0
                 else:
                     logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
             self.start_time += time.time() - interaction_start_time
