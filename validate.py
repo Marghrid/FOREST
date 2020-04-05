@@ -1,17 +1,14 @@
 #!/usr/bin/python
 import argparse
-import itertools
-import time
+import random
 
 from termcolor import colored
 
-from tyrell.decider import ValidationDecider, Example
 from tyrell.dslBuilder import DSLBuilder
-from tyrell.enumerator import KTreeEnumerator, FunnyEnumerator
 from tyrell.parse_examples import parse_file
-from tyrell.interpreter import ValidationInterpreter, ValidationPrinter
+from tyrell.interpreter import ValidationPrinter
 from tyrell.logger import get_logger
-from tyrell.synthesizer import MultipleSynthesizer, SingleSynthesizer, GreedySynthesizer
+from tyrell.synthesizer import MultipleSynthesizer, SingleSynthesizer, MultiTreeSynthesizer
 from tyrell.type_checker import check_type
 
 logger = get_logger('tyrell')
@@ -19,9 +16,12 @@ logger = get_logger('tyrell')
 
 def main():
     examples_file = read_cmd_args()
-    greedy_synthesize(examples_file)
-    # greedy_synthesize_valid(examples_file)
-    # synthesize(examples_file)
+    show(examples_file)
+    # multitree_synthesize(examples_file)
+    multitree_some_invalid(examples_file)
+    # ktree_some_invalid(examples_file)
+    # multitree_only_valid(examples_file)
+    # ktree_synthesize(examples_file)
     # single_synthesize(examples_file)
 
 
@@ -46,6 +46,60 @@ def show(examples_file):
     print()
 
 
+def multitree_synthesize(examples_file):
+    dsl, valid, invalid, type_validation = prepare_things(examples_file)
+    if "string" not in type_validation[0]:
+        raise Exception("GreedySynthesizer is only for strings.")
+    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl)
+    printer = ValidationPrinter()
+    program = synthesizer.synthesize()
+    if program is not None:
+        logger.info(
+            colored(f'Solution: {type_validation[0]}(IN) /\\ {printer.eval(program, ["IN"])}', "green"))
+    else:
+        logger.info('Solution not found!')
+
+
+def multitree_only_valid(examples_file):
+    dsl, valid, _, type_validation = prepare_things(examples_file)
+    if "string" not in type_validation[0]:
+        raise Exception("GreedySynthesizer is only for strings.")
+    synthesizer = MultiTreeSynthesizer(valid, [], dsl)
+    synthesize(synthesizer, type_validation)
+
+
+def multitree_some_invalid(examples_file):
+    """ Synthesize using Multi-tree encoding and keeping only 1/4 of invalid examples. """
+    dsl, valid, invalid, type_validation = prepare_things(examples_file)
+    if "string" not in type_validation[0]:
+        raise Exception("MultiTreeSynthesizer is only for strings.")
+    random.seed(0)
+    invalid = random.sample(invalid, len(invalid) // 4)
+    print("remaining invalid:", invalid)
+    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl)
+    synthesize(synthesizer, type_validation)
+
+
+def ktree_some_invalid(examples_file):
+    dsl, valid, invalid, type_validation = prepare_things(examples_file)
+    random.seed(0)
+    invalid = random.sample(invalid, len(invalid) // 4)
+    synthesizer = MultipleSynthesizer(valid, invalid, dsl)
+    synthesize(synthesizer, type_validation)
+
+
+def ktree_synthesize(examples_file):
+    dsl, valid, invalid, type_validation = prepare_things(examples_file)
+    synthesizer = MultipleSynthesizer(valid, invalid, dsl)
+    synthesize(synthesizer, type_validation)
+
+
+def single_synthesize(examples_file):
+    dsl, valid, invalid, type_validation = prepare_things(examples_file)
+    synthesizer = SingleSynthesizer(valid, invalid, dsl)
+    synthesize(synthesizer, type_validation)
+
+
 def prepare_things(examples_file):
     logger.info("Parsing examples from file " + examples_file)
     valid, invalid = parse_file(examples_file)
@@ -61,47 +115,7 @@ def prepare_things(examples_file):
     return dsl, valid, invalid, type_validation
 
 
-def greedy_synthesize(examples_file):
-    dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    if "string" not in type_validation[0]:
-        raise Exception("Synth-19 is only for strings.")
-    printer = ValidationPrinter()
-    synthesizer = GreedySynthesizer(valid, invalid, dsl)
-    program = synthesizer.synthesize()
-    if program is not None:
-        logger.info(
-            colored(f'Solution: {type_validation[0]}(IN) /\\ {printer.eval(program, ["IN"])}', "green"))
-    else:
-        logger.info('Solution not found!')
-
-def greedy_synthesize_valid(examples_file):
-    dsl, valid, _, type_validation = prepare_things(examples_file)
-    if "string" not in type_validation[0]:
-        raise Exception("Synth-19 is only for strings.")
-    synthesizer = GreedySynthesizer(valid, [], dsl)
-    printer = ValidationPrinter()
-    program = synthesizer.synthesize()
-    if program is not None:
-        logger.info(
-            colored(f'Solution: {type_validation[0]}(IN) /\\ {printer.eval(program, ["IN"])}', "green"))
-    else:
-        logger.info('Solution not found!')
-
-def synthesize(examples_file):
-    dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    synthesizer = MultipleSynthesizer(valid, invalid, dsl)
-    printer = ValidationPrinter()
-    program = synthesizer.synthesize()
-    if program is not None:
-        logger.info(
-            colored(f'Solution: {type_validation[0]}(IN) /\\ {printer.eval(program, ["IN"])}', "green"))
-    else:
-        logger.info('Solution not found!')
-
-
-def single_synthesize(examples_file):
-    dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    synthesizer = SingleSynthesizer(valid, invalid, dsl)
+def synthesize(synthesizer, type_validation):
     printer = ValidationPrinter()
     program = synthesizer.synthesize()
     if program is not None:

@@ -6,7 +6,7 @@ from ..common_substrings import find_all_cs
 from ..decider import ExampleDecider, ValidationDecider, Example
 from ..distinguisher import Distinguisher
 from ..dslBuilder import DSLBuilder
-from ..enumerator import GreedyEnumerator, FunnyEnumerator
+from ..enumerator import MultiTreeEnumerator, FunnyEnumerator
 from ..interpreter import ValidationInterpreter, ValidationPrinter, NodeCounter
 from ..logger import get_logger
 from ..utils import nice_time
@@ -17,7 +17,7 @@ yes_values = {"yes", "valid", "true", "1", "+", "v", "y", "t"}
 no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 
-class GreedySynthesizer(ABC):
+class MultiTreeSynthesizer(ABC):
 
     def __init__(self, valid_examples, invalid_examples, main_dsl):
         self.max_indistinguishable = 3
@@ -70,7 +70,7 @@ class GreedySynthesizer(ABC):
                                               split_valid=self.valid)
             for depth in range(3, 10):
                 logger.info(f'Synthesizing programs of depth {depth}...')
-                self._enumerator = GreedyEnumerator(self.main_dsl, dsls, depth)
+                self._enumerator = MultiTreeEnumerator(self.main_dsl, dsls, depth)
 
                 self.try_for_depth()
 

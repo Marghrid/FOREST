@@ -13,7 +13,7 @@ logger = get_logger('tyrell.enumerator.smt')
 
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
-class GreedyEnumerator(Enumerator):
+class MultiTreeEnumerator(Enumerator):
 
     def __init__(self, main_dsl: TyrellSpec, tree_dsls: List[TyrellSpec], depth):
         super().__init__()
