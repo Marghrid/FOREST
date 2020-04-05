@@ -5,4 +5,4 @@ from .from_iterator import FromIteratorEnumerator, make_empty_enumerator, make_s
 from .funny_enumerator import FunnyEnumerator
 from .random import RandomEnumerator
 from .ktree_enumerator import KTreeEnumerator
-from .greedy_enumerator import GreedyEnumerator
+from .multitree_enumerator import MultiTreeEnumerator
