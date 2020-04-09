@@ -30,6 +30,7 @@ class MultiTreeSynthesizer(ABC):
 
         self.main_dsl = main_dsl
         self._distinguisher = Distinguisher()
+        self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')', '{', '}', '[', ']', '"'}
 
         self.num_attempts = 0
         self.num_interactions = 0
@@ -205,8 +206,8 @@ class MultiTreeSynthesizer(ABC):
 
     def build_regex(self, cs):
         if isinstance(cs, str):
-            if cs == '.':
-                return r'(\.+)'
+            if cs in self.special_chars:
+                return f'(\\{cs}+)'
             elif len(cs) == 1:
                 return fr'({cs}+)'
             else:

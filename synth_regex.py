@@ -71,7 +71,7 @@ def synthesize(synthesizer, type_validation):
     program = synthesizer.synthesize()
     if program is not None:
         logger.info(
-            colored(f'Solution: {type_validation[0]}(IN) /\\ {printer.eval(program, ["IN"])}', "green"))
+            colored(f'Solution: {printer.eval(program, ["IN"])}', "green"))
     else:
         logger.info('Solution not found!')
 
