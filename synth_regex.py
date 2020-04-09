@@ -18,11 +18,6 @@ def main():
     examples_file = read_cmd_args()
     show(examples_file)
     multitree_synthesize(examples_file)
-    # multitree_some_invalid(examples_file)
-    # ktree_some_invalid(examples_file)
-    # multitree_only_valid(examples_file)
-    # ktree_synthesize(examples_file)
-    # single_synthesize(examples_file)
 
 
 def show(examples_file):
@@ -59,55 +54,11 @@ def multitree_synthesize(examples_file):
     else:
         logger.info('Solution not found!')
 
-
-def multitree_only_valid(examples_file):
-    dsl, valid, _, type_validation = prepare_things(examples_file)
-    if "string" not in type_validation[0]:
-        raise Exception("GreedySynthesizer is only for strings.")
-    synthesizer = MultiTreeSynthesizer(valid, [], dsl)
-    synthesize(synthesizer, type_validation)
-
-
-def multitree_some_invalid(examples_file):
-    """ Synthesize using Multi-tree encoding and keeping only 1/4 of invalid examples. """
-    dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    if "string" not in type_validation[0]:
-        raise Exception("MultiTreeSynthesizer is only for strings.")
-    random.seed(0)
-    invalid = random.sample(invalid, len(invalid) // 4)
-    print("remaining invalid:", invalid)
-    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl)
-    synthesize(synthesizer, type_validation)
-
-
-def ktree_some_invalid(examples_file):
-    dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    random.seed(0)
-    invalid = random.sample(invalid, len(invalid) // 4)
-    synthesizer = MultipleSynthesizer(valid, invalid, dsl)
-    synthesize(synthesizer, type_validation)
-
-
-def ktree_synthesize(examples_file):
-    dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    synthesizer = MultipleSynthesizer(valid, invalid, dsl)
-    synthesize(synthesizer, type_validation)
-
-
-def single_synthesize(examples_file):
-    dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    synthesizer = SingleSynthesizer(valid, invalid, dsl)
-    synthesize(synthesizer, type_validation)
-
-
 def prepare_things(examples_file):
     logger.info("Parsing examples from file " + examples_file)
     valid, invalid = parse_file(examples_file)
-    type_validation, valid, invalid = check_type(valid, invalid)
-    if "AlphaRegex" in examples_file:
-        type_validation = ["is_string"]
+    type_validation = ["is_string"]
     # logger.info("Assuming types: " + str(type_validation))
-    logger.debug("Remaining invalid examples:" + str(invalid))
     builder = DSLBuilder(type_validation, valid, invalid)
     dsl = builder.build()[0]
     # TODO: build() returns a list of DSLs for each different type of element. Now I'm just using the first element

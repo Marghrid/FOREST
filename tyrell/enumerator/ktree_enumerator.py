@@ -25,11 +25,6 @@ class KTreeEnumerator(Enumerator):
             self.variables.append(v)
             # variable range constraints
             solver.add(z3.And(v >= 0, v < self.spec.num_productions()))
-            # hname = 'h' + str(x + 1)
-            # h = z3.Int(hname)
-            # self.variables_fun.append(h)
-            # # high variables range constraints
-            # solver.add(z3.And(h >= 0, h <= 1))
 
     def createOutputConstraints(self, solver):
         '''The output production matches the output type'''

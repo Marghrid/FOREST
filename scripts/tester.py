@@ -177,7 +177,7 @@ class   Tester:
                 print(f"{inst.name}:".ljust(maxl),
                       f"{round(sum(times) / len(times), 2)},".ljust(8),
                       f"{interactions[0]},".ljust(3),
-                      f"{enumerators[0]},".ljust(18),
+                      f"{enumerators[0]},".ljust(21),
                       f"{enumerated[0]},".ljust(6),
                       f"{nodes[0]},".ljust(3),
                       f'"{inst.tasks[0].solution}"')
