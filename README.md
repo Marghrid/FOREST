@@ -1,9 +1,10 @@
 # Validations Synthesizer:
 
-_Trinity Sapiens Sapiens_.
-Built based on [Trinity](https://github.com/fredfeng/Trinity).
+Based on [Trinity](https://github.com/fredfeng/Trinity).
 
-[Try the synthesizer!](https://colab.research.google.com/drive/1M1fUzgJLzfZ_KrD6oR_BCi-aLLG3kXMB) on Google Colab
+[Try the synthesizer](https://colab.research.google.com/drive/1M1fUzgJLzfZ_KrD6oR_BCi-aLLG3kXMB) on Google Colab.
+
+[Benchmarks descriptions](https://docs.google.com/spreadsheets/d/1NcmG0DgNYGOTuBxmWRwGORGCIvjtfbYk2sVo3RR7PyI/edit?usp=sharing).
 
 Dev Environment Setup
 =====================
