@@ -103,9 +103,9 @@ class   Tester:
         self.instances = []
         self.num_processes = num_processes
         if runsolver:
-            command_base = ["runsolver", "-W", str(timeout), "python3", "validate.py"]
+            command_base = ["runsolver", "-W", str(timeout), "python3", "synth_regex.py"]
         else:
-            command_base = ["python3", "validate.py"]
+            command_base = ["python3", "synth_regex.py"]
 
 
         for dir in instance_dirs:
