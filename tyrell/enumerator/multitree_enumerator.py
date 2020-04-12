@@ -21,6 +21,7 @@ class MultiTreeEnumerator(Enumerator):
         self.variables = {}
         self.variables_fun = []
         self.main_dsl = main_dsl
+        self.dsl = self.main_dsl
         self.tree_dsls = tree_dsls
 
         assert len(tree_dsls) > 0

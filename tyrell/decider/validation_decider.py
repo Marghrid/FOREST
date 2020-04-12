@@ -94,6 +94,8 @@ class ValidationDecider(ExampleDecider):
                 char_node = node.children[0]
                 assert (char_node.is_enum() and char_node.type.name == "Char")
                 st = str(char_node.data)
+                # FIXME: What if char is always present but it is part of a char class? Then it can be the char class
+                #  that must occur.
                 if all(map(lambda x: re.search(st, x.input[0]) is not None, self.valid_exs)) \
                         and '[' not in st and st not in self.already_must_occur:
                     self.already_must_occur.add(st)

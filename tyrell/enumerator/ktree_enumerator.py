@@ -14,7 +14,7 @@ logger = get_logger('tyrell.enumerator.smt')
 
 class KTreeEnumerator(Enumerator):
     def initLeafProductions(self):
-        for p in self.spec.productions():
+        for p in self.dsl.productions():
             if (not p.is_function()) or str(p).find('Empty') != -1:
                 self.leaf_productions.append(p)
 
@@ -24,16 +24,16 @@ class KTreeEnumerator(Enumerator):
             v = z3.Int(name)
             self.variables.append(v)
             # variable range constraints
-            solver.add(z3.And(v >= 0, v < self.spec.num_productions()))
+            solver.add(z3.And(v >= 0, v < self.dsl.num_productions()))
 
     def createOutputConstraints(self, solver):
         '''The output production matches the output type'''
-        big_or = list(map(lambda p: self.variables[0] == p.id, self.spec.get_productions_with_lhs(self.spec.output)))
+        big_or = list(map(lambda p: self.variables[0] == p.id, self.dsl.get_productions_with_lhs(self.dsl.output)))
         solver.add(z3.Or(big_or))
 
     def createInputConstraints(self, solver):
         '''Each input will appear at least once in the program'''
-        input_productions = self.spec.get_param_productions()
+        input_productions = self.dsl.get_param_productions()
         for x in range(0, len(input_productions)):
             big_or = list(map(lambda y: self.variables[y] == input_productions[x].id, range(len(self.nodes))))
             solver.add(z3.Or(big_or))
@@ -41,7 +41,7 @@ class KTreeEnumerator(Enumerator):
     def createFunctionConstraints(self, solver):
         '''If a function occurs then set the function variable to 1 and 0 otherwise'''
         for x in range(0, len(self.nodes)):
-            for p in self.spec.productions():
+            for p in self.dsl.productions():
                 # FIXME: improve empty integration
                 if p.is_function() and not 'Empty' in str(p):  # str(p).find('Empty') == -1:
                     ctr = z3.Implies(
@@ -65,13 +65,13 @@ class KTreeEnumerator(Enumerator):
             node = self.nodes[parent_id]
             if node.children is not None:
                 # the node has children
-                for prod in self.spec.productions():
+                for prod in self.dsl.productions():
                     for child_idx in range(0, len(node.children)):
                         child_type = 'Empty'
                         if prod.is_function() and child_idx < len(prod.rhs):
                             child_type = str(prod.rhs[child_idx])
                         big_or = []
-                        for t in self.spec.get_productions_with_lhs(child_type):
+                        for t in self.dsl.get_productions_with_lhs(child_type):
                             big_or.append(self.variables[node.children[child_idx].id - 1] == t.id)
                             big_or.append(self.variables[parent_id] != prod.id)
                         solver.add(z3.Or(big_or))
@@ -85,8 +85,8 @@ class KTreeEnumerator(Enumerator):
             if test2 or test3: continue
 
             node_var = self.variables[node.id - 1]
-            if self.spec.get_function_production("union") is None: return
-            union_id = self.spec.get_function_production("union").id
+            if self.dsl.get_function_production("union") is None: return
+            union_id = self.dsl.get_function_production("union").id
             node_is_union = node_var == z3.IntVal(union_id)
 
             subtree0, subtree1 = self.get_subtree(node.children[0]), \
@@ -102,7 +102,7 @@ class KTreeEnumerator(Enumerator):
 
     def maxChildren(self) -> int:
         '''Finds the maximum number of children in the productions'''
-        return 2  # max(map(len, [p.rhs for p in self.spec.productions()]))
+        return 2  # max(map(len, [p.rhs for p in self.dsl.productions()]))
 
     def buildKTree(self, children, depth):
         '''Builds a K-tree that will contain the program'''
@@ -140,8 +140,8 @@ class KTreeEnumerator(Enumerator):
 
     def _resolve_is_not_parent_predicate(self, pred):
         self._check_arg_types(pred, [str, str])
-        parent = self.spec.get_function_production_or_raise(pred.args[0])
-        child = self.spec.get_function_production_or_raise(pred.args[1])
+        parent = self.dsl.get_function_production_or_raise(pred.args[0])
+        child = self.dsl.get_function_production_or_raise(pred.args[1])
 
         child_pos = []
         # find positions that type-check between parent and child
@@ -195,12 +195,12 @@ class KTreeEnumerator(Enumerator):
             msg = 'Failed to resolve predicates. {}'.format(e)
             raise RuntimeError(msg) from None
 
-    def __init__(self, spec: TyrellSpec, depth):
+    def __init__(self, dsl: TyrellSpec, depth):
         super().__init__()
         self.z3_solver = z3.Solver()
         self.leaf_productions = []
         self.variables = []
-        self.spec = spec
+        self.dsl = dsl
         if depth <= 0:
             raise ValueError(
                 'Depth cannot be non-positive: {}'.format(depth))
@@ -215,7 +215,7 @@ class KTreeEnumerator(Enumerator):
         self.createLeafConstraints(self.z3_solver)
         self.createChildrenConstraints(self.z3_solver)
         self.createUnionConstraints(self.z3_solver)
-        self.resolve_predicates(self.spec.predicates())
+        self.resolve_predicates(self.dsl.predicates())
 
     def get_subtree(self, node: ASTNode):
         if node.children is None or len(node.children) < 2:
@@ -230,8 +230,8 @@ class KTreeEnumerator(Enumerator):
 
         # Find out if some commutative operation was used.
         #FIXME: union is hardcoded as commutative operation!
-        if self.spec.get_function_production("union") is None: return
-        union_id = self.spec.get_function_production("union").id
+        if self.dsl.get_function_production("union") is None: return
+        union_id = self.dsl.get_function_production("union").id
         # commutative_op_nodes contains the variables of all nodes that have id of a commutative operation (in this
         # case, it is only union)
         commutative_op_nodes = filter(lambda x: int(str(self.model[x])) == union_id, self.variables)
@@ -273,7 +273,7 @@ class KTreeEnumerator(Enumerator):
                 if pred.name == "block_first_tree" or pred.name == "block_tree":
                     self.blockModel()
                 else:
-                    self.spec.add_predicate(pred.name, pred.args)
+                    self.dsl.add_predicate(pred.name, pred.args)
         else:
             self.blockModel()
 
@@ -289,10 +289,10 @@ class KTreeEnumerator(Enumerator):
         # code is a list with the productions
         code = []
         for n in self.nodes:
-            prod = self.spec.get_production_or_raise(result[n.id - 1])
+            prod = self.dsl.get_production_or_raise(result[n.id - 1])
             code.append(prod)
 
-        builder = D.Builder(self.spec)
+        builder = D.Builder(self.dsl)
         builder_nodes = [None] * len(self.nodes)
         for y in range(len(self.nodes) - 1, -1, -1):
             if "Empty" not in str(code[self.nodes[y].id - 1]):
@@ -335,7 +335,7 @@ class KTreeEnumerator(Enumerator):
             children_vars = list(map(lambda x: self.variables[x.id - 1], subtree.children))
             assert len(children_vars) == 2
             block += self.block_subtree_rec(subtree.children[0], program.children[0])
-            # block += [children_vars[1] != z3.IntVal(self.spec.get_function_production("empty").id)]
+            # block += [children_vars[1] != z3.IntVal(self.dsl.get_function_production("empty").id)]
         elif len(program.children) == 2:
             assert len(subtree.children) == 2
             block += self.block_subtree_rec(subtree.children[0], program.children[0])

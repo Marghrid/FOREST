@@ -1,9 +1,8 @@
 import time
-from abc import ABC
+from abc import ABC, abstractmethod
 
-from ..decider import ExampleDecider, ValidationDecider, Example
+from ..decider import ValidationDecider, Example
 from ..distinguisher import Distinguisher
-from ..enumerator import Enumerator, KTreeEnumerator
 from ..interpreter import Interpreter, ValidationInterpreter, ValidationPrinter, NodeCounter
 from ..logger import get_logger
 from ..utils import nice_time
@@ -16,13 +15,17 @@ no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 class MultipleSynthesizer(ABC):
 
-    def __init__(self, valid_examples, invalid_examples, dsl):
-        self.max_depth = 6
+    def __init__(self, valid_examples, invalid_examples, dsl, pruning=True):
+
         self.examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
         self.dsl = dsl
+        self.pruning = pruning
+        if not pruning:
+            logger.warning('Synthesizing without pruning.')
         self._printer = ValidationPrinter()
         self._distinguisher = Distinguisher()
         self._decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=self.examples)
+        self._enumerator = None
         self._node_counter = NodeCounter()
         self.indistinguishable = 0
         self.max_indistinguishable = 3
@@ -40,25 +43,9 @@ class MultipleSynthesizer(ABC):
     def decider(self):
         return self._decider
 
+    @abstractmethod
     def synthesize(self):
-        logger.info("Using FunnyEnumerator.")
-        self.start_time = time.time()
-
-        for dep in range(3, self.max_depth + 1):
-            logger.info(f'Synthesizing programs of depth {dep}...')
-            self._enumerator = KTreeEnumerator(self.dsl, depth=dep)
-
-            self.try_for_depth()
-
-            if len(self.programs) > 0:
-                logger.info(f'Synthesizer done.\n'
-                            f'  Enumerator: {self._enumerator.__class__.__name__}\n'
-                            f'  Enumerated: {self.num_attempts}\n'
-                            f'  Interactions: {self.num_interactions}\n'
-                            f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n'
-                            f'  Solution: {self._printer.eval(self.programs[0], ["IN"])}\n'
-                            f'  Nodes: {self._node_counter.eval(self.programs[0], [0])}')
-                return self.programs[0]
+        pass
 
     def distinguish(self):
         start_distinguish = time.time()
@@ -111,7 +98,7 @@ class MultipleSynthesizer(ABC):
         if self.num_attempts > 0 and self.num_attempts % 1000 == 0:
             logger.info(
                 f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')
-            logger.info(f'DSL has {len(self._enumerator.spec.predicates())} predicates.')
+            logger.info(f'DSL has {len(self._enumerator.dsl.predicates())} predicates.')
 
         return program
 
@@ -139,6 +126,18 @@ class MultipleSynthesizer(ABC):
                         pred_str = self._printer.eval(pred.args[0], ["IN"])
                         logger.debug(f'New predicate: {pred.name} {pred_str}')
 
-            self._enumerator.update(new_predicates)
-            # self._enumerator.update(None)
+            if self.pruning:
+                self._enumerator.update(new_predicates)
+            else:
+                self._enumerator.update(None)
             program = self.enumerate()
+
+        if len(self.programs) > 0:
+            logger.info(f'Synthesizer done.\n'
+                        f'  Enumerator: {self._enumerator.__class__.__name__}'
+                        f'{", no pruning" if not self.pruning else ""}\n'
+                        f'  Enumerated: {self.num_attempts}\n'
+                        f'  Interactions: {self.num_interactions}\n'
+                        f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n'
+                        f'  Solution: {self._printer.eval(self.programs[0], ["IN"])}\n'
+                        f'  Nodes: {self._node_counter.eval(self.programs[0], [0])}')

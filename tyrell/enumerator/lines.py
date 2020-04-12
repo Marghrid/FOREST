@@ -80,7 +80,7 @@ class LinesEnumerator(Enumerator):
 
         # z3 variables for each production node
         self.variables = []
-        self.spec = spec
+        self.dsl = spec
         self.num_constraints = 0
         self.num_variables = 0
         self.sym_breaker = sym_breaker
@@ -105,7 +105,7 @@ class LinesEnumerator(Enumerator):
                 self.find_lattices()
 
         self.cleanedModel = dict()
-        self.num_prods = self.spec.num_productions()
+        self.num_prods = self.dsl.num_productions()
         self.max_children = self.max_children()
         self.find_types()
         self.init_leaf_productions()
@@ -127,7 +127,7 @@ class LinesEnumerator(Enumerator):
         self.create_type_constraints()
         self.create_children_constraints()
         self._production_id_cache = {}
-        for p in self.spec.productions():
+        for p in self.dsl.productions():
             if p.is_enum():
                 self._production_id_cache[p._get_rhs()] = p.id
         # self.resolve_predicates()
@@ -143,7 +143,7 @@ class LinesEnumerator(Enumerator):
         self.get_model_constraint()
 
     def init_leaf_productions(self):
-        for p in self.spec.productions():
+        for p in self.dsl.productions():
             # FIXME: improve empty integration
             if not p.is_function() or str(p).find('Empty') != -1:
                 self.leaf_productions.append(p)
@@ -153,15 +153,15 @@ class LinesEnumerator(Enumerator):
             line_productions = []
             for t in self.types:
                 self.num_prods += 1
-                line_productions.append(LineProduction(self.num_prods, self.spec.get_type(t)))
+                line_productions.append(LineProduction(self.num_prods, self.dsl.get_type(t)))
             self.line_productions.append(line_productions)
 
     def find_types(self):
         types = []
-        for t in self.spec.types():
+        for t in self.dsl.types():
             types.append(t.name)
             flag = False
-            for p in self.spec.productions():
+            for p in self.dsl.productions():
                 if not p.is_function() or p.lhs.name == 'Empty':
                     continue
                 if p.lhs.name == types[-1]:
@@ -221,7 +221,7 @@ class LinesEnumerator(Enumerator):
         v = Int(name)
         self.variables.append(v)
         ctr = []
-        for p in self.spec.productions():
+        for p in self.dsl.productions():
             if p not in self.leaf_productions:
                 ctr.append(v == p.id)
         self.z3_solver.add(Or(ctr))
@@ -255,7 +255,7 @@ class LinesEnumerator(Enumerator):
         """The output production matches the output type"""
         ctr = []
         var = self.roots[-1].var  # last line corresponds to the output line
-        for p in self.spec.get_productions_with_lhs(self.spec.output):
+        for p in self.dsl.get_productions_with_lhs(self.dsl.output):
             ctr.append(var == p.id)
             for r in range(len(self.roots) - 1):
                 self.z3_solver.add(self.roots[r].var != p.id)
@@ -279,7 +279,7 @@ class LinesEnumerator(Enumerator):
 
     def create_input_constraints(self):
         """Each input will appear at least once in the program"""
-        input_productions = self.spec.get_param_productions()
+        input_productions = self.dsl.get_param_productions()
         for x in range(0, len(input_productions)):
             ctr = []
             for y in self.leafs:
@@ -293,14 +293,14 @@ class LinesEnumerator(Enumerator):
             for t in range(len(self.types)):
                 if self.types[t] == 'Empty':
                     continue
-                for p in self.spec.productions():
+                for p in self.dsl.productions():
                     if p.is_function() and p.lhs.name == self.types[t]:
                         self.z3_solver.add(Implies(r.var == p.id, r.type == t))
                         self.num_constraints += 1
 
     def create_children_constraints(self):
         for r in self.roots:
-            for p in self.spec.productions():
+            for p in self.dsl.productions():
                 if not p.is_function() or p.lhs.name == 'Empty':
                     continue
                 aux = r.var == p.id
@@ -332,7 +332,7 @@ class LinesEnumerator(Enumerator):
     def max_children(self) -> int:
         '''Finds the maximum number of children in the productions'''
         max = 0
-        for p in self.spec.productions():
+        for p in self.dsl.productions():
             if len(p.rhs) > max:
                 max = len(p.rhs)
         return max
@@ -350,8 +350,8 @@ class LinesEnumerator(Enumerator):
     def _resolve_is_not_parent_predicate(self, pred):
 
         self._check_arg_types(pred, [str, str, (int, float)])
-        prod0 = self.spec.get_function_production_or_raise(pred.args[0])
-        prod1 = self.spec.get_function_production_or_raise(pred.args[1])
+        prod0 = self.dsl.get_function_production_or_raise(pred.args[0])
+        prod1 = self.dsl.get_function_production_or_raise(pred.args[1])
 
         for r in self.roots:
             for s in range(len(r.children[0].lines)):
@@ -362,7 +362,7 @@ class LinesEnumerator(Enumerator):
 
     def _resolve_distinct_inputs_predicate(self, pred):
         self._check_arg_types(pred, [str])
-        prod0 = self.spec.get_function_production_or_raise(pred.args[0])
+        prod0 = self.dsl.get_function_production_or_raise(pred.args[0])
         for r in self.roots:
             for c_1 in range(len(r.children)):
                 child_1 = r.children[c_1]
@@ -373,7 +373,7 @@ class LinesEnumerator(Enumerator):
 
     def _resolve_distinct_filters_predicate(self, pred):
         self._check_arg_types(pred, [str])
-        prod0 = self.spec.get_function_production_or_raise(pred.args[0])
+        prod0 = self.dsl.get_function_production_or_raise(pred.args[0])
         for r in self.roots:
             self.z3_solver.add(Implies(r.var == prod0.id, r.children[int(pred.args[1])].var != r.children[int(pred.args[2])].var))
 
@@ -400,7 +400,7 @@ class LinesEnumerator(Enumerator):
 
     def resolve_predicates(self):
         try:
-            for pred in self.spec.predicates():
+            for pred in self.dsl.predicates():
                 if pred.name == 'is_not_parent':
                     self._resolve_is_not_parent_predicate(pred)
                 elif pred.name == 'distinct_inputs':
@@ -642,9 +642,9 @@ class LinesEnumerator(Enumerator):
         self.program2tree.clear()
 
         for r in roots:
-            r.production = self.spec.get_production(model[r.var].as_long())
+            r.production = self.dsl.get_production(model[r.var].as_long())
             for c in r.children:
-                c.production = self.spec.get_production(model[c.var].as_long())
+                c.production = self.dsl.get_production(model[c.var].as_long())
                 if c.production is None:
                     for l in c.lines:
                         if model[l] == 1:
@@ -652,7 +652,7 @@ class LinesEnumerator(Enumerator):
                             c.production = s
                             break
 
-        builder = D.Builder(self.spec)
+        builder = D.Builder(self.dsl)
         num_nodes = self.roots + self.leafs
         builder_nodes = [None] * len(num_nodes)
 

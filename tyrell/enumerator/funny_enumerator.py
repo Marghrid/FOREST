@@ -15,13 +15,13 @@ logger = get_logger('tyrell.enumerator.smt')
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
 class FunnyEnumerator(Enumerator):
 
-    def __init__(self, spec: TyrellSpec, depth=None, length=None):
+    def __init__(self, dsl: TyrellSpec, depth=None, length=None):
         super().__init__()
         self.z3_solver = z3.Solver()
         self.leaf_productions = []
         self.variables = {}
         self.variables_fun = []
-        self.spec = spec
+        self.dsl = dsl
         if depth < 2:
             raise ValueError(
                 f'Depth must be larger or equal to 2: {depth}')
@@ -47,12 +47,12 @@ class FunnyEnumerator(Enumerator):
         self.create_leaf_constraints(self.z3_solver)
         self.create_children_constraints(self.z3_solver)
         self.create_union_constraints()
-        self.resolve_predicates(self.spec.predicates())
+        self.resolve_predicates(self.dsl.predicates())
 
         logger.debug(f"New enumerator: depth {self.depth}, length {self.length}, variables {len(self.variables)}")
 
     def init_leaf_productions(self):
-        for p in self.spec.productions():
+        for p in self.dsl.productions():
             if (not p.is_function()) or str(p).find('Empty') != -1:
                 self.leaf_productions.append(p)
 
@@ -61,14 +61,14 @@ class FunnyEnumerator(Enumerator):
         for node in self.nodes:
             v = z3.Int(self._get_n_var_name(node))
             self.variables[node] = v
-            solver.add(z3.And(v >= 0, v < self.spec.num_productions()))
+            solver.add(z3.And(v >= 0, v < self.dsl.num_productions()))
 
     def create_output_constraints(self, solver):
         """ The output production matches the output type """
         # the head of each tree must be a regex
         for tree in self.trees:
             head_var = self.variables[tree.head]
-            big_or = list(map(lambda p: head_var == p.id, self.spec.get_productions_with_lhs("Regex")))
+            big_or = list(map(lambda p: head_var == p.id, self.dsl.get_productions_with_lhs("Regex")))
             solver.add(z3.Or(big_or))
 
     def create_leaf_constraints(self, solver):
@@ -82,13 +82,13 @@ class FunnyEnumerator(Enumerator):
         for parent in self.nodes:
             if parent.children is not None:
                 # the node has children
-                for prod in self.spec.productions():
+                for prod in self.dsl.productions():
                     for child_idx in range(0, len(parent.children)):
                         child_type = 'Empty'
                         if prod.is_function() and child_idx < len(prod.rhs):
                             child_type = str(prod.rhs[child_idx])
                         big_or = []
-                        for ty in self.spec.get_productions_with_lhs(child_type):
+                        for ty in self.dsl.get_productions_with_lhs(child_type):
                             big_or.append(self.variables[parent.children[child_idx]] == ty.id)
                             big_or.append(self.variables[parent] != prod.id)
                             pass
@@ -104,8 +104,8 @@ class FunnyEnumerator(Enumerator):
             if test2 or test3: continue
 
             node_var = self.variables[node]
-            if self.spec.get_function_production("union") is None: return
-            union_id = self.spec.get_function_production("union").id
+            if self.dsl.get_function_production("union") is None: return
+            union_id = self.dsl.get_function_production("union").id
             node_is_union = node_var == z3.IntVal(union_id)
 
             subtree0, subtree1 = self.get_subtree(node.children[0]), \
@@ -121,7 +121,7 @@ class FunnyEnumerator(Enumerator):
 
     def max_children(self) -> int:
         """Finds the maximum number of children in the productions"""
-        return max(map(lambda p: len(p.rhs), self.spec.productions()))
+        return max(map(lambda p: len(p.rhs), self.dsl.productions()))
 
     def build_k_tree(self, children, depth, tree_id):
         """Builds a K-tree that will contain the program"""
@@ -158,8 +158,8 @@ class FunnyEnumerator(Enumerator):
 
     def _resolve_is_not_parent_predicate(self, pred):
         self._check_arg_types(pred, [str, str])
-        parent = self.spec.get_function_production_or_raise(pred.args[0])
-        child = self.spec.get_function_production_or_raise(pred.args[1])
+        parent = self.dsl.get_function_production_or_raise(pred.args[0])
+        child = self.dsl.get_function_production_or_raise(pred.args[1])
         child_pos = []
         # find positions that type-check between parent and child
         for x in range(0, len(parent.rhs)):
@@ -242,8 +242,8 @@ class FunnyEnumerator(Enumerator):
 
         # Find out if some commutative operation was used.
         # FIXME: union is hardcoded as commutative operation!
-        if self.spec.get_function_production("union") is None: return
-        union_id = self.spec.get_function_production("union").id
+        if self.dsl.get_function_production("union") is None: return
+        union_id = self.dsl.get_function_production("union").id
         # commutative_op_nodes contains the variables of all nodes that have id of a commutative operation (in this
         # case, it is only union)
         commutative_op_nodes = filter(lambda x: int(str(self.model[x])) == union_id, self.variables)
@@ -279,7 +279,7 @@ class FunnyEnumerator(Enumerator):
         if predicates is not None:
             self.resolve_predicates(predicates)
             for pred in predicates:
-                self.spec.add_predicate(pred.name, pred.args)
+                self.dsl.add_predicate(pred.name, pred.args)
         # else:
         self.block_model()
 
@@ -296,10 +296,10 @@ class FunnyEnumerator(Enumerator):
         for t_idx in range(len(self.trees)):
             tree = self.trees[t_idx]
             for n in tree.nodes:
-                prod = self.spec.get_production_or_raise(result[t_idx][n.id - 1])
+                prod = self.dsl.get_production_or_raise(result[t_idx][n.id - 1])
                 productions[t_idx].append(prod)
 
-        builder = Builder(self.spec)
+        builder = Builder(self.dsl)
         head_nodes = []
         assert len(self.trees) == len(productions)
         for tree_idx, tree in enumerate(self.trees):
@@ -316,13 +316,13 @@ class FunnyEnumerator(Enumerator):
                     builder_nodes[y] = builder.make_node(prod_tree[y].id, children)
             head_nodes.append(builder_nodes[0])
 
-        concat_prod = self.spec.get_function_production("concat")
+        concat_prod = self.dsl.get_function_production("concat")
         concat_node = builder.make_node(concat_prod, head_nodes)
 
-        param0_prod = self.spec.get_param_production(0)
+        param0_prod = self.dsl.get_param_production(0)
         param0_node = builder.make_node(param0_prod, [])
 
-        match_prod = self.spec.get_function_production("match")
+        match_prod = self.dsl.get_function_production("match")
         match_node = builder.make_node(match_prod, [concat_node, param0_node])
 
         return match_node
