@@ -80,7 +80,7 @@ class Task:
                     regex = r"Elapsed time: (\d+\.\d+)"
                     self.time = float(re.search(regex, l)[1])
                 if "Enumerator" in l:
-                    regex = r"Enumerator: (\w+)"
+                    regex = r"Enumerator: (.+)"
                     self.enumerator = re.search(regex, l)[1]
                 if "Enumerated" in l:
                     regex = r"Enumerated: (\d+)"
@@ -95,18 +95,18 @@ class Task:
                     self.solution = l.replace("[info]   Solution: ", "", 1)
 
 
-class   Tester:
-    def __init__(self, instance_dirs, num_processes=1, run_each=1, timeout=120, runsolver=False, show_output=False):
+class Tester:
+    def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1, timeout=120, runsolver=False,
+                 show_output=False):
         # several per instance. Len = len(instances) * run_each
         self.show_output = show_output
         self.tasks = []
         self.instances = []
         self.num_processes = num_processes
         if runsolver:
-            command_base = ["runsolver", "-W", str(timeout), "python3", "synth_regex.py"]
+            command_base = ["runsolver", "-W", str(timeout), "python3", "synth_regex.py", '-m', method]
         else:
-            command_base = ["python3", "synth_regex.py"]
-
+            command_base = ["python3", "synth_regex.py", '-m', method]
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")
@@ -147,6 +147,8 @@ class   Tester:
     def print_results(self):
         """ Print execution information for each instance (sorted by name) """
         maxl = max(map(lambda i: len(i.name), self.instances)) + 2
+        max_enumerators_length = max(map(lambda t: len(t.enumerator), self.tasks)) + 2
+        max_enumerated_length = max(map(lambda t: len(str(t.enumerated)), self.tasks)) + 2
         now = datetime.datetime.now()
         print(f"\n =====  RESULTS on {socket.gethostname()}, {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
         print("instance, time, interactions, enumerator, enumerated, nodes, solution")
@@ -175,15 +177,15 @@ class   Tester:
                 print(f"{inst.name}:".ljust(maxl), "has different number of nodes")
             else:
                 print(f"{inst.name}:".ljust(maxl),
-                      f"{round(sum(times) / len(times), 2)},".ljust(8),
+                      f"{round(sum(times) / len(times), 2)},".ljust(10),
                       f"{interactions[0]},".ljust(3),
-                      f"{enumerators[0]},".ljust(21),
-                      f"{enumerated[0]},".ljust(6),
+                      f"{enumerators[0]},".ljust(max_enumerators_length),
+                      f"{enumerated[0]},".ljust(max_enumerated_length),
                       f"{nodes[0]},".ljust(3),
                       f'"{inst.tasks[0].solution}"')
 
     def terminate_all(self):
         print(colored("Terminating all tasks", "red"))
-        while len(self.tasks) > 0 :
+        while len(self.tasks) > 0:
             task = self.tasks.pop()
             task.terminate()

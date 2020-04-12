@@ -7,17 +7,22 @@ from tyrell.dslBuilder import DSLBuilder
 from tyrell.parse_examples import parse_file
 from tyrell.interpreter import ValidationPrinter
 from tyrell.logger import get_logger
-from tyrell.synthesizer import MultipleSynthesizer, SingleSynthesizer, MultiTreeSynthesizer
-from tyrell.type_checker import check_type
+from tyrell.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer
 
 logger = get_logger('tyrell')
 
 
 def main():
-    examples_file = read_cmd_args()
+    examples_file, synth_method = read_cmd_args()
     show(examples_file)
-    multitree_synthesize(examples_file)
-    # ktree_synthesize(examples_file)
+    if synth_method == 'multitree':
+        multitree_synthesize(examples_file)
+    elif synth_method == 'ktree':
+        ktree_synthesize(examples_file)
+    elif synth_method == 'nopruning':
+        multitree_nopruning_synthesize(examples_file)
+    else:
+        raise ValueError
 
 
 def show(examples_file):
@@ -48,9 +53,18 @@ def multitree_synthesize(examples_file):
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl)
     synthesize(synthesizer, type_validation)
 
+
 def ktree_synthesize(examples_file):
     dsl, valid, invalid, type_validation = prepare_things(examples_file)
-    synthesizer = MultipleSynthesizer(valid, invalid, dsl)
+    synthesizer = KTreeSynthesizer(valid, invalid, dsl)
+    synthesize(synthesizer, type_validation)
+
+
+def multitree_nopruning_synthesize(examples_file):
+    dsl, valid, invalid, type_validation = prepare_things(examples_file)
+    if "string" not in type_validation[0]:
+        raise Exception("GreedySynthesizer is only for strings.")
+    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, pruning=False)
     synthesize(synthesizer, type_validation)
 
 
@@ -77,19 +91,21 @@ def synthesize(synthesizer, type_validation):
 
 
 def read_cmd_args():
+    methods = ('multitree', 'ktree', 'nopruning')
     parser = argparse.ArgumentParser(description='Validations Synthesizer')
     parser.add_argument('file', type=str, help='file with I/O examples')
     parser.add_argument('-d', '--debug', action='store_true', help='debug mode')
+    parser.add_argument('-m', '--method', metavar='|'.join(methods), type=str, default='multitree',
+                        help='Method of synthesis. Default: multitree.')
     args = parser.parse_args()
     if args.debug:
         logger.setLevel("DEBUG")
     else:
         logger.setLevel("INFO")
-    if not args.file:
-        io_file = "instances/PostalCodesPortugal.txt"
-    else:
-        io_file = args.file
-    return io_file
+    if args.method not in methods:
+        raise ValueError('Unknown method ' + args.method)
+
+    return args.file, args.method
 
 
 if __name__ == '__main__':
