@@ -24,6 +24,7 @@ def main():
                         help='Number of times to run each instance. Default: 1.', default=1)
     parser.add_argument('-t', '--timeout', metavar="T", type=int, help='Timeout in seconds. Default: 120.', default=120)
     parser.add_argument('-o', '--out', action='store_true', help='Show output. Default: False.', default=False)
+    parser.add_argument('-m', '--mode', metavar="MODE", type=str, help='Mode. Default:', default=1)
     args = parser.parse_args()
 
     num_processes = args.processes

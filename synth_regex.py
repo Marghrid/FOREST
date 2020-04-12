@@ -1,6 +1,5 @@
 #!/usr/bin/python
 import argparse
-import random
 
 from termcolor import colored
 
@@ -18,6 +17,7 @@ def main():
     examples_file = read_cmd_args()
     show(examples_file)
     multitree_synthesize(examples_file)
+    # ktree_synthesize(examples_file)
 
 
 def show(examples_file):
@@ -46,13 +46,13 @@ def multitree_synthesize(examples_file):
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl)
-    printer = ValidationPrinter()
-    program = synthesizer.synthesize()
-    if program is not None:
-        logger.info(
-            colored(f'Solution: {type_validation[0]}(IN) /\\ {printer.eval(program, ["IN"])}', "green"))
-    else:
-        logger.info('Solution not found!')
+    synthesize(synthesizer, type_validation)
+
+def ktree_synthesize(examples_file):
+    dsl, valid, invalid, type_validation = prepare_things(examples_file)
+    synthesizer = MultipleSynthesizer(valid, invalid, dsl)
+    synthesize(synthesizer, type_validation)
+
 
 def prepare_things(examples_file):
     logger.info("Parsing examples from file " + examples_file)
