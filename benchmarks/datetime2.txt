@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 datetime2 YYYY-MM-DD hh:mm:ss
+=======
+tetime2 YYYY-MM-DD hh:mm:ss
+>>>>>>> 6c35e8a71aa3bc9c28c13444ae40b4077921d5a1
 \d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}
 
 ++
@@ -43,3 +47,7 @@ datetime2 YYYY-MM-DD hh:mm:ss
 2020/09/13 09::48:47
 2020/09/12 09:19::47
 1970/09/13 09:48:474
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6c35e8a71aa3bc9c28c13444ae40b4077921d5a1

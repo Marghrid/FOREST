@@ -1,5 +1,5 @@
 email
-([A-Za-z0-9]|\.	)+   @   [A-Za-z0-9]+   \.   [A-Za-z][A-Za-z]+
+([A-Za-z0-9]|\.)+@[A-Za-z0-9]+\.[A-Za-z][A-Za-z][A-Za-z]?
 ++
 W10Yv.e1IDN@kz.B20.ef
 tc6hg.ig_l1i@NEf7k.uhw
