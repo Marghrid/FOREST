@@ -124,6 +124,8 @@ class MultipleSynthesizer(ABC):
                 if new_predicates is not None:
                     for pred in new_predicates:
                         pred_str = self._printer.eval(pred.args[0], ["IN"])
+                        if len(pred.args) > 1:
+                            pred_str += str(pred.args[1])
                         logger.debug(f'New predicate: {pred.name} {pred_str}')
 
             if self.pruning:
