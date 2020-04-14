@@ -51,18 +51,17 @@ class Task:
     def terminate(self):
         if self.process is not None:
             self.process.terminate()
+            self.process.poll()
 
-    def wait(self, show_output):
+    def is_done(self):
+        ''' Checks if task is done or has timed out. '''
         elapsed = time.time() - self.start_time
-        current_timeout = round(max(1, self.timeout - elapsed))
-        print(colored(f"Waiting {current_timeout}s for {self.instance}.", "cyan"))
-        try:
-            self.process.wait(timeout=current_timeout)
-        except subprocess.TimeoutExpired:
-            print(colored(f"{self.instance} timed out.", "red"))
-            self.instance.terminate_tasks()
-            return
+        if elapsed >= self.timeout:
+            self.terminate()
+            return True
+        return self.process.poll() is not None
 
+    def read_output(self, show_output):
         po, pe = self.process.communicate()
         po = str(po, encoding='utf-8').splitlines()
         pe = str(pe, encoding='utf-8').splitlines()
@@ -127,22 +126,27 @@ class Tester:
                 self.tasks.append(new_task)
 
         # tasks are ordered randomly
-        random.shuffle(self.tasks)
+        self.to_run = self.tasks.copy()
+        random.shuffle(self.to_run)
 
-    @staticmethod
-    def chunks(lst, n):
-        """ Yield successive n-sized chunks from lst. """
-        for i in range(0, len(lst), n):
-            yield lst[i:i + n]
+        self.running = []
 
     def test(self):
         """ Starts running tasks in random order """
-        for chunk in self.chunks(self.tasks, self.num_processes):
-            for task in chunk:
-                task.run()
+        while len(self.to_run) > 0:
+            for task in self.running:
+                if task.is_done():
+                    task.read_output(self.show_output)
+                    self.running.remove(task)
 
-            for task in chunk:
-                task.wait(self.show_output)
+            for i in range(len(self.running), self.num_processes):
+                new_task = self.to_run.pop()
+                self.running.append(new_task)
+                new_task.run()
+            print(colored(
+                f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
+                f"{len(self.to_run) + len(self.running)} to go.", "magenta"))
+            time.sleep(10)
 
     def print_results(self):
         """ Print execution information for each instance (sorted by name) """
@@ -186,6 +190,8 @@ class Tester:
 
     def terminate_all(self):
         print(colored("Terminating all tasks", "red"))
-        while len(self.tasks) > 0:
-            task = self.tasks.pop()
+        self.to_run = []
+        while len(self.running) > 0:
+            task = self.running.pop()
             task.terminate()
+            task.is_done()
