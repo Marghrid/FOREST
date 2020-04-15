@@ -9,6 +9,22 @@ import socket
 from termcolor import colored
 
 
+all_methods = ('multitree', 'ktree', 'nopruning')
+
+
+def nice_time(seconds):
+    seconds = round(seconds)
+    m, s = divmod(seconds, 60)
+    h, m = divmod(m, 60)
+    ret = ''
+    if h > 0:
+        ret += f'{h}h'
+    if m > 0:
+        ret += f'{m}m'
+    ret += f'{s}s'
+    return ret
+
+
 class Instance:
     def __init__(self, name, path):
         self.name = name
@@ -41,17 +57,19 @@ class Task:
         self.nodes = -1
         self.solution = ''
 
+        m_idx = self.command.index('-m')
+        self.method = self.command[m_idx + 1]
+
     def run(self):
-        print(colored(f"Running {self.instance}.", "blue"))
+        print(colored(f"Running {self.instance} {self.method}.", "blue"))
         interaction_file = open('int_no.txt')
         self.process = subprocess.Popen(self.command, stdin=interaction_file,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.start_time = time.time()
 
     def terminate(self):
-        if self.process is not None:
-            self.process.terminate()
-            self.process.poll()
+        self.process.terminate()
+        self.process.wait()
 
     def is_done(self):
         ''' Checks if task is done or has timed out. '''
@@ -95,17 +113,17 @@ class Task:
 
 
 class Tester:
-    def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1, timeout=120, runsolver=False,
-                 show_output=False):
-        # several per instance. Len = len(instances) * run_each
+    def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1, timeout=120, show_output=False):
         self.show_output = show_output
+        self.timeout = timeout
         self.tasks = []
         self.instances = []
         self.num_processes = num_processes
-        if runsolver:
-            command_base = ["runsolver", "-W", str(timeout), "python3", "synth_regex.py", '-m', method]
+        if method == 'compare-times':
+            methods = all_methods
         else:
-            command_base = ["python3", "synth_regex.py", '-m', method]
+            methods = [method]
+        command_base = ["python3", "synth_regex.py", '-m']
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")
@@ -115,38 +133,50 @@ class Tester:
                 inst_name = inst_name.replace(".txt", "", 1)
                 self.instances.append(Instance(inst_name, inst_path))
 
-        # instances are sorted by name
+        # sort instances by name
         print(colored(f"Found {len(self.instances)} instances.", "magenta"))
         self.instances = sorted(self.instances, key=lambda i: i.name)
 
+        # create tasks:
         for inst in self.instances:
-            for i in range(run_each):
-                command = command_base + [inst.path]
-                new_task = Task(command=command, instance=inst, timeout=timeout)
-                self.tasks.append(new_task)
+            for m in methods:
+                for i in range(run_each):
+                    command = command_base + [m] + [inst.path]
+                    new_task = Task(command=command, instance=inst, timeout=timeout)
+                    self.tasks.append(new_task)
+
+        print(colored(f"Created {len(self.tasks)} tasks.", "magenta"))
 
         # tasks are ordered randomly
         self.to_run = self.tasks.copy()
         random.shuffle(self.to_run)
 
+        # currently running tasks
         self.running = []
 
     def test(self):
         """ Starts running tasks in random order """
-        while len(self.to_run) > 0:
+        start_time = time.time()
+        while len(self.to_run) > 0 or len(self.running) > 0:
+            to_remove = []
             for task in self.running:
                 if task.is_done():
                     task.read_output(self.show_output)
-                    self.running.remove(task)
+                    to_remove.append(task)
+            for t in to_remove:
+                self.running.remove(t)
 
-            for i in range(len(self.running), self.num_processes):
+            while len(self.running) < self.num_processes:
+                if len(self.to_run) == 0:
+                    break
                 new_task = self.to_run.pop()
                 self.running.append(new_task)
                 new_task.run()
             print(colored(
                 f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
-                f"{len(self.to_run) + len(self.running)} to go.", "magenta"))
-            time.sleep(10)
+                f"{len(self.to_run) + len(self.running)} to go. "
+                f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
+            time.sleep(self.timeout // 60)
 
     def print_results(self):
         """ Print execution information for each instance (sorted by name) """
@@ -188,10 +218,31 @@ class Tester:
                       f"{nodes[0]},".ljust(3),
                       f'"{inst.tasks[0].solution}"')
 
+    def print_time_comparison(self):
+        maxl = max(map(lambda i: len(i.name), self.instances)) + 2
+        print(f"instance,".ljust(maxl), end='')
+        for m in all_methods:
+            print(f"{m},", end='')
+        print()
+        for inst in self.instances:
+            print(f"{inst.name},".ljust(maxl), end='')
+            for m in all_methods:
+                # check that all methods have tasks.
+                assert any(map(lambda t: t.method == m, inst.tasks))
+                m_tasks = list(filter(lambda t: t.method == m, inst.tasks))
+                times = map(lambda t: t.time, m_tasks)
+                times = list(filter(lambda x: x >= 0, times))
+
+                if len(times) == 0:
+                    print(f"timeout,".ljust(9), end='')
+                    continue
+                else:
+                    print(f"{round(sum(times) / len(times), 2)},".ljust(9), end='')
+            print()
+
     def terminate_all(self):
         print(colored("Terminating all tasks", "red"))
         self.to_run = []
         while len(self.running) > 0:
             task = self.running.pop()
             task.terminate()
-            task.is_done()

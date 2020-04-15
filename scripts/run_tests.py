@@ -13,11 +13,12 @@ def handler(signal_received, frame):
     print('\nSIGINT or CTRL-C detected. Exiting gracefully')
     if tester is not None:
         tester.terminate_all()
+    exit()
 
 
 def main():
     signal(SIGINT, handler)
-    methods = ('multitree', 'ktree', 'nopruning')
+    methods = ('multitree', 'ktree', 'nopruning', 'compare-times')
 
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester')
     parser.add_argument('directories', type=str, metavar="dir", nargs='+', help='Directories with instances')
@@ -41,9 +42,12 @@ def main():
 
     global tester
 
-    tester = Tester(args.directories, method, num_processes, run_each, timeout, False, show_output)
+    tester = Tester(args.directories, method, num_processes, run_each, timeout, show_output)
     tester.test()
-    tester.print_results()
+    if method == 'compare-times':
+        tester.print_time_comparison()
+    else:
+        tester.print_results()
 
 
 if __name__ == '__main__':
