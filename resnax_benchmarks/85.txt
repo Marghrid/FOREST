@@ -1,0 +1,15 @@
+// natural language
+The input box should accept only if either (1) first 2 letters alpha + 6 numeric or (2) 8 numeric
+
+// examples
+"SH123456",+
+"ab123456",+
+"12345678",+
+"sd456565",+
+"S2D3E4F5",-
+"a1234567",-
+"1234567",-
+
+
+
+// gt

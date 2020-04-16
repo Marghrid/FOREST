@@ -1,4 +1,12 @@
+import re
+
+from tyrell.logger import get_logger
+
+logger = get_logger('tyrell')
+
+
 def parse_file(filename):
+    logger.info("Parsing examples from file " + filename)
     invalid_exs = []
     valid_exs = []
     with open(filename, "r") as in_file:
@@ -19,6 +27,34 @@ def parse_file(filename):
             exs = read_example(filename, next_line)
             invalid_exs.extend(exs)
             next_line = in_file.readline()
+
+    return valid_exs, invalid_exs
+
+
+def parse_resnax(filename):
+    logger.info("Parsing examples from file " + filename)
+
+    invalid_exs = []
+    valid_exs = []
+    with open(filename, "r") as in_file:
+        next_line = in_file.readline()
+        while next_line and not '// example' in next_line:
+            print(next_line)
+            next_line = in_file.readline()
+
+        next_line = in_file.readline()  # skip line with "// examples"
+        while next_line and '// gt' not in next_line:
+            next_line = next_line.rstrip()
+            ex, valid = read_resnax_example(next_line)
+            if ex == None:
+                continue
+            if valid:
+                valid_exs.append([ex])
+            else:
+                invalid_exs.append([ex])
+            next_line = in_file.readline()
+
+        print(valid_exs, invalid_exs)
 
     return valid_exs, invalid_exs
 
@@ -50,3 +86,13 @@ def read_AlphaRegex_example(next_line):
                 exs.append([new0])
                 exs.append([new1])
     return exs
+
+
+def read_resnax_example(next_line):
+    match = re.fullmatch(r'"(.*)",([+\-])', next_line)
+    if match is None:
+        return None, None
+
+    ex = match.groups()[0]
+    valid = match.groups()[1] == '+'
+    return ex, valid

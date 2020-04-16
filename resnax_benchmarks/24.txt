@@ -1,0 +1,10 @@
+// natural language
+I need to validate each sub string length is 3 which is split by comma.
+
+// examples
+"em1,erg,123,enc",+
+"em1,erg,123,ency",-
+
+
+
+// gt
