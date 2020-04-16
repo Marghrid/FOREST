@@ -8,8 +8,14 @@ import socket
 
 from termcolor import colored
 
-
 all_methods = ('multitree', 'ktree', 'nopruning')
+
+
+def half_true():
+    n = 0
+    while True:
+        yield (n % 4 == 0)
+        n += 1
 
 
 def nice_time(seconds):
@@ -113,7 +119,8 @@ class Task:
 
 
 class Tester:
-    def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1, timeout=120, show_output=False):
+    def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1, timeout=120, show_output=False,
+                 resnax=False):
         self.show_output = show_output
         self.timeout = timeout
         self.tasks = []
@@ -124,6 +131,8 @@ class Tester:
         else:
             methods = [method]
         command_base = ["python3", "synth_regex.py", '-m']
+        if resnax:
+            command_base = ["python3", "synth_regex.py", '--resnax', '-m']
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")
@@ -156,6 +165,7 @@ class Tester:
 
     def test(self):
         """ Starts running tasks in random order """
+        half_true_iter = half_true()
         start_time = time.time()
         while len(self.to_run) > 0 or len(self.running) > 0:
             to_remove = []
@@ -172,11 +182,12 @@ class Tester:
                 new_task = self.to_run.pop()
                 self.running.append(new_task)
                 new_task.run()
-            print(colored(
-                f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
-                f"{len(self.to_run) + len(self.running)} to go. "
-                f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
-            time.sleep(self.timeout // 60)
+            if next(half_true_iter):
+                print(colored(
+                    f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
+                    f"{len(self.to_run) + len(self.running)} to go. "
+                    f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
+            time.sleep(max(self.timeout // 30, 10))
 
     def print_results(self):
         """ Print execution information for each instance (sorted by name) """

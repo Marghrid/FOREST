@@ -10,7 +10,7 @@ tester = None
 
 def handler(signal_received, frame):
     # Handle any cleanup here
-    print('\nSIGINT or CTRL-C detected. Exiting gracefully')
+    print('\nSIGINT or CTRL-C detected. Exiting gracefully.')
     if tester is not None:
         tester.terminate_all()
     exit()
@@ -29,22 +29,18 @@ def main():
     parser.add_argument('-o', '--out', action='store_true', help='Show output. Default: False.', default=False)
     parser.add_argument('-m', '--method', metavar='|'.join(methods), type=str, default='multitree',
                         help='Method of synthesis. Default: multitree.')
+    parser.add_argument('--resnax', action='store_true', help='read resnax i/o examples format.')
 
     args = parser.parse_args()
 
-    num_processes = args.processes
-    run_each = args.run_each
-    timeout = args.timeout
-    show_output = args.out
     if args.method not in methods:
         raise ValueError('Unknown method ' + args.method)
-    method = args.method
 
     global tester
 
-    tester = Tester(args.directories, method, num_processes, run_each, timeout, show_output)
+    tester = Tester(args.directories, args.method, args.processes, args.run_each, args.timeout, args.out, args.resnax)
     tester.test()
-    if method == 'compare-times':
+    if args.method == 'compare-times':
         tester.print_time_comparison()
     else:
         tester.print_results()
