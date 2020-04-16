@@ -38,3 +38,5 @@ examples from: https://www.freeformatter.com/credit-card-number-generator-valida
 --
 2345678856392
 12345676543212345342
+**
+[0-9]{14,19}
