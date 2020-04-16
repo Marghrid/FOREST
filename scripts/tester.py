@@ -67,7 +67,7 @@ class Task:
         self.method = self.command[m_idx + 1]
 
     def run(self):
-        print(colored(f"Running {self.instance} {self.method}.", "blue"))
+        print(colored(f"Running {self.instance} {self.method}: {' '.join(self.command)}", "blue"))
         interaction_file = open('int_no.txt')
         self.process = subprocess.Popen(self.command, stdin=interaction_file,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -165,6 +165,9 @@ class Tester:
 
     def test(self):
         """ Starts running tasks in random order """
+        if self.num_processes == 1:
+            self.test_sequentially()
+            return
         half_true_iter = half_true()
         start_time = time.time()
         while len(self.to_run) > 0 or len(self.running) > 0:
@@ -188,6 +191,17 @@ class Tester:
                     f"{len(self.to_run) + len(self.running)} to go. "
                     f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
             time.sleep(max(self.timeout // 30, 10))
+
+    def test_sequentially(self):
+        start_time = time.time()
+        while len(self.to_run) > 0:
+            new_task = self.to_run.pop()
+            new_task.run()
+            new_task.read_output(self.show_output)
+            print(colored(
+                f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
+                f"{len(self.to_run) + len(self.running)} to go. "
+                f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
 
     def print_results(self):
         """ Print execution information for each instance (sorted by name) """
@@ -257,3 +271,4 @@ class Tester:
         while len(self.running) > 0:
             task = self.running.pop()
             task.terminate()
+

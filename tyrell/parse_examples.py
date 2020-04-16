@@ -37,24 +37,22 @@ def parse_resnax(filename):
     invalid_exs = []
     valid_exs = []
     with open(filename, "r") as in_file:
-        next_line = in_file.readline()
-        while next_line and not '// example' in next_line:
+        next_line = in_file.readline().rstrip()
+        while next_line is not None and not '// example' in next_line:
             print(next_line)
-            next_line = in_file.readline()
+            next_line = in_file.readline().rstrip()
 
-        next_line = in_file.readline()  # skip line with "// examples"
+        next_line = in_file.readline().rstrip()  # skip line with "// examples"
         while next_line and '// gt' not in next_line:
-            next_line = next_line.rstrip()
+            next_line = in_file.readline().rstrip()
+
             ex, valid = read_resnax_example(next_line)
-            if ex == None:
+            if ex is None:
                 continue
             if valid:
                 valid_exs.append([ex])
             else:
                 invalid_exs.append([ex])
-            next_line = in_file.readline()
-
-        print(valid_exs, invalid_exs)
 
     return valid_exs, invalid_exs
 
