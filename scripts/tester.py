@@ -85,6 +85,15 @@ class Task:
             return True
         return self.process.poll() is not None
 
+    def wait(self):
+        print(colored(f"Waiting {self.timeout}s for {self.instance}.", "cyan"))
+        try:
+            self.process.wait(timeout=self.timeout)
+        except subprocess.TimeoutExpired:
+            print(colored(f"{self.instance} timed out.", "red"))
+            self.process.terminate()
+            return
+
     def read_output(self, show_output):
         po, pe = self.process.communicate()
         po = str(po, encoding='utf-8').splitlines()
@@ -197,6 +206,7 @@ class Tester:
         while len(self.to_run) > 0:
             new_task = self.to_run.pop()
             new_task.run()
+            new_task.wait()
             new_task.read_output(self.show_output)
             print(colored(
                 f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
