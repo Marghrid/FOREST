@@ -13,3 +13,5 @@ abc
 bcc
 ac
 aa
+**
+a|b*c

@@ -20,3 +20,5 @@ DG89TXK
 CQ12 SO
 JU29
 F3 EQT
+**
+[0-9A-Z]{4} [A-Z]{3}

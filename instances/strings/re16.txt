@@ -39,3 +39,6 @@ HU
 98
 09
 -
+**
+([0-9]{2}|[A-Z]{2})-
+concat(union(range(char_class(0, 9), 2), range(char_class(0, 9), 2)), "-")

@@ -1,8 +1,5 @@
 ([A-Z]|[0-9]){2}-([A-Z]|[0-9]){2}-([A-Z]|[0-9]){2}
 
-regex9 is a simplification of this, supposedly
-timeout
-
 ++
 11-DH-75
 35-NI-10
@@ -33,3 +30,5 @@ C-46-42
 74-XC
 67
 GH
+**
+([A-Z]|[0-9]){2}-([A-Z]|[0-9]){2}-([A-Z]|[0-9]){2}

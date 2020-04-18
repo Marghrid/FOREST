@@ -1,12 +1,4 @@
-concat(concat(re([0-9]), re(-)), concat(re([0-9]), re([0-9])))
-r1 = re([0-9])
-r2 = concat(r1, r1)
-r3 = re(-)
-r4 = concat(r1, r3)
-r5 = concat(r2, r4)
-02.08
-Solution found: is_string(IN) /\ match([0-9]-[0-9][0-9], IN)
-1m23s
+re01
 ++
 0-85
 3-05
@@ -48,3 +40,5 @@ V-40
 4-4
 495
 884
+**
+[0-9]-[0-9][0-9]

@@ -2,10 +2,10 @@ email
 ([A-Za-z0-9]|\.)+@[A-Za-z0-9]+\.[A-Za-z][A-Za-z][A-Za-z]?
 ++
 W10Yv.e1IDN@kz.B20.ef
-tc6hg.ig_l1i@NEf7k.uhw
+tc6hg.igl1i@NEf7k.uhw
 cM5Vz.WM5Ju@EQ11P.lqu
 fK6K2nC0PL@YMwbk.lok
-4q3ng.IvW_Z3@scydJ.oq
+4q3ng.IvWZ3@scydJ.oq
 pg7.Ro.17Wia@ZP5.dP.ph
 yaH.lpuPB@sJz8e.gpn
 s2JHwRlDkY@b.sn6D.ldd
@@ -17,4 +17,4 @@ fK6K2nC0PL@YMwbk
 b.sn6D.ldd
 @
 **
-([A-Za-z0-9]|\.)+@[A-Za-z0-9]+\.[A-Za-z][A-Za-z][A-Za-z]?
+([A-Za-z0-9]|\.)+@([A-Za-z0-9]|\.)+\.[A-Za-z][A-Za-z][A-Za-z]?
