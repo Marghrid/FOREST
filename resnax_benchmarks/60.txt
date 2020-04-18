@@ -14,4 +14,3 @@ I want to write a regular expression using jQuery to validate input fields which
 
 
 // gt
-"abacvfrdfrgthgfrthgf222222",-
