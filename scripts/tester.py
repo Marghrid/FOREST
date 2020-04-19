@@ -100,7 +100,7 @@ class Task:
         pe = str(pe, encoding='utf-8').splitlines()
 
         if self.process.returncode != 0:
-            print(colored("RETURN CODE: " + str(self.process.returncode), "red"))
+            print(colored(f"RETURN CODE {self.instance}: {self.process.returncode}", "red"))
 
         end = False
         for l in pe:

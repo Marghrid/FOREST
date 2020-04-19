@@ -52,12 +52,13 @@ def parse_resnax(filename):
             next_line = next_line.rstrip()
             if ground_truth_next:
                 ground_truth = next_line
+                ground_truth_next = False
                 continue
             ex, valid = read_resnax_example(next_line)
             if ex is None:
                 if len(next_line) > 2 and not next_line.startswith("//"):
                     print(" ", next_line)
-                elif next_line.startswith('// gt'):
+                elif next_line.startswith('// gt') or next_line.startswith('// ground truth'):
                     ground_truth_next = True
                 continue
             if valid:

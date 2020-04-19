@@ -137,6 +137,6 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
         for field_idx, field in enumerate(self.valid[0]):
             if len(field) == 0 and all(map(lambda ex: len(ex[field_idx]) == 0, self.valid)):
                 # ensure this field is the empty string on all examples
+                self.invalid = list(filter(lambda ex: len(ex[field_idx]) == 0, self.invalid))
                 for ex in self.valid + self.invalid:
                     ex.pop(field_idx)
-                self.invalid = list(filter(lambda ex: len(ex[field_idx]) == 0, self.invalid))
