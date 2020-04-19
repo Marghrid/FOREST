@@ -16,3 +16,4 @@ The input will be in the form a colon (:) separated tuple of three values. The f
 
 
 // gt
+[0-9]+:[0-9a-z]+:[0-9a-z]+

@@ -19,4 +19,5 @@ What is the regular expression for validating a month with the leading zero?
 "13",-
 
 // gt
+0[1-9]|1[0-2]
 or(concat(<0>,<num1-9>),concat(<1>,or(<0>,or(<1>,<2>))))

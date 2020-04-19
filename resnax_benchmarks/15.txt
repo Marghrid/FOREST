@@ -16,3 +16,4 @@ i need a Regular that validate Decimal (18,3) this mean max number of digits bef
 
 
 // gt
+[0-9]{1,15}(\.[0-9]{1,3})?

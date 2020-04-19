@@ -9,3 +9,4 @@ write regular expression in C# to validate that the input does not contain doubl
 
 
 // gt
+[a-z]*( [a-z]+)*

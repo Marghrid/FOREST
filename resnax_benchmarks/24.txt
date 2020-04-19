@@ -8,3 +8,4 @@ I need to validate each sub string length is 3 which is split by comma.
 
 
 // gt
+[0-9a-z]{3}(,[0-9a-z]{3})*

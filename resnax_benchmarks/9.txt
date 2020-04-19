@@ -13,3 +13,4 @@ I want this value to accept up to 18 digits before the decimal, and 1 digit afte
 
 
 // gt
+[0-9]{1,18}(\.[0-9])?

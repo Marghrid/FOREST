@@ -13,4 +13,5 @@ Requirement is that total number of "-" with the string can only be one
 
 
 // gt
+[A-Za-z]*-?[A-Za-z]*
 concat(star(not(<->)),concat(optional(<->),star(not(<->))))

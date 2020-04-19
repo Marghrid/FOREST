@@ -12,3 +12,4 @@ I need a regular expression that can validate that a string is an alphanumeric c
 
 
 // gt
+([0-9A-Za-z]|,)+

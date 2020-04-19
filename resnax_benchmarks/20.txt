@@ -13,5 +13,5 @@ How can i write valid regular expression for Oracle's Number(2,2), Also digits a
 "0.000",-
 
 
-
 // gt
+0(\.[0-2][0-9]*)?

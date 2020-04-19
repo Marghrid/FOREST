@@ -10,4 +10,5 @@ Need a regular expression to check a string with 4 digit and the space in trail.
 
 
 // gt
+[0-9]{4} ([0-9A-Z]| )*
 startwith(concat(repeat(<num>,4),< >))

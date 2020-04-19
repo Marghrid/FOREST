@@ -11,4 +11,5 @@ concat(concat(repeat(R1,3),<->),concat(repeat(R1,3),concat(<->,repeat(R1,4))))
 "105 931 4288",-
 
 // gt
+[0-9]{3}-[0-9]{3}-[0-9]{4}
 concat(concat(repeat(<num>,3),<->),concat(repeat(<num>,3),concat(<->,repeat(<num>,4))))

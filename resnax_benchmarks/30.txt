@@ -19,4 +19,5 @@ concat(R1,concat(R2,concat(R3,concat(R4,R5))))
 "abc-ab 12345",-
 
 // gt
+[a-z]{1,3}-[a-z]{1,2} [0-9]{1,4}
 concat(repeatrange(<let>,1,3),concat(<->,concat(repeatrange(<let>,1,2),concat(< >,repeatrange(<num>,1,4)))))

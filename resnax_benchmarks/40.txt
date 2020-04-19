@@ -13,3 +13,4 @@ i need regular expression for : one or two digits then "." and one or two digits
 
 
 // gt
+[0-9]{1,2}(.[0-9]{1,2})?

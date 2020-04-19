@@ -13,3 +13,4 @@ accept numeric values that are seven or ten digits
 
 
 // gt
+[0-9]{7}([0-9]{3})?

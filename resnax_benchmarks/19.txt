@@ -8,4 +8,5 @@ I am trying to write a regular expression which validates a text box to have onl
 "12345,1234567",-
 
 // gt
+([0-9]{5}|[0-9]{9})(,([0-9]{5}|[0-9]{9}))+,?
 concat(or(repeat(<num>,5),repeat(<num>,9)),concat(repeatatleast(or(repeat(<num>,5),repeat(<num>,9)),1),optional(<,>)))

@@ -12,4 +12,5 @@ regular expression which validates only number and min length should be 11 and m
 
 
 // gt
+\+?[0-9]{10,15}
 or(concat(optional(<+>),repeatrange(<num>,10,15)),repeatrange(<num>,11,16))

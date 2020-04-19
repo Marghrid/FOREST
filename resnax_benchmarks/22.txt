@@ -12,4 +12,5 @@ I'm trying to write a regular expression to check whether or not a proposed name
 "33333333333",-
 
 // gt
+
 and(repeatrange(<any>,3,20),and(startwith(<cap>),and(not(contain(concat(<cap>,<cap>))),and(not(contain(concat(not(<let>),< >))),and(not(contain(concat(< >,not(<cap>)))),and(not(contain(concat(not(<let>),<->))),and(not(contain(concat(<->,not(<low>)))),not(contain(concat(<cap>,not(or(<low>,or(<->,< >)))))))))))))

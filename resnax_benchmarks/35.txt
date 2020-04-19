@@ -16,4 +16,5 @@ concat(R1,concat(R2,R3))
 "pa**",-
 
 // gt
+\*?[A-Za-z][A-Za-z]+\*?
 concat(optional(<*>),concat(repeatatleast(<let>,2),optional(<*>)))

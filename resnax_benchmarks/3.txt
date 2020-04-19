@@ -11,3 +11,4 @@ write regular expression that allows only digits, characters like "&" "|" "." "(
 
 
 // gt
+[0-9 &|.()]+

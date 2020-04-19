@@ -10,3 +10,4 @@ I want to validate if my input consists starting with 8 hexadecimal characters f
 
 
 // gt
+[0-9A-F]{8}_[0-9a-zA-Z]+

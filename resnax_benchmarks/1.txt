@@ -14,4 +14,4 @@ write a regular expression that only matches strings, no numbers, no special cha
 
 
 // gt
-repeatatleast(<let>,1)
+[a-z]+

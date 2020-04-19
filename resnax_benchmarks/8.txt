@@ -18,3 +18,4 @@ It should accept numbers only with decimal part "0" or "5" only.
 
 
 // gt
+[0-9]+(\.(0|5))?

@@ -10,4 +10,5 @@ I need a regular expression that can validate an input string to make sure it is
 "30.01",-
 
 // gt
+
 and(not(<0>),or(concat(concat(<3>,<0>),optional(concat(<.>,repeatrange(<0>,1,2)))),concat(optional(or(<1>,<2>)),concat(<num>,optional(concat(<.>,repeatrange(<num>,1,2)))))))

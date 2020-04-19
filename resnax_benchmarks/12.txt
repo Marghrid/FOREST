@@ -17,3 +17,4 @@ optional number of digits followed by an "X" and an optional ("^" followed by on
 
 
 // gt
+[0-9]*X(\^[0-9]+)?

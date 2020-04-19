@@ -1,5 +1,8 @@
 // natural language
-I need a regular expression that will test the input bulletpoint Should start with only one "+" symbol or optional ( + should not come in between ) bulletpoint should not contain alphabets and any other special character bulletpoint Should not contain consecutive "+" symbols
+I need a regular expression that will test the input
+- Should start with only one "+" symbol or optional ( + should not come in between )
+- should not contain alphabets and any other special character
+- Should not contain consecutive "+" symbols
 
 // examples
 "+91",+
@@ -12,4 +15,5 @@ I need a regular expression that will test the input bulletpoint Should start wi
 
 
 // gt
+\+?[0-9]+
 concat(optional(<+>),repeatatleast(<num>,1))

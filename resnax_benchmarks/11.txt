@@ -13,3 +13,4 @@ I want to develop one regular expression which validates only strings which have
 
 
 // gt
+(A|B|C)+

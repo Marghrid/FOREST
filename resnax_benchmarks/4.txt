@@ -11,4 +11,5 @@ validate a textbox with decimal number. I need the exact digit like this two dig
 "12.4",-
 
 // gt
+[0-9]{2}\.5
 concat(repeat(<num>,2),concat(<.>,<5>))
