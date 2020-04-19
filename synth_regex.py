@@ -14,7 +14,7 @@ logger = get_logger('tyrell')
 
 
 def main():
-    examples_file, synth_method, resnax = read_cmd_args()
+    examples_file, synth_method, self_interact, resnax = read_cmd_args()
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
@@ -23,11 +23,11 @@ def main():
 
     show(valid, invalid, ground_truth)
     if synth_method == 'multitree':
-        program = multitree_synthesize(valid, invalid)
+        program = multitree_synthesize(valid, invalid, self_interact, ground_truth)
     elif synth_method == 'ktree':
-        program = ktree_synthesize(valid, invalid)
+        program = ktree_synthesize(valid, invalid, self_interact, ground_truth)
     elif synth_method == 'nopruning':
-        program = multitree_nopruning_synthesize(valid, invalid)
+        program = multitree_nopruning_synthesize(valid, invalid, self_interact, ground_truth)
     else:
         raise ValueError
     # if ground_truth:
@@ -58,25 +58,25 @@ def show(valid, invalid, ground_truth: str):
     print(colored(ground_truth, "green"))
 
 
-def multitree_synthesize(valid, invalid):
+def multitree_synthesize(valid, invalid, self_interact, ground_truth):
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
-    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl)
+    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth, auto_interaction=self_interact)
     return synthesize(synthesizer, type_validation)
 
 
-def ktree_synthesize(valid, invalid):
+def ktree_synthesize(valid, invalid, self_interact, ground_truth):
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
-    synthesizer = KTreeSynthesizer(valid, invalid, dsl)
+    synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth, pruning=True, auto_interaction=self_interact)
     return synthesize(synthesizer, type_validation)
 
 
-def multitree_nopruning_synthesize(valid, invalid):
+def multitree_nopruning_synthesize(valid, invalid, self_interact, ground_truth):
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
-    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, pruning=False)
+    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth, pruning=False, auto_interaction=self_interact)
     return synthesize(synthesizer, type_validation)
 
 
@@ -103,11 +103,12 @@ def synthesize(synthesizer, type_validation):
 def read_cmd_args():
     methods = ('multitree', 'ktree', 'nopruning')
     parser = argparse.ArgumentParser(description='Validations Synthesizer')
-    parser.add_argument('file', type=str, help='file with I/O examples')
-    parser.add_argument('-d', '--debug', action='store_true', help='debug mode')
+    parser.add_argument('file', type=str, help='File with I/O examples.')
+    parser.add_argument('-d', '--debug', action='store_true', help='Debug mode.')
     parser.add_argument('-m', '--method', metavar='|'.join(methods), type=str, default='multitree',
                         help='Method of synthesis. Default: multitree.')
-    parser.add_argument('--resnax', action='store_true', help='read resnax i/o examples format.')
+    parser.add_argument('-s', '--self-interact', action="store_true", help="Self interaction mode.")
+    parser.add_argument('--resnax', action='store_true', help='Read resnax i/o examples format.')
     args = parser.parse_args()
     if args.debug:
         logger.setLevel("DEBUG")
@@ -116,7 +117,7 @@ def read_cmd_args():
     if args.method not in methods:
         raise ValueError('Unknown method ' + args.method)
 
-    return args.file, args.method, args.resnax
+    return args.file, args.method, args.self_interact, args.resnax
 
 
 if __name__ == '__main__':

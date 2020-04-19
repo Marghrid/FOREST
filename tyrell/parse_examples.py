@@ -1,16 +1,9 @@
 import re
 
 from tyrell.logger import get_logger
+from tyrell.utils import is_regex
 
 logger = get_logger('tyrell')
-
-
-def is_regex(next_line: str):
-    try:
-        re.compile(next_line)
-        return True
-    except re.error:
-        return False
 
 
 def parse_file(filename):

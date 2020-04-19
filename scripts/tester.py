@@ -68,7 +68,7 @@ class Task:
     def run(self):
         print(colored(f"Running {self.instance} {self.method}: {' '.join(self.command)}", "blue"))
         interaction_file = open('int_no.txt')
-        self.process = subprocess.Popen(self.command, stdin=interaction_file,
+        self.process = subprocess.Popen(self.command, # stdin=interaction_file,
                                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.start_time = time.time()
 
@@ -145,9 +145,9 @@ class Tester:
             methods = all_methods
         else:
             methods = [method]
-        command_base = ["python3", "synth_regex.py", '-m']
+        command_base = ["python3", "synth_regex.py", '-s', '-m']
         if resnax:
-            command_base = ["python3", "synth_regex.py", '--resnax', '-m']
+            command_base = ["python3", "synth_regex.py", '-s', '--resnax', '-m']
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")

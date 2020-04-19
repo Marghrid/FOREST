@@ -21,8 +21,8 @@ no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 class MultiTreeSynthesizer(MultipleSynthesizer):
 
-    def __init__(self, valid_examples, invalid_examples, main_dsl, pruning=True):
-        super().__init__(valid_examples, invalid_examples, main_dsl, pruning)
+    def __init__(self, valid_examples, invalid_examples, main_dsl, ground_truth, pruning=True, auto_interaction=False):
+        super().__init__(valid_examples, invalid_examples, main_dsl, ground_truth, pruning, auto_interaction)
         self.valid = valid_examples
         self.invalid = invalid_examples
 
@@ -103,13 +103,14 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             elif len(cs) == 1:
                 return fr'({cs}+)'
             else:
+                ret = ''
                 for char in cs:
                     ret = 'fr((?:'
                     if char in self.special_chars:
                         ret += "\\"
                     ret += char
                     ret += ")+)"
-                return ret #fr'((?:{cs})+)'
+                return ret # fr'((?:{cs})+)'
         elif isinstance(cs, list):
             pass
 
