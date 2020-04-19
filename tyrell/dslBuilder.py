@@ -35,7 +35,6 @@ class DSLBuilder:
             dsl_base = dsl_file.read()
 
         if "integer" in val_type:
-
             dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(int, valid))) + "}\n"
 
         elif "real" in val_type:
@@ -82,7 +81,7 @@ class DSLBuilder:
             if substring in self.special_chars:
                 relevant_chars.add(f"\\{substring}")
             elif substring == "'":
-                relevant_chars.add(f'"{substring}"')
+                relevant_chars.add(f'{substring}')
             else:
                 relevant_chars.add(substring)
         
@@ -105,7 +104,7 @@ class DSLBuilder:
                 elif char in self.special_chars:
                     relevant_chars.add(f"\\{char}")
                 elif char == "'":
-                    relevant_chars.add(f'"{char}"')
+                    relevant_chars.add(f'{char}')
                 else:
                     relevant_chars.add(char)
 

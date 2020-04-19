@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse
+import time
 
 from termcolor import colored
 
@@ -16,22 +17,26 @@ def main():
     examples_file, synth_method, resnax = read_cmd_args()
 
     if resnax:
-        valid, invalid = parse_resnax(examples_file)
+        valid, invalid, ground_truth = parse_resnax(examples_file)
     else:
-        valid, invalid = parse_file(examples_file)
+        valid, invalid, ground_truth = parse_file(examples_file)
 
-    show(valid, invalid)
+    show(valid, invalid, ground_truth)
     if synth_method == 'multitree':
-        multitree_synthesize(valid, invalid)
+        program = multitree_synthesize(valid, invalid)
     elif synth_method == 'ktree':
-        ktree_synthesize(valid, invalid)
+        program = ktree_synthesize(valid, invalid)
     elif synth_method == 'nopruning':
-        multitree_nopruning_synthesize(valid, invalid)
+        program = multitree_nopruning_synthesize(valid, invalid)
     else:
         raise ValueError
+    # if ground_truth:
+    #     check(program,ground_truth)
+    # else:
+    #     print("No ground truth to check if program is correct.")
 
 
-def show(valid, invalid):
+def show(valid, invalid, ground_truth: str):
     print("Valid examples:")
     max_len = max(map(lambda x: len(x[0]), valid))
     max_len = max(max_len, 6)
@@ -49,6 +54,8 @@ def show(valid, invalid):
         if (i + 1) % 5 == 0:
             print()
     print()
+    print("Ground truth:")
+    print(colored(ground_truth, "green"))
 
 
 def multitree_synthesize(valid, invalid):
@@ -56,13 +63,13 @@ def multitree_synthesize(valid, invalid):
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl)
-    synthesize(synthesizer, type_validation)
+    return synthesize(synthesizer, type_validation)
 
 
 def ktree_synthesize(valid, invalid):
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = KTreeSynthesizer(valid, invalid, dsl)
-    synthesize(synthesizer, type_validation)
+    return synthesize(synthesizer, type_validation)
 
 
 def multitree_nopruning_synthesize(valid, invalid):
@@ -70,7 +77,7 @@ def multitree_nopruning_synthesize(valid, invalid):
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, pruning=False)
-    synthesize(synthesizer, type_validation)
+    return synthesize(synthesizer, type_validation)
 
 
 def prepare_things(valid, invalid):

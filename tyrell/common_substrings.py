@@ -28,7 +28,7 @@ def find_lcs(arr):
                 if len(results) == 0:
                     results = {stem}
                 elif len(next(iter(results))) < len(stem):
-                    results = [stem]
+                    results = {stem}
                 elif len(next(iter(results))) == len(stem):
                     results.add(stem)
 

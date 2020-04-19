@@ -16,7 +16,7 @@ instance_paths += glob.glob(dir + "*.txt")
 
 for examples_file in instance_paths:
     print('\n', examples_file)
-    valid, invalid = parse_file(examples_file)
+    valid, invalid, ground_truth = parse_file(examples_file)
     transposed_valid = list(map(list, zip(*valid)))
     print(transposed_valid)
     substrings = []

@@ -5,10 +5,19 @@ from tyrell.logger import get_logger
 logger = get_logger('tyrell')
 
 
+def is_regex(next_line: str):
+    try:
+        re.compile(next_line)
+        return True
+    except re.error:
+        return False
+
+
 def parse_file(filename):
     logger.info("Parsing examples from file " + filename)
     invalid_exs = []
     valid_exs = []
+    ground_truth = ''
     with open(filename, "r") as in_file:
         next_line = in_file.readline()
         while next_line and not next_line.startswith("++"):
@@ -22,13 +31,20 @@ def parse_file(filename):
             next_line = in_file.readline()
 
         next_line = in_file.readline()  # skip line with "--"
-        while next_line:
+        while next_line and not next_line.startswith("**"):
             next_line = next_line.rstrip()
             exs = read_example(filename, next_line)
             invalid_exs.extend(exs)
             next_line = in_file.readline()
 
-    return valid_exs, invalid_exs
+        while next_line:
+            next_line = next_line.rstrip()
+            if is_regex(next_line):
+                ground_truth = next_line
+                break
+            next_line = in_file.readline()
+
+    return valid_exs, invalid_exs, ground_truth
 
 
 def parse_resnax(filename):
@@ -36,14 +52,20 @@ def parse_resnax(filename):
 
     invalid_exs = []
     valid_exs = []
+    ground_truth_next = False
+    ground_truth = ''
     with open(filename, "r") as in_file:
         for next_line in in_file:
             next_line = next_line.rstrip()
-
+            if ground_truth_next:
+                ground_truth = next_line
+                continue
             ex, valid = read_resnax_example(next_line)
             if ex is None:
                 if len(next_line) > 2 and not next_line.startswith("//"):
                     print(" ", next_line)
+                elif next_line.startswith('// gt'):
+                    ground_truth_next = True
                 continue
             if valid:
                 valid_exs.append([ex])
@@ -51,7 +73,7 @@ def parse_resnax(filename):
                 invalid_exs.append([ex])
 
 
-    return valid_exs, invalid_exs
+    return valid_exs, invalid_exs, ground_truth
 
 
 def read_example(filename, next_line):

@@ -103,7 +103,13 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             elif len(cs) == 1:
                 return fr'({cs}+)'
             else:
-                return fr'((?:{cs})+)'
+                for char in cs:
+                    ret = 'fr((?:'
+                    if char in self.special_chars:
+                        ret += "\\"
+                    ret += char
+                    ret += ")+)"
+                return ret #fr'((?:{cs})+)'
         elif isinstance(cs, list):
             pass
 

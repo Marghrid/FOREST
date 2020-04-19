@@ -10,7 +10,6 @@ from termcolor import colored
 
 all_methods = ('multitree', 'ktree', 'nopruning')
 
-
 def half_true():
     n = 0
     while True:
@@ -81,6 +80,7 @@ class Task:
         ''' Checks if task is done or has timed out. '''
         elapsed = time.time() - self.start_time
         if elapsed >= self.timeout:
+            print(colored(f"{self.instance} timed out.", "red"))
             self.terminate()
             return True
         return self.process.poll() is not None
@@ -99,15 +99,21 @@ class Task:
         po = str(po, encoding='utf-8').splitlines()
         pe = str(pe, encoding='utf-8').splitlines()
 
+        if self.process.returncode != 0:
+            print(colored("RETURN CODE: " + str(self.process.returncode), "red"))
+
         end = False
+        for l in pe:
+            print(colored("ERROR: " + l, "red"))
         for l in po:
             # print(l)
+            # if re.search("[\w+]", l) is not None and show_output:
+            if show_output:
+                print(" ", l)
             if not end:
                 if "Synthesizer done" in l:
                     end = True
             else:
-                if re.search("[\w+]", l) is not None and show_output:
-                    print(" ", l)
                 if "Elapsed time" in l:
                     regex = r"Elapsed time: (\d+\.\d+)"
                     self.time = float(re.search(regex, l)[1])
