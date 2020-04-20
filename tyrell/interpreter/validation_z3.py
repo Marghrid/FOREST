@@ -32,8 +32,10 @@ class Validation_z3(PostOrderInterpreter):
     def eval_Char(self, c):
         return c
 
-    def eval_NumCopies(self, v):
-        return int(v)
+    def eval_RangeVal(self, v):
+        s = v.split(',')
+        assert len(s) == 2
+        return (int(s[0]), int(s[1]))
 
     def eval_conj(self, node, args) -> bool:
         return args[0] if args[0] is not None else args[1]
@@ -76,9 +78,10 @@ class Validation_z3(PostOrderInterpreter):
     def eval_posit(self, node, args):
         return z3.Plus(args[0])
 
-    def eval_copies(self, node, args):
-        num_copies = args[1]
-        return z3.Loop(args[0], num_copies, num_copies)
+    def eval_range(self, node, args):
+        range_vals = args[1]
+        assert len(range_vals) == 2
+        return z3.Loop(args[0], range_vals[0], range_vals[1])
 
     def eval_concat(self, node, args):
         if len(args) == 1:

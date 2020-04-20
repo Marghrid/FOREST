@@ -43,11 +43,11 @@ class DSLBuilder:
         elif "string" in val_type:
             dsl += "enum Value {" + ",".join(map(lambda x: f'"{x}"', self.get_values(len, valid))) + "}\n"
             dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.get_relevant_chars(valid))) + "}\n"
-            dsl += "enum NumCopies {" + ",".join(map(lambda x: f'"{x}"', self.get_num_copies(valid))) + "}\n"
+            dsl += "enum RangeVal {" + ",".join(map(lambda x: f'"{x}"', self.get_range_vals(valid))) + "}\n"
 
         elif "regex" in val_type:
             dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.get_relevant_chars(valid))) + "}\n"
-            dsl += "enum NumCopies {" + ",".join(map(lambda x: f'"{x}"', self.get_num_copies(valid))) + "}\n"
+            dsl += "enum RangeVal {" + ",".join(map(lambda x: f'"{x}"', self.get_range_vals(valid))) + "}\n"
 
         logger.debug("\n" + dsl)
 
@@ -117,9 +117,7 @@ class DSLBuilder:
         relevant_chars.update(char_classes)
         return sorted(relevant_chars)
 
-    def get_num_copies(self, valid):
-        num_copies = set()
-
+    def get_range_vals(self, valid):
         compressed = valid.copy()
 
         substrings = set()
@@ -132,9 +130,14 @@ class DSLBuilder:
         lens = map(len, compressed)
         m = max(lens) + 1
         m = max(m, 3)
-        num_copies.update(range(2, m))
 
-        return sorted(num_copies)
+        range_vals = []
+        for j in range(2, m + 1):
+            for i in range(0, j + 1):
+                range_vals.append(f'{i},{j}')
+
+
+        return range_vals
 
     def update_char_classes(self, char_classes):
         if '[0-9]' in char_classes and '[A-Z]' in char_classes:

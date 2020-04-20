@@ -4,7 +4,7 @@ from .post_order import PostOrderInterpreter
 
 class ValidationPrinter(PostOrderInterpreter):
     # */+/? concat |
-    # {"kleene":3, "copies":3, "posit":3, "option":3, "concat":2, "union":1}
+    # {"kleene":3, "range":3, "posit":3, "option":3, "concat":2, "union":1}
     def __init__(self):
         super().__init__()
         self.precedences = {}
@@ -23,6 +23,11 @@ class ValidationPrinter(PostOrderInterpreter):
 
     def eval_Value(self, v):
         return v
+
+    def eval_RangeVal(self, v):
+        s = v.split(',')
+        assert len(s) == 2
+        return (int(s[0]), int(s[1]))
 
     def eval_conj(self, node: Node, args) -> str:
         """Bool -> Bool, Bool;"""
@@ -102,14 +107,20 @@ class ValidationPrinter(PostOrderInterpreter):
         self.precedences[node.production.id] = 3
         return self.eval_unary_operator(args, node, '+')
 
-    def eval_copies(self, node, args):
+    def eval_range(self, node, args):
         self.precedences[node.production.id] = 3
         child_id = node.children[0].production.id
         child_prec = self.precedences[child_id]
-        if child_prec >= self.precedences[node.production.id]:
-            return f'{args[0]}{{{args[1]}}}'
+        range_vals = args[1]
+        assert len(range_vals) == 2
+        if range_vals[0] == range_vals[1]:
+            range_vals_str = str(range_vals[0])
         else:
-            return f'({args[0]}){{{args[1]}}}'
+            range_vals_str = f"{range_vals[0]},{range_vals[1]}"
+        if child_prec >= self.precedences[node.production.id]:
+            return f'{args[0]}{{{range_vals_str}}}'
+        else:
+            return f'({args[0]}){{{range_vals_str}}}'
 
     def eval_concat(self, node, args):
         self.precedences[node.production.id] = 2

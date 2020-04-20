@@ -23,7 +23,7 @@ class NodeCounter(PostOrderInterpreter):
     def eval_Char(self, v):
         return 0
 
-    def eval_NumCopies(selfself, v):
+    def eval_RangeVal(selfself, v):
         return 1
 
     def eval_conj(self, node: Node, args) -> str:
@@ -74,7 +74,7 @@ class NodeCounter(PostOrderInterpreter):
     def eval_posit(self, node, args):
         return 1 + sum(args)
 
-    def eval_copies(self, node, args):
+    def eval_range(self, node, args):
         return 1 + sum(args)
 
     def eval_concat(self, node, args):

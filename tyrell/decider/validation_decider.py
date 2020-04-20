@@ -77,9 +77,18 @@ class ValidationDecider(ExampleDecider):
                 if new_predicate is not None:
                     new_predicates.append(new_predicate)
 
-            elif production.name == "copies":
+            elif production.name == "range":
                 regex = self.interpreter.eval(node, self.valid_exs[0])
-                new_predicate = self.check_matches(node, regex, tree_idx)
+                arg = node.args[1].data.split(',')
+                assert len(arg) == 2
+                # arg = (int(arg[0]), int(arg[1]))
+                regex0 = re.sub('\{.*\}', '{' + arg[0] + '}', regex, 1)
+                new_predicate = self.check_matches(node, regex0, tree_idx)
+                if new_predicate is not None:
+                    new_predicates.append(new_predicate)
+
+                regex1 = re.sub('\{.*\}', '{' + arg[1] + '}', regex, 1)
+                new_predicate = self.check_matches(node, regex1, tree_idx)
                 if new_predicate is not None:
                     new_predicates.append(new_predicate)
 
