@@ -75,20 +75,20 @@ class ValidationDecider(ExampleDecider):
 
             elif production.name == "range":
                 '''
-                Block r{n-1,m} if
-                    a{n} always occurs (n-1 is too low), or
-                    a{m} never occurs (m is too high)
+                Block r{n,m} if
+                    r{n} does not always occurs
+                    r{m} never occurs
                 '''
                 regex = self.interpreter.eval(node, self.valid_exs[0])
                 bounds = node.args[1].data.split(',')
-                n = str(int(bounds[0]) + 1)
+                n = bounds[0]
                 m = bounds[1]
                 assert len(bounds) == 2
                 # arg = (int(arg[0]), int(arg[1]))
                 regex_n = re.sub('{\d+,\d+}$', '{' + n + '}', regex, 1)
                 regex_m = re.sub('{\d+,\d+}$', '{' + m + '}', regex, 1)
 
-                if self.always_matches_examples(regex_n):
+                if not self.always_matches_examples(regex_n):
                     new_predicates.append(Predicate("block_subtree", [node, tree_idx]))
                 elif self.never_matches_examples(regex_m):
                     new_predicates.append(Predicate("block_subtree", [node, tree_idx]))
