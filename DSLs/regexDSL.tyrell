@@ -11,30 +11,7 @@ func re:     Regex -> Char;
 
 func concat: Regex -> Regex, Regex;
 func union:  Regex -> Regex, Regex;
-func range: Regex -> Regex, RangeVal;
 func kleene: Regex s -> Regex r;
 func posit:  Regex s -> Regex r;
 func option: Regex s -> Regex r;
 
-# predicate is_commutative(union);
-
-predicate is_not_parent(kleene, kleene);
-predicate is_not_parent(option, option);
-predicate is_not_parent(posit,  posit);
-predicate is_not_parent(range, range);
-
-predicate is_not_parent(kleene, posit);
-predicate is_not_parent(kleene, option);
-predicate is_not_parent(kleene, range);
-
-predicate is_not_parent(posit, kleene);
-predicate is_not_parent(posit, option);
-predicate is_not_parent(posit, range);
-
-predicate is_not_parent(option, kleene);
-predicate is_not_parent(option, posit);
-predicate is_not_parent(option, range);
-
-predicate is_not_parent(range, posit);
-predicate is_not_parent(range, option);
-predicate is_not_parent(range, kleene);

@@ -178,8 +178,12 @@ class MultiTreeEnumerator(Enumerator):
         for tree in self.trees:
             dsl = self.tree_dsls[tree.id - 1]
 
-            parent = dsl.get_function_production_or_raise(pred.args[0])
-            child = dsl.get_function_production_or_raise(pred.args[1])
+            parent = dsl.get_function_production(pred.args[0])
+            if parent is None:
+                continue
+            child = dsl.get_function_production(pred.args[1])
+            if child is None:
+                continue
             child_pos = []
             # find positions that type-check between parent and child
             for x in range(0, len(parent.rhs)):

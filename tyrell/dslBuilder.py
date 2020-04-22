@@ -31,6 +31,7 @@ class DSLBuilder:
 
     def build_dsl(self, val_type, valid):
         dsl = ''
+        range_operator = False
         with open("DSLs/" + re.sub('^is_', '', val_type) + "DSL.tyrell", "r") as dsl_file:
             dsl_base = dsl_file.read()
 
@@ -47,12 +48,18 @@ class DSLBuilder:
 
         elif "regex" in val_type:
             dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.get_relevant_chars(valid))) + "}\n"
-            dsl += "enum RangeVal {" + ",".join(map(lambda x: f'"{x}"', self.get_range_vals(valid))) + "}\n"
+            range_vals = self.get_range_vals(valid)
+            if len(range_vals) > 0:
+                range_operator = True
+                dsl += "enum RangeVal {" + ",".join(map(lambda x: f'"{x}"', range_vals)) + "}\n"
+
 
         logger.debug("\n" + dsl)
 
         dsl += dsl_base
-
+        if range_operator:
+            dsl += self._range_operator()
+        dsl += self._predicates()
         dsl = spec.parse(dsl)
 
         return dsl
@@ -128,8 +135,8 @@ class DSLBuilder:
             compressed = list(map(lambda x: x.replace(ss, '.'), compressed))
 
         lens = map(len, compressed)
-        m = max(lens) + 1
-        m = max(m, 3)
+        m = max(lens)
+        # m = max(m, 3)
 
         range_vals = []
         for j in range(2, m + 1):
@@ -148,3 +155,25 @@ class DSLBuilder:
             char_classes.add('[A-Za-z]')
         if '[0-9]' in char_classes and '[A-Z]' in char_classes and '[a-z]' in char_classes:
             char_classes.add('[0-9A-Za-z]')
+
+    def _range_operator(self):
+        return "func range: Regex -> Regex, RangeVal;\n" \
+                "predicate is_not_parent(range, range);\n" \
+                "predicate is_not_parent(kleene, range);\n" \
+                "predicate is_not_parent(posit, range);\n" \
+                "predicate is_not_parent(option, range);\n" \
+                "predicate is_not_parent(range, posit);\n" \
+                "predicate is_not_parent(range, option);\n" \
+                "predicate is_not_parent(range, kleene);\n"
+
+    def _predicates(self):
+        return "# predicate is_commutative(union);\n" \
+               "predicate is_not_parent(kleene, kleene);\n" \
+               "predicate is_not_parent(option, option);\n" \
+               "predicate is_not_parent(posit,  posit);\n" \
+               "predicate is_not_parent(kleene, posit);\n" \
+               "predicate is_not_parent(kleene, option);\n" \
+               "predicate is_not_parent(posit, kleene);\n" \
+               "predicate is_not_parent(posit, option);\n" \
+               "predicate is_not_parent(option, kleene);\n" \
+               "predicate is_not_parent(option, posit);\n"
