@@ -251,7 +251,7 @@ class Tester:
             if any(map(lambda x: x != nodes[0], nodes)):
                 print(f"{inst.name}:".ljust(maxl), "has different number of nodes")
             else:
-                print(f"{inst.name}:".ljust(maxl),
+                print(f"{inst.name},".ljust(maxl),
                       f"{round(sum(times) / len(times), 2)},".ljust(10),
                       f"{interactions[0]},".ljust(3),
                       f"{enumerators[0]},".ljust(max_enumerators_length),

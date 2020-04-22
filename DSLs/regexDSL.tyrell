@@ -9,9 +9,3 @@ program Validate(String) -> Regex;
 func empty: Empty -> Empty;
 func re:     Regex -> Char;
 
-func concat: Regex -> Regex, Regex;
-func union:  Regex -> Regex, Regex;
-func kleene: Regex s -> Regex r;
-func posit:  Regex s -> Regex r;
-func option: Regex s -> Regex r;
-

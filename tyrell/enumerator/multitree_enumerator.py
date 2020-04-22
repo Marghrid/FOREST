@@ -283,7 +283,10 @@ class MultiTreeEnumerator(Enumerator):
         commutative_op_nodes = []
         for tree in self.trees:
             dsl = self.tree_dsls[tree.id-1]
-            union_id = dsl.get_function_production("union").id
+            union = dsl.get_function_production("union")
+            if union is None:
+                continue
+            union_id = union.id
             commutative_op_nodes.extend(filter(
                 lambda n: int(str(self.model[n])) == union_id, tree.nodes))
 
