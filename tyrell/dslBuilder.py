@@ -167,9 +167,9 @@ class DSLBuilder:
     def _range_operator(self):
         return "func range: Regex -> Regex, RangeVal;\n" \
                "predicate is_not_parent(range, range);\n" \
-               "predicate is_not_parent(kleene, range);\n" \
-               "predicate is_not_parent(posit, range);\n" \
-               "predicate is_not_parent(option, range);\n"
+               "predicate is_not_parent(range, kleene);\n" \
+               "predicate is_not_parent(range, posit);\n" \
+               "predicate is_not_parent(range, option);\n"
 
     def _predicates(self):
         return "# predicate is_commutative(union);\n" \

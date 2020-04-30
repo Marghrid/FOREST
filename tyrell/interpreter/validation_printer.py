@@ -66,8 +66,7 @@ class ValidationPrinter(PostOrderInterpreter):
         return args[0] + " >= " + args[1]
 
     def eval_re(self, node, args):
-        self.precedences[node.production.id] = 4
-        self.precedences[node.production.id] = 4
+        self.precedences[node.production.id] = 5
         if len(args[0]) == 1 or '[' in args[0]:
             return args[0]
         else:
@@ -96,15 +95,15 @@ class ValidationPrinter(PostOrderInterpreter):
         return children_str
 
     def eval_kleene(self, node: Node, args):
-        self.precedences[node.production.id] = 3
+        self.precedences[node.production.id] = 4
         return self.eval_unary_operator(args, node, '*')
 
     def eval_option(self, node, args):
-        self.precedences[node.production.id] = 3
+        self.precedences[node.production.id] = 4
         return self.eval_unary_operator(args, node, '?')
 
     def eval_posit(self, node, args):
-        self.precedences[node.production.id] = 3
+        self.precedences[node.production.id] = 4
         return self.eval_unary_operator(args, node, '+')
 
     def eval_range(self, node, args):
