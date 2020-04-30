@@ -60,8 +60,6 @@ class DSLBuilder:
                 range_operator = True
                 dsl += "enum RangeVal {" + ",".join(map(lambda x: f'"{x}"', range_vals)) + "}\n"
 
-        logger.debug("\n" + dsl)
-
         dsl += dsl_base
         if not super_simple_dsl:
             dsl += self._regex_operators()
@@ -69,6 +67,8 @@ class DSLBuilder:
                 dsl += self._range_operator()
         if not super_simple_dsl:
             dsl += self._predicates()
+
+        logger.debug("\n" + dsl)
 
         dsl = spec.parse(dsl)
 
@@ -169,10 +169,7 @@ class DSLBuilder:
                "predicate is_not_parent(range, range);\n" \
                "predicate is_not_parent(kleene, range);\n" \
                "predicate is_not_parent(posit, range);\n" \
-               "predicate is_not_parent(option, range);\n" \
-               "predicate is_not_parent(range, posit);\n" \
-               "predicate is_not_parent(range, option);\n" \
-               "predicate is_not_parent(range, kleene);\n"
+               "predicate is_not_parent(option, range);\n"
 
     def _predicates(self):
         return "# predicate is_commutative(union);\n" \

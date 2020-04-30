@@ -154,6 +154,10 @@ class MultipleSynthesizer(ABC):
                 new_predicates = res.why()
                 if new_predicates is not None:
                     for pred in new_predicates:
+                        if pred.name.startswith("block_range"):
+                            logger.debug(
+                                f'New predicate: {pred.name} {pred.args[0]}')
+                            continue
                         pred_str = self._printer.eval(pred.args[0], ["IN"])
                         if len(pred.args) > 1:
                             pred_str = str(pred.args[1]) + " " + pred_str
