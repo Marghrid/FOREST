@@ -181,7 +181,6 @@ class FunnyEnumerator(Enumerator):
         ranges_to_block = self.range_lower_bounds[lower_bound]
 
         for range_node in ranges_to_block:
-            print("blocking:", range_node)
             program_to_block = program
             program_to_block.args[1] = range_node
             # We want to run block_subtree only for nodes in the tree in which
@@ -204,7 +203,6 @@ class FunnyEnumerator(Enumerator):
         ranges_to_block = self.range_upper_bounds[upper_bound]
 
         for range_node in ranges_to_block:
-            print("blocking on tree:", range_node)
             program_to_block = program
             program_to_block.args[1] = range_node
             # We want to run block_subtree only for nodes in the tree in which

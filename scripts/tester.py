@@ -66,10 +66,18 @@ class Task:
         self.method = self.command[m_idx + 1]
 
     def run(self):
-        print(colored(f"Running {self.instance} {self.method}: {' '.join(self.command)}", "blue"))
-        interaction_file = open('int_no.txt')
-        self.process = subprocess.Popen(self.command, # stdin=interaction_file,
-                                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        print(colored(f"Running {self.instance} {self.method}: "
+                      f"{' '.join(self.command)}", "blue"))
+        if '-s' in self.command:
+            self.process = subprocess.Popen(self.command,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
+        else:
+            interaction_file = open('int_no.txt')
+            self.process = subprocess.Popen(self.command,
+                                            stdin=interaction_file,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE)
         self.start_time = time.time()
 
     def terminate(self):
@@ -100,7 +108,8 @@ class Task:
         pe = str(pe, encoding='utf-8').splitlines()
 
         if self.process.returncode != 0:
-            print(colored(f"RETURN CODE {self.instance}: {self.process.returncode}", "red"))
+            print(colored(f"RETURN CODE {self.instance}:"
+                          f"{self.process.returncode}", "red"))
 
         end = False
         for l in pe:
@@ -147,7 +156,7 @@ class Tester:
             methods = [method]
         command_base = ["python3", "synth_regex.py", '-s', '-m']
         if resnax:
-            command_base = ["python3", "synth_regex.py", '-s', '--resnax', '-m']
+            command_base = ["python3", "synth_regex.py", '--resnax', '-m']
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")

@@ -177,7 +177,6 @@ class Enumerator(ABC):
             if data[1] not in self.range_upper_bounds:
                 self.range_upper_bounds[data[1]] = []
             self.range_upper_bounds[data[1]].append(range_node)
-            print(data)
 
     def block_subtree(self, subtree: ASTNode, program: Node):
         """ Block the subtree below the program node from happening in the
