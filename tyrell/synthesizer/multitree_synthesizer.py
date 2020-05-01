@@ -21,13 +21,18 @@ no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 class MultiTreeSynthesizer(MultipleSynthesizer):
 
-    def __init__(self, valid_examples, invalid_examples, main_dsl, ground_truth, pruning=True, auto_interaction=False):
-        super().__init__(valid_examples, invalid_examples, main_dsl, ground_truth, pruning, auto_interaction)
+    def __init__(self, valid_examples, invalid_examples, main_dsl, ground_truth,
+                 pruning=True, auto_interaction=False, force_funny=False):
+        super().__init__(valid_examples, invalid_examples, main_dsl, ground_truth,
+                         pruning, auto_interaction)
         self.valid = valid_examples
         self.invalid = invalid_examples
 
         self.main_dsl = main_dsl
-        self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')', '{', '}', '[', ']', '"'}
+        self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
+                              '{', '}', '[', ']', '"'}
+
+        self.force_funny = force_funny
 
         new_l = len(self.valid[0])
         l = 0
@@ -36,26 +41,32 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             self.divide_examples()
             new_l = len(self.valid[0])
             pass
-        # divided_valid and divided_invalid are a list of lists. Each list is an example and the lists inside are
-        # splits of examples. I want a DSL for each split, with alphabet and the rest computed accordingly.
+
+        # divided_valid and divided_invalid are a list of lists. Each list is an
+        # example and the lists inside are splits of examples. I want a DSL for each
+        # split, with alphabet and the rest computed accordingly.
         self.remove_empties()
         assert all(map(lambda l: len(l) == len(self.valid[0]), self.valid))
-        assert len(self.invalid) == 0 or all(map(lambda l: len(l) == len(self.valid[0]), self.invalid))
+        assert len(self.invalid) == 0 or \
+               all(map(lambda l: len(l) == len(self.valid[0]), self.invalid))
 
     def synthesize(self):
         transposed_valid = list(map(list, zip(*self.valid)))
         assert all(map(lambda l: len(l) == len(transposed_valid[0]), transposed_valid))
         transposed_divided_invalid = list(map(list, zip(*self.invalid)))
-        assert all(map(lambda l: len(l) == len(transposed_divided_invalid[0]), transposed_divided_invalid))
+        assert all(map(lambda l: len(l) == len(transposed_divided_invalid[0]),
+                       transposed_divided_invalid))
 
         type_validations = ['is_regex'] * len(transposed_valid)
         builder = DSLBuilder(type_validations, self.valid, self.invalid)
         dsls = builder.build()
+
         self.start_time = time.time()
 
-        if len(self.valid[0]) > 1:
+        if len(self.valid[0]) > 1 and not self.force_funny:
             logger.info("Using GreedyEnumerator.")
-            self._decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=self.examples,
+            self._decider = ValidationDecider(interpreter=ValidationInterpreter(),
+                                              examples=self.examples,
                                               split_valid=self.valid)
             for depth in range(3, 10):
                 logger.info(f'Synthesizing programs of depth {depth}...')
@@ -68,7 +79,8 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
         else:
             logger.info("Using FunnyEnumerator.")
-            self._decider = ValidationDecider(interpreter=ValidationInterpreter(), examples=self.examples)
+            self._decider = ValidationDecider(interpreter=ValidationInterpreter(),
+                                              examples=self.examples)
             sizes = list(itertools.product(range(3, 10), range(1, 10)))
             sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
             for dep, leng in sizes:

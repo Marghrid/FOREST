@@ -1,7 +1,5 @@
 #!/usr/bin/python
 import argparse
-import time
-
 from termcolor import colored
 
 from tyrell.dslBuilder import DSLBuilder
@@ -23,17 +21,15 @@ def main():
 
     show(valid, invalid, ground_truth)
     if synth_method == 'multitree':
-        program = multitree_synthesize(valid, invalid, self_interact, ground_truth)
+        multitree_synthesize(valid, invalid, self_interact, ground_truth)
+    elif synth_method == "funny":
+        funny_synthesize(valid, invalid, self_interact, ground_truth)
     elif synth_method == 'ktree':
-        program = ktree_synthesize(valid, invalid, self_interact, ground_truth)
+        ktree_synthesize(valid, invalid, self_interact, ground_truth)
     elif synth_method == 'nopruning':
-        program = multitree_nopruning_synthesize(valid, invalid, self_interact, ground_truth)
+        multitree_nopruning_synthesize(valid, invalid, self_interact, ground_truth)
     else:
         raise ValueError
-    # if ground_truth:
-    #     check(program,ground_truth)
-    # else:
-    #     print("No ground truth to check if program is correct.")
 
 
 def show(valid, invalid, ground_truth: str):
@@ -61,14 +57,25 @@ def show(valid, invalid, ground_truth: str):
 def multitree_synthesize(valid, invalid, self_interact, ground_truth):
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
+        raise Exception("MultiTree Synthesizer is only for strings.")
+    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
+                                       auto_interaction=self_interact)
+    return synthesize(synthesizer, type_validation)
+
+
+def funny_synthesize(valid, invalid, self_interact, ground_truth):
+    dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
+    if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
-    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth, auto_interaction=self_interact)
+    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
+                                       auto_interaction=self_interact, force_funny=True)
     return synthesize(synthesizer, type_validation)
 
 
 def ktree_synthesize(valid, invalid, self_interact, ground_truth):
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
-    synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth, pruning=True, auto_interaction=self_interact)
+    synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth, pruning=True,
+                                   auto_interaction=self_interact)
     return synthesize(synthesizer, type_validation)
 
 
@@ -76,7 +83,8 @@ def multitree_nopruning_synthesize(valid, invalid, self_interact, ground_truth):
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
-    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth, pruning=False, auto_interaction=self_interact)
+    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth, pruning=False,
+                                       auto_interaction=self_interact)
     return synthesize(synthesizer, type_validation)
 
 
@@ -85,7 +93,8 @@ def prepare_things(valid, invalid):
     # logger.info("Assuming types: " + str(type_validation))
     builder = DSLBuilder(type_validation, valid, invalid)
     dsl = builder.build()[0]
-    # TODO: build() returns a list of DSLs for each different type of element. Now I'm just using the first element
+    # TODO: build() returns a list of DSLs for each different type of element. Now I'm
+    #  just using the first element
 
     return dsl, valid, invalid, type_validation
 
@@ -101,14 +110,17 @@ def synthesize(synthesizer, type_validation):
 
 
 def read_cmd_args():
-    methods = ('multitree', 'ktree', 'nopruning')
+    methods = ('multitree', 'funny', 'ktree', 'nopruning')
     parser = argparse.ArgumentParser(description='Validations Synthesizer')
     parser.add_argument('file', type=str, help='File with I/O examples.')
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode.')
-    parser.add_argument('-m', '--method', metavar='|'.join(methods), type=str, default='multitree',
+    parser.add_argument('-m', '--method', metavar='|'.join(methods), type=str,
+                        default='multitree',
                         help='Method of synthesis. Default: multitree.')
-    parser.add_argument('-s', '--self-interact', action="store_true", help="Self interaction mode.")
-    parser.add_argument('--resnax', action='store_true', help='Read resnax i/o examples format.')
+    parser.add_argument('-s', '--self-interact', action="store_true",
+                        help="Self interaction mode.")
+    parser.add_argument('--resnax', action='store_true',
+                        help='Read resnax i/o examples format.')
     args = parser.parse_args()
     if args.debug:
         logger.setLevel("DEBUG")

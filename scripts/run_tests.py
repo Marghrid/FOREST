@@ -18,7 +18,7 @@ def handler(signal_received, frame):
 
 def main():
     signal(SIGINT, handler)
-    methods = ('multitree', 'ktree', 'nopruning', 'compare-times')
+    methods = ('multitree', 'funny', 'ktree', 'nopruning', 'compare-times')
 
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester')
     parser.add_argument('directories', type=str, metavar="dir", nargs='+', help='Directories with instances')
