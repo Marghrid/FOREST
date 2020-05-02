@@ -220,9 +220,11 @@ class Tester:
         start_time = time.time()
         while len(self.to_run) > 0:
             new_task = self.to_run.pop()
+            self.running = [new_task]
             new_task.run()
             new_task.wait()
             new_task.read_output(self.show_output)
+            self.running = []
             print(colored(
                 f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
                 f"{len(self.to_run) + len(self.running)} to go. "

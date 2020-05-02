@@ -109,14 +109,16 @@ def synthesize(synthesizer, type_validation):
         logger.info('Solution not found!')
 
 
+# noinspection PyTypeChecker
 def read_cmd_args():
     methods = ('multitree', 'funny', 'ktree', 'nopruning')
-    parser = argparse.ArgumentParser(description='Validations Synthesizer')
+    parser = argparse.ArgumentParser(description='Validations Synthesizer',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('file', type=str, help='File with I/O examples.')
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode.')
     parser.add_argument('-m', '--method', metavar='|'.join(methods), type=str,
                         default='multitree',
-                        help='Method of synthesis. Default: multitree.')
+                        help='Method of synthesis.')
     parser.add_argument('-s', '--self-interact', action="store_true",
                         help="Self interaction mode.")
     parser.add_argument('--resnax', action='store_true',
