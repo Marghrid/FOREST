@@ -14,3 +14,4 @@ I have one field that is meant to allow a 1 - 3 character string. The first char
 
 
 // gt
+(A|B|C|Z)[0-9A-Z]{0,2}

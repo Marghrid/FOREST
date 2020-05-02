@@ -11,3 +11,4 @@ What is the regex that matches 6 characters, first is a letter, others are numbe
 
 
 // gt
+[a-z][0-9]{5}

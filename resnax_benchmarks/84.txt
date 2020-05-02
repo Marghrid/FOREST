@@ -13,3 +13,4 @@ I am trying to make a regular expression that validates letters, numbers and spa
 
 
 // gt
+([0-9A-Za-z]| )*

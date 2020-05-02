@@ -11,4 +11,5 @@ I want to limit mamimum total digit counts are 5. And decimal numbers are 2 posi
 "12.345",-
 
 // gt
+
 and(repeat(or(<.>,<num>),5),and(not(startwith(<.>)),and(not(endwith(<.>)),concat(repeatrange(<num>,1,5),optional(concat(<.>,repeatrange(<num>,1,2)))))))

@@ -7,6 +7,5 @@ Should allow only alphanumeric with no space and no other characters including "
 "a@yb",-
 "_",-
 
-
-
 // gt
+[0-9A-Za-z]+

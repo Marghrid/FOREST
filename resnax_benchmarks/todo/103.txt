@@ -11,4 +11,5 @@ I am trying to implement regex validation for passport number. My requirement is
 
 
 // gt
+[0-9]{3,20}
 and(not(repeatatleast(<0>,1)),repeatrange(<alphanum>,3,20))

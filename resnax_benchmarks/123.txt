@@ -8,4 +8,5 @@ An identifier must begin with either an alphabet or underscore (""_""), it can n
 "#abc",-
 
 // gt
+([a-z]|_)([a-z0-9]|_)+
 and(startwith(or(<let>,<_>)),repeatatleast(or(<alphanum>,<_>),1))

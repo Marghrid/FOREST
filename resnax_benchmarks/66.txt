@@ -8,4 +8,5 @@ First Name and Last Name Only with only 2 words with only 1 Space.
 "Sunil  Kumar",-
 
 // gt
+[A-Z][a-z]+ [A-Z][a-z]+
 concat(concat(<cap>,repeatatleast(<low>,1)),concat(< >,concat(<cap>,repeatatleast(<low>,1))))

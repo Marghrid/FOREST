@@ -10,4 +10,5 @@ I would like to validate a string format that should only contain only numbers w
 "3,345",-
 
 // gt
+[0-9]{1,5}((\.|,)[0-9]{1,2})?
 concat(repeatrange(<num>,1,5),optional(concat(or(<.>,<,>),repeatrange(<num>,1,2))))

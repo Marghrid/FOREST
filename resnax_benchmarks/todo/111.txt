@@ -12,4 +12,5 @@ I am trying to create a regular expression in javascript with the following rule
 "aa-",-
 
 // gt
+[a-z]+(\.|( |-)[a-z]+)
 and(repeatatleast(<any>,2),concat(repeatatleast(<let>,1),or(endwith(<.>),concat(optional(or(< >,<->)),repeatatleast(<let>,1)))))

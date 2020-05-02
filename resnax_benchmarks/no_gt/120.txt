@@ -8,4 +8,5 @@ Is it possible to match lines that do not contain a specific word, e.g. ""hede""
 "hede",-
 
 // gt
+
 not(contain(concat(concat(<h>,<e>),concat(<d>,<e>))))

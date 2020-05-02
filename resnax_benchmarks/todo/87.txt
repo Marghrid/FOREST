@@ -18,4 +18,5 @@ Decimal numbers up to 3 decimal places which are greater than zero
 "0,000",-
 
 // gt
+[0-9]+,?[0-9]{0,3}
 and(not(contain(concat(<0>,concat(<,>,star(<0>))))),concat(repeatatleast(<num>,1),optional(concat(<,>,repeatrange(<num>,1,3)))))

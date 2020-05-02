@@ -9,4 +9,4 @@ I am trying to validate dollar amount, anything greater than equal to 0.1
 "0",-
 
 // gt
-or(concat(<0>,concat(<.>,concat(<num1-9>,star(<num>)))),concat(<num1-9>,concat(star(<num>),concat(<.>,star(<num>)))))
+(0\.[1-9])|([1-9][0-9]*)

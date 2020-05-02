@@ -15,4 +15,5 @@ User allowed to enter two characters after "%"
 
 
 // gt
+%[a-z][a-z]+%?
 concat(<%>,startwith(repeat(<let>,2)))

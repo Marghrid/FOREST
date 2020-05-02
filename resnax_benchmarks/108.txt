@@ -7,4 +7,5 @@ Here are the conditions for my regular expression: must start with ""09"". total
 "09912345",-
 
 // gt
+09[0-9]{7}
 and(repeat(<num>,9),startwith(concat(<0>,<9>)))

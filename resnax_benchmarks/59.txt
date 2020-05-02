@@ -1,5 +1,7 @@
 // natural language
-We like to validate following with Regex: bulletpoint string may contain 0 or more alphabets, digits, underscore OR bulletpoint string may contain literals "%sample1%" or "%sample2%" (0 or more times in any order) 
+We like to validate following with Regex: 
+ - string may contain 0 or more alphabets, digits, underscore OR
+ - string may contain literals "%sample1%" or "%sample2%" (0 or more times in any order) 
 
 // examples
 "%sample1%_%sample2%",+
@@ -11,4 +13,4 @@ We like to validate following with Regex: bulletpoint string may contain 0 or mo
 
 
 // gt
-star(or(or(<let>,or(<num>,<_>)),or(concat(<%>,concat(<s>,concat(<a>,concat(<m>,concat(<p>,concat(<l>,concat(<e>,concat(<1>,<%>)))))))),concat(<%>,concat(<s>,concat(<a>,concat(<m>,concat(<p>,concat(<l>,concat(<e>,concat(<2>,<%>)))))))))))
+([a-z0-9]|_|(%sample1%)|(%sample2%))*

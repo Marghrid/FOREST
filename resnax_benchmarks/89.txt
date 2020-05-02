@@ -10,4 +10,5 @@ I want to use a Regular expression validator in my line edit that doesn't allow 
 
 
 // gt
+(\.?[a-z])*\.?
 not(contain(concat(<.>,<.>)))

@@ -7,4 +7,5 @@ I only want the first one, which contains only one ""."" and starts with ""abc""
 "abc.m.nop.pqrs",-
 
 // gt
+abc\.[a-z]+
 concat(concat(<a>,concat(<b>,<c>)),concat(<.>,repeatatleast(<let>,1)))

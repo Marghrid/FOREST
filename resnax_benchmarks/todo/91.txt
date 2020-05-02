@@ -26,4 +26,5 @@ and(R1,concat(concat(R2,repeat(<num>,3)),concat(concat(R2,repeat(<num>,3)),conca
 "013432233",-
 
 // gt
+([0-9]|\(|\)| |\.|-){10,15}
 and(repeatrange(<any>,10,15),concat(star(or(<(>,or(<)>,or(< >,or(<.>,<->))))),concat(repeat(<num>,3),concat(star(or(<(>,or(<)>,or(< >,or(<.>,<->))))),concat(repeat(<num>,3),concat(star(or(<(>,or(<)>,or(< >,or(<.>,<->))))),repeat(<num>,4)))))))

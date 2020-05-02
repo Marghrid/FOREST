@@ -11,4 +11,5 @@ write a regular expression for validating a organisation name which allows alpha
 "@Incule",-
 
 // gt
+
 and(startwith(<alphanum>),repeatatleast(or(<alphanum>,or(<.>,or(<->,or(<#>,or(<&>,<@>))))),1))

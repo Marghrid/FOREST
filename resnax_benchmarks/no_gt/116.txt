@@ -10,4 +10,5 @@ match strings which do not contain two consecutive underscores, i.e., ""__""
 "a_b__Cd",-
 
 // gt
+
 not(contain(repeat(<_>,2)))

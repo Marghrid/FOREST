@@ -18,3 +18,4 @@ I need to validate a string that contains underscore(_) in between the numbers. 
 
 
 // gt
+[0-9]+(_?[0-9])+

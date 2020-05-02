@@ -13,3 +13,4 @@ The input box should accept only if either (1) first 2 letters alpha + 6 numeric
 
 
 // gt
+([A-Za-z]{2}|[0-9]{2})[0-9]{6}

@@ -5,6 +5,5 @@ the first letter of each string is in upper case
 "My Name Is Jass",+
 "My name is Jass",-
 
-
-
 // gt
+[A-Z][a-z]*( [A-Z][a-z]*)*

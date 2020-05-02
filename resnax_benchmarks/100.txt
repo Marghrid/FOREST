@@ -14,3 +14,4 @@ The string must be 9 characters long, starting with "SO-" (case insensitive eg "
 
 
 // gt
+(S|s)(O|o)-[0-9]{6}

@@ -8,6 +8,5 @@ I need a regular expression that only validates UK mobile numbers. A UK mobile n
 "021929182711",-
 "00701029182",-
 
-
-
 // gt
+(07|447)[0-9]{8,11}

@@ -14,4 +14,4 @@ allow only numbers, maxmium two decimals, max one comma (,) and one "-" symbol i
 
 
 // gt
-concat(concat(optional(<->),repeatatleast(<num>,1)),concat(optional(<,>),repeatrange(<num>,0,2)))
+-?[0-9]+,?[0-9]{0,2}

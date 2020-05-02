@@ -9,4 +9,5 @@ I need a regular expression that has the following constraints. contains only [A
 "*ABC.123*",-
 
 // gt
+[A-Z0-9.]*\*[A-Z0-9.]*
 and(repeatrange(<any>,1,15),concat(star(or(<cap>,or(<num>,<.>))),concat(<*>,star(or(<cap>,or(<num>,<.>))))))

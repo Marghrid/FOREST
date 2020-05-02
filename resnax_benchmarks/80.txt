@@ -10,3 +10,4 @@ the number with 10 or more digits and that number should not have "$" symbol in 
 
 
 // gt
+[0-9]{10}[0-9]*

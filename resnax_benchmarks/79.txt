@@ -12,3 +12,4 @@ I'm trying to use regular expressions to match a string that does not contain th
 
 
 // gt
+((< )|[A-Za-z]| |\.|')*

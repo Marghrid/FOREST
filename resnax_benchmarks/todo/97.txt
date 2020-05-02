@@ -16,4 +16,5 @@ start and finish with a percentage sign and can contain any number of characters
 
 
 // gt
+%([a-ZA-Za-Z]| )*%
 concat(<%>,concat(star(<any>),<%>))

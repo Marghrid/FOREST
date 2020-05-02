@@ -38,4 +38,5 @@ write a Regular Expression validator to accept numbers only with decimal part 0 
 "50",-
 
 // gt
+0*([0-4](\.5?0*)?)|(5\.0*)
 concat(star(<0>),or(concat(or(<0>,or(<1>,or(<2>,or(<3>,<4>)))),optional(concat(<.>,concat(optional(<5>),star(<0>))))),concat(<5>,concat(<.>,star(<0>)))))

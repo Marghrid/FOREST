@@ -6,4 +6,5 @@ Find sequences of one upper case letter followed by lower case letters.
 "geeksforgeeks",-
 
 // gt
+[A-Z][a-z]+
 contain(concat(<cap>,<low>))

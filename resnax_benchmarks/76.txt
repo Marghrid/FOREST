@@ -9,6 +9,5 @@ valid characters are alphanumeric and "."(period). The patterns are "%d4%" and "
 "%d4%.te%st.file",-
 "D%d4%.T%t7%.te%st.%t7%file.%d4%.txt",-
 
-
-
 // gt
+([0-9a-zA-Z]|\.|%d4%|%t7%)+

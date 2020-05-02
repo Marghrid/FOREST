@@ -10,3 +10,4 @@ The name must only consist of letters, numbers and one or more single spaces (no
 
 
 // gt
+[A-Z0-9a-z]( ?[A-Z0-9a-z])+

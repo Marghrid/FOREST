@@ -10,6 +10,5 @@ it doesn't start with a space, doesn't contain a space, and doesn't end with a s
 "HELLO ",-
 " ",-
 
-
-
 // gt
+[A-Z]*

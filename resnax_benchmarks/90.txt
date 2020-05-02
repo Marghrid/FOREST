@@ -7,6 +7,5 @@ I want regex that only validates that the field contains digits, but that does n
 "77.43",-
 "xyz777",-
 
-
-
 // gt
+[0-9]+

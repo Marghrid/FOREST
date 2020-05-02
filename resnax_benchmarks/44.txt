@@ -12,4 +12,4 @@ I need a regular expression that satisfy these rules: The maximum number of deci
 "84.2564",-
 
 // gt
-concat(repeatrange(<num>,1,11),optional(concat(<.>,repeatrange(<num>,1,3))))
+[0-9]{1,11}(\.[0-9]{1,3})?

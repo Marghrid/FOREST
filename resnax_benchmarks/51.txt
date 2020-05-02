@@ -12,6 +12,5 @@ I need to match only strings that include one character "/" between numbers or i
 "1/2/",-
 "1.2/3",-
 
-
-
 // gt
+[0-9](/[0-9])*

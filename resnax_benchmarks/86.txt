@@ -20,3 +20,4 @@ a regular expression for validating a string with alphanumeric characters and da
 
 
 // gt
+[0-9a-z](-|[0-9a-z])*[0-9a-z]

@@ -10,3 +10,4 @@ The input box should accept alphanumeric with no space and it should also allow 
 
 
 // gt
+([a-z0-9]|~|!|@|#|\$|-|_)+

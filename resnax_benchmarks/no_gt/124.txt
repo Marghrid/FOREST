@@ -6,4 +6,5 @@ Let’s take a password as a combination of alphanumeric characters along with s
 "asd123",-
 
 // gt
+
 and(contain(<num>),and(and(contain(<cap>),contain(<low>)),and(contain(<spec>),repeatrange(<any>,6,20))))

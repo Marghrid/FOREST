@@ -6,6 +6,5 @@ I am writing a regular expression to validate a zip code, where it should have e
 "123456",-
 "123 4",-
 
-
-
 // gt
+[0-9]{3} [0-9]{2}

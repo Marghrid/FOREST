@@ -9,4 +9,5 @@ I want to find all strings starting with ""{"" but NOT with """\{"". I have only
 "\{bad}",-
 
 // gt
+{.*
 startwith(<{>)

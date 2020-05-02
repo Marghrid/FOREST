@@ -13,3 +13,4 @@ The first character should be a designated character like "A", "B" or "C" only. 
 
 
 // gt
+(A|B|C)[0-9]{3}

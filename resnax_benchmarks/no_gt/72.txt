@@ -9,4 +9,7 @@ at least 6 characters. no space. at least one digit. at least one upper case let
 "Fo0*",-
 
 // gt
+
+
+
 and(repeatatleast(<any>,6),and(not(contain(< >)),and(contain(<num>),and(contain(<cap>),and(contain(<low>),contain(or(<!>,or(<@>,or(<#>,or(<$>,or(<%>,or(<^>,or(<&>,or(<*>,or(<(>,or(<)>,or(<_>,<.>)))))))))))))))))

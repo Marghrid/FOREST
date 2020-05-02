@@ -10,4 +10,5 @@ validate a set of double number with semi-colon delimited
 
 
 // gt
+[0-9]+\.[0-9]+(;[0-9]+\.[0-9]+)*
 concat(concat(repeatatleast(<num>,1),concat(<.>,repeatatleast(<num>,1))),star(concat(<;>,concat(repeatatleast(<num>,1),concat(<.>,repeatatleast(<num>,1))))))

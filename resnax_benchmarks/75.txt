@@ -10,6 +10,5 @@ Need a regular expression to validate number with comma separator.
 ",34",-
 "1,,,,10",-
 
-
-
 // gt
+[0-9]+(,[0-9]+)*

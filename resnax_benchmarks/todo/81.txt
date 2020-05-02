@@ -10,3 +10,4 @@ It should allow only one space between words. That is, total number of spaces be
 
 
 // gt
+[A-Za-z]( ?[A-Za-z])*

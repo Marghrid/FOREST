@@ -27,4 +27,5 @@ concat(and(R1,R2),R3)
 "1234.5A",-
 
 // gt
+
 and(not(startwith(repeatatleast(<0>,2))),concat(repeatatleast(<num>,1),concat(<.>,repeat(<num>,2))))

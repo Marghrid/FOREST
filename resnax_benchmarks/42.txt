@@ -8,6 +8,5 @@ I need to validate the next pattern: starts with "C0" and finish with 4 digits e
 "C0412",-
 "C0a457",-
 
-
-
 // gt
+C0[0-9]{4}

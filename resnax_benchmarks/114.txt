@@ -9,4 +9,5 @@ It will always expect optional 2 numeric number with hyphen (""-"") after ""1566
 "1566 ",-
 
 // gt
+1566(-[0-9]{2})?
 concat(concat(<1>,concat(<5>,concat(<6>,<6>))),optional(concat(<->,repeat(<num>,2))))

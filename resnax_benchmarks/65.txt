@@ -14,4 +14,5 @@ I'm trying to make a regular expression that validates positive natural numbers 
 "176.257.17",-
 
 // gt
+[0-9]{1,3}(\.[0-9]{3}){0,2}
 concat(repeatrange(<num>,1,3),repeatrange(concat(<.>,repeat(<num>,3)),0,2))

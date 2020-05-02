@@ -1,6 +1,3 @@
-// natural language
-Here are the conditions for my regular expression: must start with ""09"". total length is 9.
-
 // example
 "aab",+
 "abb",+
@@ -10,4 +7,5 @@ Here are the conditions for my regular expression: must start with ""09"". total
 "abaa",-
 
 // gt
+(aa(a|b)*)|((a|b)*bb)
 or(startwith(concat(<a>,<a>)),endwith(concat(<b>,<b>)))

@@ -10,7 +10,5 @@ I want to write a regular expression using jQuery to validate input fields which
 "abacvfrdfrgthgfrthgf22222",+
 "abacvfrdfrgthgfrthgf222222",-
 
-
-
-
 // gt
+.{2,24}[a-z0-9]

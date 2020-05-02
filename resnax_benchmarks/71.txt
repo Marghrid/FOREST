@@ -10,4 +10,5 @@ I need a regular expression validation expression that will allow positive numbe
 "",+
 
 // gt
+([0-9]|\.|,)*
 star(or(<num>,or(<.>,<,>)))
