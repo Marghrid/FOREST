@@ -156,7 +156,7 @@ class Tester:
             methods = [method]
         command_base = ["python3", "synth_regex.py", '-s', '-m']
         if resnax:
-            command_base = ["python3", "synth_regex.py", '--resnax', '-m']
+            command_base = ["python3", "synth_regex.py", '-s', '--resnax', '-m']
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")
@@ -251,7 +251,7 @@ class Tester:
             nodes = list(filter(lambda x: x >= 0, nodes))
 
             if len(times) == 0:
-                print(f"{inst.name}:".ljust(maxl), "timed out")
+                print(f"{inst.name},".ljust(maxl), "timed out")
                 continue
             if any(map(lambda x: x != enumerated[0], enumerated)):
                 print(f"{inst.name}:".ljust(maxl), "does not always enumerate the same number of programs")

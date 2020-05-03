@@ -69,7 +69,6 @@ class SingleSynthesizer(ABC):
         if self.num_attempts > 0 and self.num_attempts % 1000 == 0:
             logger.info(
                 f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')
-            logger.info(f'DSL has {len(self._enumerator.dsl.predicates())} predicates.')
 
         return program
 
