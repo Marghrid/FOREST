@@ -6,9 +6,10 @@ from tyrell.logger import get_logger
 logger = get_logger('tyrell.synthesizer')
 
 
-# TODO: Because different input fields have different types, I must have a different DSL for each input field. To
-#  achieve this, I must find a way to return a "set" of DSLs. Perhaps one per field type?
-# Idea: return a list of DSLs, where the position in the list corresponds to the position in the types list
+# TODO: Because different input fields have different types, I must have a different
+#  DSL for each input field. To achieve this, I must find a way to return a "set" of
+#  DSLs. Perhaps one per field type? Idea: return a list of DSLs, where the position in
+#  the list corresponds to the position in the types list
 class DSLBuilder:
 
     def __init__(self, type_validations, valid, invalid):
@@ -21,7 +22,8 @@ class DSLBuilder:
         self.transposed_valid = list(map(list, zip(*valid)))
         self.invalid = invalid
         self.transposed_invalid = list(map(list, zip(*invalid)))
-        self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')', '{', '}', '[', ']', '"'}
+        self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
+                              '{', '}', '[', ']', '"'}
 
     def build(self):
         dsls = []
@@ -112,9 +114,13 @@ class DSLBuilder:
                 if 'A' <= char <= 'Z':
                     char_classes.add('[A-Z]')
                     letters.add(char)
+                    if 'A' <= char <= 'F':
+                        char_classes.add('[A-F]')
                 elif 'a' <= char <= 'z':
                     letters.add(char)
                     char_classes.add('[a-z]')
+                    if 'a' <= char <= 'f':
+                        char_classes.add('[a-f]')
                 elif '0' <= char <= '9':
                     numbers.add(char)
                     char_classes.add('[0-9]')
@@ -157,6 +163,18 @@ class DSLBuilder:
     def update_char_classes(self, char_classes):
         if '[0-9]' in char_classes and '[A-Z]' in char_classes:
             char_classes.add('[0-9A-Z]')
+        if '[A-F]' in char_classes:
+            if '[0-9]' in char_classes:
+                char_classes.add('[0-9A-F]')
+            else:
+                char_classes.remove('[A-F]')
+        if '[a-f]' in char_classes:
+            if '[0-9]' in char_classes:
+                char_classes.add('[0-9a-f]')
+            else:
+                char_classes.remove('[a-f]')
+        if '[A-F]' in char_classes and '[a-f]' in char_classes and '[0-9]' in char_classes:
+            char_classes.add('[0-9A-Fa-f]')
         if '[0-9]' in char_classes and '[a-z]' in char_classes:
             char_classes.add('[0-9a-z]')
         if '[A-Z]' in char_classes and '[a-z]' in char_classes:

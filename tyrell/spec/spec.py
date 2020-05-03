@@ -83,8 +83,9 @@ class ProductionSpec:
 
     def get_productions_with_lhs(self, ty: Union[str, Type]) -> List[Production]:
         """
-        Return the productions whose LHS is `ty`, where `ty` can be a Type or a string representing the name of the type
-        If no production is found, or `ty` is not a string or a Type, return an empty list
+        Return the productions whose LHS is `ty`, where `ty` can be a Type or a string
+        representing the name of the type If no production is found, or `ty` is not a
+        string or a Type, return an empty list
         """
         if isinstance(ty, Type):
             return self._get_productions_with_lhs(ty.name)
