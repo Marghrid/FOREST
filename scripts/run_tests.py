@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-from signal import signal, SIGINT
+from signal import signal, SIGINT, SIGTERM
 
 from tester import Tester
 
@@ -19,6 +19,7 @@ def handler(signal_received, frame):
 # noinspection PyTypeChecker
 def main():
     signal(SIGINT, handler)
+    signal(SIGTERM, handler)
     methods = ('multitree', 'funny', 'ktree', 'nopruning', 'compare-times')
 
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',

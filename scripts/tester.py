@@ -10,10 +10,11 @@ from termcolor import colored
 
 all_methods = ('multitree', 'ktree', 'nopruning')
 
+
 def half_true():
     n = 0
     while True:
-        yield (n % 4 == 0)
+        yield n % 4 == 0
         n += 1
 
 
@@ -53,6 +54,7 @@ class Task:
         self.instance = instance
         self.instance.add_task(self)
         self.timeout = timeout
+        self.timed_out = False
         self.process = None
         self.start_time = 0
         self.time = -1
@@ -81,15 +83,17 @@ class Task:
         self.start_time = time.time()
 
     def terminate(self):
-        self.process.terminate()
-        self.process.wait()
+        while self.process.poll() is None:
+            self.process.terminate()
+            time.sleep(2)
 
     def is_done(self):
-        ''' Checks if task is done or has timed out. '''
+        """ Checks if task is done or has timed out. """
         elapsed = time.time() - self.start_time
         if elapsed >= self.timeout:
             print(colored(f"{self.instance} timed out.", "red"))
             self.terminate()
+            self.timed_out = True
             return True
         return self.process.poll() is not None
 
@@ -99,7 +103,8 @@ class Task:
             self.process.wait(timeout=self.timeout)
         except subprocess.TimeoutExpired:
             print(colored(f"{self.instance} timed out.", "red"))
-            self.process.terminate()
+            self.terminate()
+            self.timed_out = True
             return
 
     def read_output(self, show_output):
@@ -140,13 +145,15 @@ class Task:
                     self.nodes = int(re.search(regex, l)[1])
                 if "[info]   Solution: " in l:
                     self.solution = l.replace("[info]   Solution: ", "", 1)
+                if "No solution" in l:
+                    self.solution = "No solution"
 
 
 class Tester:
     def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1, timeout=120, show_output=False,
                  resnax=False):
         self.show_output = show_output
-        self.timeout = timeout
+        self.timeout = timeout + 2
         self.tasks = []
         self.instances = []
         self.num_processes = num_processes
@@ -175,7 +182,7 @@ class Tester:
             for m in methods:
                 for i in range(run_each):
                     command = command_base + [m] + [inst.path]
-                    new_task = Task(command=command, instance=inst, timeout=timeout)
+                    new_task = Task(command=command, instance=inst, timeout=self.timeout)
                     self.tasks.append(new_task)
 
         print(colored(f"Created {len(self.tasks)} tasks.", "magenta"))
@@ -237,18 +244,24 @@ class Tester:
         max_enumerated_length = max(map(lambda t: len(str(t.enumerated)), self.tasks)) + 2
         now = datetime.datetime.now()
         print(f"\n =====  RESULTS on {socket.gethostname()}, {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
-        print("instance, time, interactions, enumerator, enumerated, nodes, solution")
+        print("instance, time, interactions, enumerator, enumerated, timed-out, nodes, solution")
         for inst in self.instances:
-            times = map(lambda t: t.time, inst.tasks)
-            enumerated = map(lambda t: t.enumerated, inst.tasks)
+            times = list(map(lambda t: t.time, inst.tasks))
+            enumerated = list(map(lambda t: t.enumerated, inst.tasks))
             enumerators = list(map(lambda t: t.enumerator, inst.tasks))
-            interactions = map(lambda t: t.interactions, inst.tasks)
-            nodes = map(lambda t: t.nodes, inst.tasks)
+            interactions = list(map(lambda t: t.interactions, inst.tasks))
+            nodes = list(map(lambda t: t.nodes, inst.tasks))
+            timed_out = list(map(lambda t: t.timed_out, inst.tasks))
 
-            times = list(filter(lambda x: x >= 0, times))
-            enumerated = list(filter(lambda x: x > 0, enumerated))
-            interactions = list(filter(lambda x: x >= 0, interactions))
-            nodes = list(filter(lambda x: x >= 0, nodes))
+            # times = list(filter(lambda x: x >= 0, times))
+            # enumerated = list(filter(lambda x: x > 0, enumerated))
+            # interactions = list(filter(lambda x: x >= 0, interactions))
+
+            assert all(map(lambda x: x >= 0, times))
+            assert all(map(lambda x: x > 0, enumerated))
+            assert all(map(lambda x: x >= 0, interactions))
+
+            assert len(times) == len(enumerated) == len(enumerators) == len(interactions)
 
             if len(times) == 0:
                 print(f"{inst.name},".ljust(maxl), "timed out")
@@ -261,12 +274,15 @@ class Tester:
                 print(f"{inst.name}:".ljust(maxl), "has different number of interactions")
             if any(map(lambda x: x != nodes[0], nodes)):
                 print(f"{inst.name}:".ljust(maxl), "has different number of nodes")
+            if any(map(lambda x: x != timed_out[0], timed_out)):
+                print(f"{inst.name}:".ljust(maxl), "has different timed_out")
             else:
                 print(f"{inst.name},".ljust(maxl),
                       f"{round(sum(times) / len(times), 2)},".ljust(10),
                       f"{interactions[0]},".ljust(3),
                       f"{enumerators[0]},".ljust(max_enumerators_length),
                       f"{enumerated[0]},".ljust(max_enumerated_length),
+                      f"{int(timed_out[0])},",
                       f"{nodes[0]},".ljust(3),
                       f'"{inst.tasks[0].solution}"')
 
@@ -298,4 +314,3 @@ class Tester:
         while len(self.running) > 0:
             task = self.running.pop()
             task.terminate()
-

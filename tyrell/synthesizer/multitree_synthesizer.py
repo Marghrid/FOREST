@@ -76,6 +76,8 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
                 if len(self.programs) > 0:
                     return self.programs[0]
+                elif self.die:
+                    return
 
         else:
             logger.info("Using FunnyEnumerator.")
@@ -91,6 +93,8 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
                 if len(self.programs) > 0:
                     return self.programs[0]
+                elif self.die:
+                    return
 
         return None
 

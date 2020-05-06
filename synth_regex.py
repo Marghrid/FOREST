@@ -1,17 +1,30 @@
 #!/usr/bin/python
 import argparse
+from signal import signal, SIGINT, SIGTERM
+
 from termcolor import colored
 
 from tyrell.dslBuilder import DSLBuilder
-from tyrell.parse_examples import parse_file, parse_resnax
 from tyrell.interpreter import ValidationPrinter
 from tyrell.logger import get_logger
+from tyrell.parse_examples import parse_file, parse_resnax
 from tyrell.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer
 
 logger = get_logger('tyrell')
 
+synthesizer = None
+
+
+def sig_handler(received_signal, frame):
+    print('\nSIGINT or CTRL-C detected. Exiting gracefully.')
+    if synthesizer is not None:
+        print('Printing the last valid program found.')
+        synthesizer.die = True
+
 
 def main():
+    signal(SIGINT, sig_handler)
+    signal(SIGTERM, sig_handler)
     examples_file, synth_method, self_interact, resnax = read_cmd_args()
 
     if resnax:
@@ -36,18 +49,26 @@ def show(valid, invalid, ground_truth: str):
     print("Valid examples:")
     max_len = max(map(lambda x: len(x[0]), valid))
     max_len = max(max_len, 6)
-    for i, ex in enumerate(valid):
-        print(colored(f'{ex[0]}'.center(max_len), "blue"), end='  ')
-        if (i + 1) % 5 == 0:
+    line_len = 0
+    for ex in valid:
+        s = f'{ex[0]}'.center(max_len)
+        line_len += len(s)
+        print(colored(s, "blue"), end='  ')
+        if line_len > 70:
+            line_len = 0
             print()
     print()
 
     print("Invalid examples:")
     max_len = max(map(lambda x: len(x[0]), invalid))
     max_len = max(max_len, 6)
-    for i, ex in enumerate(invalid):
-        print(colored(f'{ex[0]}'.center(max_len), "red"), end='  ')
-        if (i + 1) % 5 == 0:
+    line_len = 0
+    for ex in invalid:
+        s = f'{ex[0]}'.center(max_len)
+        line_len += len(s)
+        print(colored(s, "red"), end='  ')
+        if line_len > 70:
+            line_len = 0
             print()
     print()
     print("Ground truth:")
@@ -55,6 +76,7 @@ def show(valid, invalid, ground_truth: str):
 
 
 def multitree_synthesize(valid, invalid, self_interact, ground_truth):
+    global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
         raise Exception("MultiTree Synthesizer is only for strings.")
@@ -64,6 +86,7 @@ def multitree_synthesize(valid, invalid, self_interact, ground_truth):
 
 
 def funny_synthesize(valid, invalid, self_interact, ground_truth):
+    global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
@@ -73,6 +96,7 @@ def funny_synthesize(valid, invalid, self_interact, ground_truth):
 
 
 def ktree_synthesize(valid, invalid, self_interact, ground_truth):
+    global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth, pruning=True,
                                    auto_interaction=self_interact)
@@ -80,6 +104,7 @@ def ktree_synthesize(valid, invalid, self_interact, ground_truth):
 
 
 def multitree_nopruning_synthesize(valid, invalid, self_interact, ground_truth):
+    global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")

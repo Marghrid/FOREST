@@ -42,6 +42,7 @@ class MultipleSynthesizer(ABC):
         self.num_interactions = 0
         self.programs = []
         self.start_time = None
+        self.die = False
 
     @property
     def enumerator(self):
@@ -54,6 +55,19 @@ class MultipleSynthesizer(ABC):
     @abstractmethod
     def synthesize(self):
         pass
+
+    def terminate(self):
+        logger.info(f'Synthesizer done.\n'
+                    f'  Enumerator: {self._enumerator.__class__.__name__}'
+                    f'{", no pruning" if not self.pruning else ""}\n'
+                    f'  Enumerated: {self.num_attempts}\n'
+                    f'  Interactions: {self.num_interactions}\n'
+                    f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n')
+        if len(self.programs) > 0:
+            logger.info(f'  Solution: {self._printer.eval(self.programs[0], ["IN"])}\n'
+                        f'  Nodes: {self._node_counter.eval(self.programs[0], [0])}')
+        else:
+            logger.info(f'  No solution.')
 
     def distinguish(self):
         start_distinguish = time.time()
@@ -134,7 +148,7 @@ class MultipleSynthesizer(ABC):
 
     def try_for_depth(self):
         program = self.enumerate()
-        while program is not None:
+        while program is not None and not self.die:
             new_predicates = None
 
             res = self._decider.analyze(program)
@@ -168,12 +182,5 @@ class MultipleSynthesizer(ABC):
                 self._enumerator.update(None)
             program = self.enumerate()
 
-        if len(self.programs) > 0:
-            logger.info(f'Synthesizer done.\n'
-                        f'  Enumerator: {self._enumerator.__class__.__name__}'
-                        f'{", no pruning" if not self.pruning else ""}\n'
-                        f'  Enumerated: {self.num_attempts}\n'
-                        f'  Interactions: {self.num_interactions}\n'
-                        f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n'
-                        f'  Solution: {self._printer.eval(self.programs[0], ["IN"])}\n'
-                        f'  Nodes: {self._node_counter.eval(self.programs[0], [0])}')
+        if len(self.programs) > 0 or self.die:
+            self.terminate()

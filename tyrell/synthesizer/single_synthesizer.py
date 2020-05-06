@@ -29,6 +29,9 @@ class SingleSynthesizer(ABC):
         self.program = None
         self.start_time = None
 
+    def terminate(self):
+        pass
+
     @property
     def enumerator(self):
         return self._enumerator
