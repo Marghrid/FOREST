@@ -14,7 +14,6 @@ class FunnyEnumerator(Enumerator):
 
     def __init__(self, dsl: TyrellSpec, depth=None, length=None):
         super().__init__(dsl)
-        self.leaf_productions = []
         if depth < 2:
             raise ValueError(f'Depth must be larger or equal to 2: {depth}')
         self.depth = depth
@@ -30,8 +29,8 @@ class FunnyEnumerator(Enumerator):
         self._create_variables(self.z3_solver)
         self._create_output_constraints(self.z3_solver)
         self._create_leaf_constraints(self.z3_solver)
-        self.create_children_constraints(self.z3_solver)
-        self.create_union_constraints()
+        self._create_children_constraints(self.z3_solver)
+        self._create_union_constraints()
         self.resolve_predicates(self.dsl.predicates())
 
         logger.debug(
@@ -65,7 +64,7 @@ class FunnyEnumerator(Enumerator):
                     map(lambda lp: self.variables[node] == lp.id, leaf_productions))
                 solver.add(z3.Or(big_or))
 
-    def create_children_constraints(self, solver):
+    def _create_children_constraints(self, solver):
         for parent in self.nodes:
             if parent.children is not None:
                 # the node has children
@@ -82,7 +81,7 @@ class FunnyEnumerator(Enumerator):
                             pass
                         solver.add(z3.Or(big_or))
 
-    def create_union_constraints(self):
+    def _create_union_constraints(self):
         """ Prevent union of twice the same subtree: (A|B) """
         for node in self.nodes:
             if node.children is None or len(node.children) == 0:
@@ -209,7 +208,6 @@ class FunnyEnumerator(Enumerator):
             # the program originally occurred.
             for node in self.nodes_until_depth(self.depth - program_to_block.depth() + 1):
                 self.block_subtree(node, program_to_block)
-
 
     def block_model(self):
         """ Block current model and all others equivalent to it """

@@ -4,7 +4,6 @@ from collections import deque
 
 import z3
 
-from .ast import ASTNode
 from ..dsl import Node, AtomNode
 from ..logger import get_logger
 from .ast import AST, ASTNode
@@ -61,6 +60,23 @@ class Enumerator(ABC):
     def max_children(self) -> int:
         """ Finds the maximum number of children in the productions """
         return max(map(lambda p: len(p.rhs), self.dsl.productions()))
+
+    def _get_range_values(self):
+        range_val_ty = self.dsl.get_type("RangeVal")
+        range_val_enum = self.dsl.get_productions_with_lhs(range_val_ty)
+        self.range_lower_bounds = {}
+        self.range_upper_bounds = {}
+        for range_val in range_val_enum:
+            data = range_val.rhs[0]
+            data = data.split(',')
+            range_node = AtomNode(range_val)
+            if data[0] not in self.range_lower_bounds:
+                self.range_lower_bounds[data[0]] = []
+            self.range_lower_bounds[data[0]].append(range_node)
+
+            if data[1] not in self.range_upper_bounds:
+                self.range_upper_bounds[data[1]] = []
+            self.range_upper_bounds[data[1]].append(range_node)
 
     @staticmethod
     def _check_arg_types(pred, python_tys):
@@ -134,7 +150,7 @@ class Enumerator(ABC):
             return self.build_program()
         else:
             logger.debug(
-                f'Enumerator exhausted for depth {self.depth} and length {self.length}.')
+                f'Enumerator exhausted.')
             return None
 
     def _get_subtree(self, node: ASTNode):
@@ -160,23 +176,6 @@ class Enumerator(ABC):
             block += self.block_subtree_rec(subtree.children[0], program.children[0])
             block += self.block_subtree_rec(subtree.children[1], program.children[1])
         return block
-
-    def _get_range_values(self):
-        range_val_ty = self.dsl.get_type("RangeVal")
-        range_val_enum = self.dsl.get_productions_with_lhs(range_val_ty)
-        self.range_lower_bounds = {}
-        self.range_upper_bounds = {}
-        for range_val in range_val_enum:
-            data = range_val.rhs[0]
-            data = data.split(',')
-            range_node = AtomNode(range_val)
-            if data[0] not in self.range_lower_bounds:
-                self.range_lower_bounds[data[0]] = []
-            self.range_lower_bounds[data[0]].append(range_node)
-
-            if data[1] not in self.range_upper_bounds:
-                self.range_upper_bounds[data[1]] = []
-            self.range_upper_bounds[data[1]].append(range_node)
 
     def block_subtree(self, subtree: ASTNode, program: Node):
         """ Block the subtree below the program node from happening in the

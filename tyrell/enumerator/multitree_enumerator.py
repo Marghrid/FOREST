@@ -214,7 +214,6 @@ class MultiTreeEnumerator(Enumerator):
         self.tree_dsls[tree_idx].add_predicate(pred.name, pred.args)
 
         # block all programs
-
         bounds = program.args[1].data.split(',')
         assert len(bounds) == 2
         lower_bound = bounds[0]
