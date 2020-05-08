@@ -34,10 +34,16 @@ def main():
                         help='Timeout in seconds.', default=120)
     parser.add_argument('-o', '--out', action='store_true',
                         help='Show output.', default=False)
-    parser.add_argument('-m', '--method', metavar='|'.join(methods), type=str,
+
+    synth_group = parser.add_argument_group(title="Synthesizer options")
+    synth_group.add_argument('-m', '--method', metavar='|'.join(methods), type=str,
                         default='multitree', help='Method of synthesis.')
-    parser.add_argument('--resnax', action='store_true',
+    synth_group.add_argument('--resnax', action='store_true',
                         help='read resnax i/o examples format.')
+    synth_group.add_argument('-v', '--max-valid', type=int, default=-1,
+                        help='Limit the number of valid examples. -1: unlimited.')
+    synth_group.add_argument('-i', '--max-invalid', type=int, default=-1,
+                        help='Limit the number of invalid examples. -1: unlimited.')
 
     args = parser.parse_args()
 
@@ -47,7 +53,7 @@ def main():
     global tester
 
     tester = Tester(args.directories, args.method, args.processes, args.run_each,
-                    args.timeout, args.out, args.resnax)
+                    args.timeout, args.out, args.resnax, args.max_valid, args.max_invalid)
     tester.test()
     if args.method == 'compare-times':
         tester.print_time_comparison()

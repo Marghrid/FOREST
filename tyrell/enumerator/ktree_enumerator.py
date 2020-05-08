@@ -276,7 +276,8 @@ class KTreeEnumerator(Enumerator):
 
     def update(self, predicates=None):
         """
-        :param predicates: information about the program. If None, enumerator will block complete model.
+        :param predicates: information about the failed program. If None, enumerator will
+        block complete model.
         """
         if predicates is not None:
             self.resolve_predicates(predicates)

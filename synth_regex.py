@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import argparse
+import random
 from signal import signal, SIGINT, SIGTERM
 
 from termcolor import colored
@@ -25,12 +26,18 @@ def sig_handler(received_signal, frame):
 def main():
     signal(SIGINT, sig_handler)
     signal(SIGTERM, sig_handler)
-    examples_file, synth_method, self_interact, resnax = read_cmd_args()
+    examples_file, synth_method, self_interact, resnax, max_valid, max_invalid = read_cmd_args()
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
     else:
         valid, invalid, ground_truth = parse_file(examples_file)
+
+    random.seed("regex")
+    if max_valid > 0 and max_valid < len(valid):
+        valid = random.sample(valid, max_valid)
+    if max_invalid > 0 and max_invalid < len(invalid):
+        invalid = random.sample(invalid, max_invalid)
 
     show(valid, invalid, ground_truth)
     if synth_method == 'multitree':
@@ -142,12 +149,16 @@ def read_cmd_args():
     parser.add_argument('file', type=str, help='File with I/O examples.')
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode.')
     parser.add_argument('-m', '--method', metavar='|'.join(methods), type=str,
-                        default='multitree',
-                        help='Method of synthesis.')
+                        default='multitree', help='Method of synthesis.')
     parser.add_argument('-s', '--self-interact', action="store_true",
                         help="Self interaction mode.")
+
     parser.add_argument('--resnax', action='store_true',
                         help='Read resnax i/o examples format.')
+    parser.add_argument('-v', '--max-valid', type=int, default=-1,
+                        help='Limit the number of valid examples. -1: unlimited.')
+    parser.add_argument('-i', '--max-invalid', type=int, default=-1,
+                        help='Limit the number of invalid examples. -1: unlimited.')
     args = parser.parse_args()
     if args.debug:
         logger.setLevel("DEBUG")
@@ -156,7 +167,7 @@ def read_cmd_args():
     if args.method not in methods:
         raise ValueError('Unknown method ' + args.method)
 
-    return args.file, args.method, args.self_interact, args.resnax
+    return args.file, args.method, args.self_interact, args.resnax, args.max_valid, args.max_invalid
 
 
 if __name__ == '__main__':

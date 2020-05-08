@@ -63,6 +63,7 @@ class Task:
         self.interactions = -1
         self.nodes = -1
         self.solution = ''
+        self.ground_truth = ''
 
         m_idx = self.command.index('-m')
         self.method = self.command[m_idx + 1]
@@ -147,11 +148,13 @@ class Task:
                     self.solution = l.replace("[info]   Solution: ", "", 1)
                 if "No solution" in l:
                     self.solution = "No solution"
+                if "Ground truth:" in l:
+                    self.ground_truth = l.replace("[info]   Ground truth: ", "", 1)
 
 
 class Tester:
-    def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1, timeout=120, show_output=False,
-                 resnax=False):
+    def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1,
+                 timeout=120, show_output=False, resnax=False, max_valid=-1, max_invalid=-1):
         self.show_output = show_output
         self.timeout = timeout + 2
         self.tasks = []
@@ -161,9 +164,16 @@ class Tester:
             methods = all_methods
         else:
             methods = [method]
-        command_base = ["python3", "synth_regex.py", '-s', '-m']
+        command_base = ["python3", "synth_regex.py", "-v", str(max_valid),
+                        "-i", str(max_invalid), '-s', '-m']
         if resnax:
-            command_base = ["python3", "synth_regex.py", '-s', '--resnax', '-m']
+            command_base = ["python3", "synth_regex.py", "-v", str(max_valid),
+                            "-i", str(max_invalid), '-s', '--resnax', '-m']
+
+        now = datetime.datetime.now()
+        print(f"Running on {socket.gethostname()}, "
+              f"starting on {now.strftime('%Y-%m-%d %H:%M:%S')}, "
+              f"using {methods}.")
 
         for dir in instance_dirs:
             instance_paths = glob.glob(dir + "/*.txt")
@@ -244,7 +254,7 @@ class Tester:
         max_enumerated_length = max(map(lambda t: len(str(t.enumerated)), self.tasks)) + 2
         now = datetime.datetime.now()
         print(f"\n =====  RESULTS on {socket.gethostname()}, {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
-        print("instance, time, interactions, enumerator, enumerated, timed-out, nodes, solution")
+        print("instance, time, interactions, enumerator, enumerated, timed-out, nodes, solution, ground-truth")
         for inst in self.instances:
             times = list(map(lambda t: t.time, inst.tasks))
             enumerated = list(map(lambda t: t.enumerated, inst.tasks))
@@ -284,7 +294,8 @@ class Tester:
                       f"{enumerated[0]},".ljust(max_enumerated_length),
                       f"{int(timed_out[0])},",
                       f"{nodes[0]},".ljust(3),
-                      f'"{inst.tasks[0].solution}"')
+                      f'"{inst.tasks[0].solution}",',
+                      f'"{inst.tasks[0].ground_truth}"')
 
     def print_time_comparison(self):
         maxl = max(map(lambda i: len(i.name), self.instances)) + 2

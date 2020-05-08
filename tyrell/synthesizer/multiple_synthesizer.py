@@ -66,6 +66,8 @@ class MultipleSynthesizer(ABC):
         if len(self.programs) > 0:
             logger.info(f'  Solution: {self._printer.eval(self.programs[0], ["IN"])}\n'
                         f'  Nodes: {self._node_counter.eval(self.programs[0], [0])}')
+        if self.ground_truth is not None:
+            logger.info(f'  Ground truth: {self.ground_truth}')
         else:
             logger.info(f'  No solution.')
 

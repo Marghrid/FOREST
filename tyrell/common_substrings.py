@@ -16,15 +16,16 @@ def find_lcs(arr):
 
             # generating all possible substrings of our reference string arr[0] i.e s
             stem = s[i:j]
-            k = 1
+            stem_in_all_strings = True
             for k in range(1, n):
                 # Check if the generated stem is common to all words
                 if stem not in arr[k]:
+                    stem_in_all_strings = False
                     break
 
             # If current substring is present in all strings and its length is greater
             # than current result
-            if k + 1 == n:
+            if stem_in_all_strings:
                 if len(results) == 0:
                     results = {stem}
                 elif len(next(iter(results))) < len(stem):
