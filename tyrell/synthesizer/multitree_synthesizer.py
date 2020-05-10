@@ -124,12 +124,12 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                 return fr'({cs}+)'
             else:
                 ret = ''
+                ret = '((?:'
                 for char in cs:
-                    ret = 'fr((?:'
                     if char in self.special_chars:
                         ret += "\\"
                     ret += char
-                    ret += ")+)"
+                ret += ")+)"
                 return ret # fr'((?:{cs})+)'
         elif isinstance(cs, list):
             pass

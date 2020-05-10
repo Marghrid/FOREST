@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import argparse
 import random
-from signal import signal, SIGINT
+from signal import signal, SIGINT, SIGTERM
 
 from termcolor import colored
 
@@ -17,7 +17,7 @@ synthesizer = None
 
 
 def sig_handler(received_signal, frame):
-    print('\nSIGINT or CTRL-C detected. Exiting gracefully.')
+    print('\nSIGINT or SIGTERM detected. Exiting gracefully.')
     if synthesizer is not None:
         print('Printing the last valid program found.')
         synthesizer.die = True
@@ -25,6 +25,7 @@ def sig_handler(received_signal, frame):
 
 def main():
     signal(SIGINT, sig_handler)
+    signal(SIGTERM, sig_handler)
     examples_file, synth_method, self_interact, resnax, max_valid, max_invalid = read_cmd_args()
 
     if resnax:
