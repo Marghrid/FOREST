@@ -1,0 +1,19 @@
+// natural language
+User allowed to enter two characters after "%"
+
+// examples
+"%ab",+
+"%ab%",+
+"%abcde",+
+"%abcde%",+
+"%abcdef%",+
+"%",-
+"%%",-
+"%%%",-
+"%a%",-
+
+
+
+// gt
+%[a-z][a-z]+%?
+concat(<%>,startwith(repeat(<let>,2)))

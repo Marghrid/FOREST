@@ -1,0 +1,10 @@
+// natural language
+I want to match a certain set of strings, such as: strings composed of exactly 6 digits
+
+// example
+"028938",+
+"DEF567987",-
+
+// gt
+[0-9]{6}
+repeat(<num>,6)

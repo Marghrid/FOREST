@@ -1,0 +1,13 @@
+// natural language
+valid characters are alphanumeric and "."(period). The patterns are "%d4%" and "%t7%". So "%" is not valid by itself, but has to be part of these specific patterns.
+
+// examples
+"test.file.D%d4%",+
+"%d4%.test.file",+
+"D%d4%.T%t7%.test.%t7%file.%d4%.txt",+
+"t%est.file.D%d4%",-
+"%d4%.te%st.file",-
+"D%d4%.T%t7%.te%st.%t7%file.%d4%.txt",-
+
+// gt
+([0-9a-zA-Z]|\.|%d4%|%t7%)+
