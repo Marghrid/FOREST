@@ -105,12 +105,16 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             common_substrings = find_all_cs(field)
             if len(common_substrings) == 1 and all(map(lambda f: len(f) == len(common_substrings[0]), field)):
                 continue
-            if len(common_substrings) > 0:
-                for cs in common_substrings:
-                    regex = self.build_regex(cs)
-                    matches = list(map(lambda ex: re.findall(regex, ex), field))
-                    if all(map(lambda m: len(m) == len(matches[0]), matches)):
-                        self.split_examples_on(cs, field_idx)
+
+            if len(common_substrings) == 1 and all(
+                    map(lambda f: re.fullmatch(self.build_regex(common_substrings[0]), f)
+                                  is not None, field)):
+                continue
+            for cs in common_substrings:
+                regex = self.build_regex(cs)
+                matches = list(map(lambda ex: re.findall(regex, ex), field))
+                if all(map(lambda m: len(m) == len(matches[0]), matches)):
+                    self.split_examples_on(cs, field_idx)
 
     def build_regex(self, cs):
         if isinstance(cs, str):

@@ -78,8 +78,6 @@ class SingleSynthesizer(ABC):
     def try_for_depth(self):
         program = self.enumerate()
         while program is not None:
-            new_predicates = None
-
             res = self._decider.analyze(program)
 
             if res.is_ok():  # program satisfies I/O examples
@@ -97,5 +95,4 @@ class SingleSynthesizer(ABC):
                         logger.debug(f'New predicate: {pred.name} {pred_str}')
 
             self._enumerator.update(new_predicates)
-            # self._enumerator.update(None)
             program = self.enumerate()

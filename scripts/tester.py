@@ -199,7 +199,7 @@ class Tester:
 
         # tasks are ordered randomly
         self.to_run = self.tasks.copy()
-        random.shuffle(self.to_run)
+        # random.shuffle(self.to_run)
 
         # currently running tasks
         self.running = []

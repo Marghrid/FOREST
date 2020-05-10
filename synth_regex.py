@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import argparse
 import random
-from signal import signal, SIGINT, SIGTERM
+from signal import signal, SIGINT
 
 from termcolor import colored
 
@@ -25,7 +25,6 @@ def sig_handler(received_signal, frame):
 
 def main():
     signal(SIGINT, sig_handler)
-    signal(SIGTERM, sig_handler)
     examples_file, synth_method, self_interact, resnax, max_valid, max_invalid = read_cmd_args()
 
     if resnax:
