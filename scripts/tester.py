@@ -86,7 +86,9 @@ class Task:
     def terminate(self):
         while self.process.poll() is None:
             self.process.terminate()
+            print("Sending SIGTERM...", end=" ")
             time.sleep(2)
+        print()
 
     def is_done(self):
         """ Checks if task is done or has timed out. """
@@ -267,9 +269,10 @@ class Tester:
             # enumerated = list(filter(lambda x: x > 0, enumerated))
             # interactions = list(filter(lambda x: x >= 0, interactions))
 
-            assert all(map(lambda x: x >= 0, times))
-            assert all(map(lambda x: x > 0, enumerated))
-            assert all(map(lambda x: x >= 0, interactions))
+            if not all(map(lambda x: x >= 0, times)):
+                print(f"{inst.name},".ljust(maxl), "error")
+            # assert all(map(lambda x: x > 0, enumerated))
+            # assert all(map(lambda x: x >= 0, interactions))
 
             assert len(times) == len(enumerated) == len(enumerators) == len(interactions)
 
