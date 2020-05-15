@@ -1,14 +1,16 @@
 value Regex;
-value String; value Number; value Bool; value Empty;
+value String;
+# value Number;
+value Bool; value Empty;
 
 # Input/output type of the synthesized program:
 program Validate(String) -> Bool;
 
 # Production rules:
-func len: Number -> String;
+# func len: Number -> String;
 
-func le: Bool -> Number, Value;
-func ge: Bool -> Number, Value;
+# func le: Bool -> Number, Value;
+# func ge: Bool -> Number, Value;
 
 func empty: Empty -> Empty;
 func re:     Regex -> Char;

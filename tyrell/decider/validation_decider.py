@@ -1,5 +1,5 @@
 import re
-from .example_base_decider import Example, ExampleDecider
+from .example_decider import Example, ExampleDecider
 from .result import ok, bad
 from ..dsl import Node, ApplyNode
 from ..interpreter import Interpreter
@@ -59,7 +59,8 @@ class ValidationDecider(ExampleDecider):
                 if self.split_valid is not None:
                     # MultiTree enumerator was used
                     assert len(node.children) == len(self.split_valid[0])
-                    matches = map(lambda ex: re.fullmatch(regex, ex[tree_idx]) \
+                    re_c = re.compile(regex)
+                    matches = map(lambda ex: re_c.fullmatch(ex[tree_idx]) \
                                              is not None, self.split_valid)
                     if not all(matches):
                         new_predicate = Predicate("block_tree", [tree, tree_idx])
@@ -130,14 +131,16 @@ class ValidationDecider(ExampleDecider):
         else:
             return new_predicates
 
-    def never_matches_examples(self, regex):
+    def never_matches_examples(self, regex: str):
         """ Returns True if no example contains the given regex """
-        return not any(map(lambda ex: re.search(regex, ex.input[0]) is not None,
+        rec = re.compile(regex)
+        return not any(map(lambda ex: rec.search(ex.input[0]) is not None,
                            self.valid_exs))
 
-    def always_matches_examples(self, regex):
+    def always_matches_examples(self, regex: str):
         """ Returns True if all examples contain the given regex """
-        return all(map(lambda ex: re.search(regex, ex.input[0]) is not None,
+        rec = re.compile(regex)
+        return all(map(lambda ex: rec.search(ex.input[0]) is not None,
                        self.valid_exs))
 
     def traverse_program(self, program, examples):

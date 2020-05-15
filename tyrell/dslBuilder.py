@@ -150,12 +150,11 @@ class DSLBuilder:
         for ss in substrings:
             compressed = list(map(lambda x: x.replace(ss, '.'), compressed))
 
-        lens = map(len, compressed)
-        m = max(lens)
+        max_l = max(map(len, compressed))
         # m = max(m, 3)
 
         range_vals = []
-        for j in range(2, m + 1):
+        for j in range(2, max_l + 1):
             for i in range(0, j + 1):
                 range_vals.append(f'{i},{j}')
         return range_vals

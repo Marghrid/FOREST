@@ -9,7 +9,7 @@ from tyrell.dslBuilder import DSLBuilder
 from tyrell.interpreter import ValidationPrinter
 from tyrell.logger import get_logger
 from tyrell.parse_examples import parse_file, parse_resnax
-from tyrell.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer
+from tyrell.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer
 
 logger = get_logger('tyrell')
 
@@ -46,6 +46,8 @@ def main():
         funny_synthesize(valid, invalid, self_interact, ground_truth)
     elif synth_method == 'ktree':
         ktree_synthesize(valid, invalid, self_interact, ground_truth)
+    elif synth_method == 'lines':
+        lines_synthesize(valid, invalid, self_interact, ground_truth)
     elif synth_method == 'nopruning':
         multitree_nopruning_synthesize(valid, invalid, self_interact, ground_truth)
     else:
@@ -53,7 +55,7 @@ def main():
 
 
 def show(valid, invalid, ground_truth: str):
-    print("Valid examples:")
+    print(len(valid), "valid examples:")
     max_len = max(map(lambda x: len(x[0]), valid))
     max_len = max(max_len, 6)
     line_len = 0
@@ -66,7 +68,7 @@ def show(valid, invalid, ground_truth: str):
             print()
     print()
 
-    print("Invalid examples:")
+    print(len(invalid), "invalid examples:")
     max_len = max(map(lambda x: len(x[0]), invalid))
     max_len = max(max_len, 6)
     line_len = 0
@@ -110,6 +112,14 @@ def ktree_synthesize(valid, invalid, self_interact, ground_truth):
     return synthesize(synthesizer, type_validation)
 
 
+def lines_synthesize(valid, invalid, self_interact, ground_truth):
+    global synthesizer
+    dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
+    synthesizer = LinesSynthesizer(valid, invalid, dsl, ground_truth, pruning=True,
+                                   auto_interaction=self_interact)
+    return synthesize(synthesizer, type_validation)
+
+
 def multitree_nopruning_synthesize(valid, invalid, self_interact, ground_truth):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
@@ -143,7 +153,7 @@ def synthesize(synthesizer, type_validation):
 
 # noinspection PyTypeChecker
 def read_cmd_args():
-    methods = ('multitree', 'funny', 'ktree', 'nopruning')
+    methods = ('multitree', 'funny', 'ktree', 'nopruning', 'lines')
     parser = argparse.ArgumentParser(description='Validations Synthesizer',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('file', type=str, help='File with I/O examples.')

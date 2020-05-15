@@ -13,13 +13,14 @@ def handler(signal_received, frame):
     print('\nSIGINT or CTRL-C detected. Exiting gracefully.')
     if tester is not None:
         tester.terminate_all()
+        tester.print_results()
     exit()
 
 
 # noinspection PyTypeChecker
 def main():
     signal(SIGINT, handler)
-    methods = ('multitree', 'funny', 'ktree', 'nopruning', 'compare-times')
+    methods = ('multitree', 'funny', 'ktree', 'nopruning', 'compare-times', 'lines')
 
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
