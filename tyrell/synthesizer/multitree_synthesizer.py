@@ -39,25 +39,23 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
         # example and the lists inside are splits of examples. I want a DSL for each
         # split, with alphabet and the rest computed accordingly.
 
-
     def synthesize(self):
-        transposed_valid = list(map(list, zip(*self.valid)))
-        assert all(map(lambda l: len(l) == len(transposed_valid[0]), transposed_valid))
-        transposed_divided_invalid = list(map(list, zip(*self.invalid)))
-        assert all(map(lambda l: len(l) == len(transposed_divided_invalid[0]),
-                       transposed_divided_invalid))
-
-        type_validations = ['is_regex'] * len(transposed_valid)
-        builder = DSLBuilder(type_validations, self.valid, self.invalid)
-        dsls = builder.build()
-
         self.start_time = time.time()
 
-        valid = self.split_examples()
+        valid, invalid = self.split_examples()
 
         if valid is not None and not self.force_funny:
             self.valid = valid
-            logger.info("Using GreedyEnumerator.")
+            self.invalid = invalid
+
+            assert all(map(lambda l: len(l) == len(self.valid[0]), self.valid))
+            assert all(map(lambda l: len(l) == len(self.invalid[0]), self.invalid))
+
+            type_validations = ['is_regex'] * len(self.valid[0])
+            builder = DSLBuilder(type_validations, self.valid, self.invalid)
+            dsls = builder.build()
+
+            logger.info("Using Static Multi-tree enumerator.")
             self._decider = ValidationDecider(interpreter=ValidationInterpreter(),
                                               examples=self.examples,
                                               split_valid=self.valid)
@@ -73,7 +71,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                     return
 
         else:
-            logger.info("Using FunnyEnumerator.")
+            logger.info("Using Dynamic Multi-tree enumerator.")
             self._decider = ValidationDecider(interpreter=ValidationInterpreter(),
                                               examples=self.examples)
             sizes = list(itertools.product(range(3, 10), range(1, 10)))
@@ -96,6 +94,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
         new_l = len(self.valid[0])
         l = 0
         valid = deepcopy(self.valid)
+        invalid = deepcopy(self.invalid)
         while new_l != l and l < max_l:
             l = new_l
             transposed_valid = list(map(list, zip(*valid)))
@@ -112,19 +111,20 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                     rec = re.compile(self.build_regex(cs))
                     matches = list(map(lambda ex: rec.findall(ex), field))
                     if all(map(lambda m: len(m) == len(matches[0]), matches)):
-                        self.split_examples_on(cs, field_idx)
+                        valid, invalid = self.split_examples_on(valid, invalid, cs,
+                                                                field_idx)
 
             new_l = len(valid[0])
 
-        self.remove_empties()
+        valid, invalid = self.remove_empties(valid, invalid)
 
         if not all(map(lambda l: len(l) == len(valid[0]), valid)):
-            return None
-        if not len(self.invalid) == 0 or \
-               all(map(lambda l: len(l) == len(valid[0]), self.invalid)):
-            return None
+            return None, None
+        if len(invalid) > 0 and \
+                not all(map(lambda l: len(l) == len(valid[0]), invalid)):
+            return None, None
 
-        return valid
+        return valid, invalid
 
     def build_regex(self, cs):
         if isinstance(cs, str):
@@ -140,32 +140,37 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                         ret += "\\"
                     ret += char
                 ret += ")+)"
-                return ret # fr'((?:{cs})+)'
+                return ret  # fr'((?:{cs})+)'
         elif isinstance(cs, list):
             pass
 
-    def split_examples_on(self, substring: str, field_idx: int):
+    def split_examples_on(self, valid, invalid, substring: str, field_idx: int):
         rec = re.compile(self.build_regex(substring))
-        for ex_idx, example in enumerate(self.valid):
+        for ex_idx, example in enumerate(valid):
             field = example[field_idx]
             split = rec.split(field, 1)
             example = example[:field_idx] + split + example[field_idx + 1:]
-            self.valid[ex_idx] = example
+            valid[ex_idx] = example
             pass
 
         remaining_invalid = []
-        for ex_idx, example in enumerate(self.invalid):
+        for ex_idx, example in enumerate(invalid):
             field = example[field_idx]
             split = rec.split(field, 1)
             example = example[:field_idx] + split + example[field_idx + 1:]
-            if len(example) == len(self.valid[0]):
+            if len(example) == len(valid[0]):
                 remaining_invalid.append(example)
-        self.invalid = remaining_invalid
+        invalid = remaining_invalid
 
-    def remove_empties(self):
-        for field_idx, field in enumerate(self.valid[0]):
-            if len(field) == 0 and all(map(lambda ex: len(ex[field_idx]) == 0, self.valid)):
+        return valid, invalid
+
+    def remove_empties(self, valid, invalid):
+        for field_idx, field in enumerate(valid[0]):
+            if len(field) == 0 and all(
+                    map(lambda ex: len(ex[field_idx]) == 0, valid)):
                 # ensure this field is the empty string on all examples
-                self.invalid = list(filter(lambda ex: len(ex[field_idx]) == 0, self.invalid))
-                for ex in self.valid + self.invalid:
+                invalid = list(
+                    filter(lambda ex: len(ex[field_idx]) == 0, invalid))
+                for ex in valid + invalid:
                     ex.pop(field_idx)
+        return valid, invalid

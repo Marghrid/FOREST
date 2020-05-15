@@ -169,11 +169,16 @@ class Tester:
             methods = all_methods
         else:
             methods = [method]
-        command_base = ["python3", "synth_regex.py", "-v", str(max_valid),
-                        "-i", str(max_invalid), '-s', '-m']
+
+        command_base = ["python3", "synth_regex.py", '-s']
+        if max_valid > 0:
+            command_base += ["-v", str(max_valid)]
+        if max_invalid > 0:
+            command_base += ["-i", str(max_invalid)]
         if resnax:
-            command_base = ["python3", "synth_regex.py", "-v", str(max_valid),
-                            "-i", str(max_invalid), '-s', '--resnax', '-m']
+            command_base.append('--resnax')
+
+        command_base.append("-m")
 
         now = datetime.datetime.now()
         print(f"Running on {socket.gethostname()}, "
