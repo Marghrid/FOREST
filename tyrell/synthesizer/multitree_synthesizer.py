@@ -2,6 +2,7 @@ import itertools
 import re
 import time
 from abc import ABC
+from copy import deepcopy
 
 from . import MultipleSynthesizer
 from ..common_substrings import find_all_cs
@@ -34,8 +35,6 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
         self.force_funny = force_funny
 
-        self.split_examples()
-
         # divided_valid and divided_invalid are a list of lists. Each list is an
         # example and the lists inside are splits of examples. I want a DSL for each
         # split, with alphabet and the rest computed accordingly.
@@ -54,7 +53,10 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
         self.start_time = time.time()
 
-        if len(self.valid[0]) > 1 and not self.force_funny:
+        valid = self.split_examples()
+
+        if valid is not None and not self.force_funny:
+            self.valid = valid
             logger.info("Using GreedyEnumerator.")
             self._decider = ValidationDecider(interpreter=ValidationInterpreter(),
                                               examples=self.examples,
@@ -93,35 +95,36 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
         max_l = max(map(lambda x: len(x[0]), self.valid))
         new_l = len(self.valid[0])
         l = 0
+        valid = deepcopy(self.valid)
         while new_l != l and l < max_l:
             l = new_l
-            transposed_valid = list(map(list, zip(*self.valid)))
+            transposed_valid = list(map(list, zip(*valid)))
 
             for field_idx, field in enumerate(transposed_valid):
                 common_substrings = find_all_cs(field)
-                if len(common_substrings) == 1 and all(map(lambda f: len(f) == len(common_substrings[0]), field)):
-                    continue
-
-                rec = re.compile(self.build_regex(common_substrings[0]))
-                if len(common_substrings) == 1 and all(
-                        map(lambda f: rec.fullmatch(f)
-                                      is not None, field)):
-                    continue
+                if len(common_substrings) == 1:
+                    rec = re.compile(self.build_regex(common_substrings[0]))
+                    if all(map(lambda f: rec.fullmatch(f) is not None, field)):
+                        continue
+                    if all(map(lambda f: len(f) == len(common_substrings[0]), field)):
+                        continue
                 for cs in common_substrings:
                     rec = re.compile(self.build_regex(cs))
                     matches = list(map(lambda ex: rec.findall(ex), field))
                     if all(map(lambda m: len(m) == len(matches[0]), matches)):
                         self.split_examples_on(cs, field_idx)
 
-            new_l = len(self.valid[0])
+            new_l = len(valid[0])
 
         self.remove_empties()
 
-        if not all(map(lambda l: len(l) == len(self.valid[0]), self.valid)):
+        if not all(map(lambda l: len(l) == len(valid[0]), valid)):
             return None
         if not len(self.invalid) == 0 or \
-               all(map(lambda l: len(l) == len(self.valid[0]), self.invalid)):
+               all(map(lambda l: len(l) == len(valid[0]), self.invalid)):
             return None
+
+        return valid
 
     def build_regex(self, cs):
         if isinstance(cs, str):

@@ -68,7 +68,7 @@ def write_lattice(node, pos):
 
 class LinesEnumerator(Enumerator):
 
-    def __init__(self, spec: TyrellSpec, loc=None, sym_breaker=True, break_sym_online=True):
+    def __init__(self, spec: TyrellSpec, loc=None, sym_breaker=False, break_sym_online=False):
 
         self.z3_solver = Solver()
 
@@ -257,6 +257,8 @@ class LinesEnumerator(Enumerator):
         var = self.roots[-1].var  # last line corresponds to the output line
         for p in self.spec.get_productions_with_lhs(self.spec.output):
             ctr.append(var == p.id)
+            for r in range(len(self.roots) - 1):
+                self.z3_solver.add(self.roots[r].var != p.id)
         self.z3_solver.add(Or(ctr))
         self.num_constraints += 1
 
@@ -343,8 +345,7 @@ class LinesEnumerator(Enumerator):
                 raise ValueError(msg)
 
     def _resolve_is_not_parent_predicate(self, pred):
-        return
-        self._check_arg_types(pred, [str, str, (int, float)])
+        self._check_arg_types(pred, [str, str])
         prod0 = self.spec.get_function_production_or_raise(pred.args[0])
         prod1 = self.spec.get_function_production_or_raise(pred.args[1])
 
@@ -627,19 +628,12 @@ class LinesEnumerator(Enumerator):
             self.totalSymTime += self.symTime
 
     def update(self, info=None, id=None):
-        if info is not None and not isinstance(info, str):
-            for core in info:
-                ctr = []
-                for constraint in core:
-                    ctr.append(self.program2tree[constraint[0]] != constraint[1].id)
-                self.z3_solver.add(Or(ctr))
-        else:
-            self.blockedModels = 0
-            self.block_model()
-            self.totalBlockedModels += self.blockedModels
-            if self.blockedModels != 0:
-                logger.error('Total Blocked Models: {}'.format(self.totalBlockedModels))
-                logger.error('Total Time Symmetries: {}'.format(self.totalSymTime))
+        self.blockedModels = 0
+        self.block_model()
+        self.totalBlockedModels += self.blockedModels
+        if self.blockedModels != 0:
+            logger.error('Total Blocked Models: {}'.format(self.totalBlockedModels))
+            logger.error('Total Time Symmetries: {}'.format(self.totalSymTime))
 
     def make_node(self, c, builder_nodes, builder):
         if str(c.production).find('Empty') == -1:
