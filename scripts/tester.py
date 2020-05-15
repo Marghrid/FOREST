@@ -233,7 +233,7 @@ class Tester:
                     f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
                     f"{len(self.to_run) + len(self.running)} to go. "
                     f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
-            time.sleep(max(self.timeout // 30, 10))
+            time.sleep(30)
 
     def test_sequentially(self):
         start_time = time.time()
