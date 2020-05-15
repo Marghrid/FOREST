@@ -126,9 +126,9 @@ class Task:
                 if "Synthesizer done" in l:
                     end = True
                 if "Program accepted" in l and not first:
-                    m = re.match("Program accepted.* (\d+\.\d+) seconds", l)
+                    m = re.search("Program accepted.*(\d+\.\d+) seconds", l)
                     if m is not None:
-                        self.first_time = self.time = m.groups()[0]
+                        self.first_time = m.groups()[0]
                     else:
                         print("Somethong went wrong")
                     first = True
@@ -170,7 +170,7 @@ class Tester:
         else:
             methods = [method]
 
-        command_base = ["python3", "synth_regex.py", '-s']
+        command_base = ["python3", "-O", "synth_regex.py", '-s']
         if max_valid > 0:
             command_base += ["-v", str(max_valid)]
         if max_invalid > 0:
