@@ -58,6 +58,7 @@ class Task:
         self.process = None
         self.start_time = 0
         self.time = -1
+        self.first_time = -1
         self.enumerator = ''
         self.enumerated = -1
         self.interactions = -1
@@ -113,6 +114,7 @@ class Task:
                           f"{self.process.returncode}", "red"))
 
         end = False
+        first = False
         for l in pe:
             print(colored("ERROR: " + l, "red"))
         for l in po:
@@ -123,6 +125,14 @@ class Task:
             if not end:
                 if "Synthesizer done" in l:
                     end = True
+                if "Program accepted" in l and not first:
+                    m = re.match("Program accepted.* (\d+\.\d+) seconds", l)
+                    if m is not None:
+                        self.first_time = self.time = m.groups()[0]
+                    else:
+                        print("Somethong went wrong")
+                    first = True
+
             else:
                 if "Elapsed time" in l:
                     regex = r"Elapsed time: (\d+\.\d+)"
@@ -249,9 +259,10 @@ class Tester:
         max_enumerated_length = max(map(lambda t: len(str(t.enumerated)), self.tasks)) + 2
         now = datetime.datetime.now()
         print(f"\n =====  RESULTS on {socket.gethostname()}, {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
-        print("instance, time, interactions, enumerator, enumerated, timed-out, nodes, solution, ground-truth")
+        print("instance, time, first-time, interactions, enumerator, enumerated, timed-out, nodes, solution, ground-truth")
         for inst in self.instances:
             times = list(map(lambda t: t.time, inst.tasks))
+            first_times = list(map(lambda t: t.first_time, inst.tasks))
             enumerated = list(map(lambda t: t.enumerated, inst.tasks))
             enumerators = list(map(lambda t: t.enumerator, inst.tasks))
             interactions = list(map(lambda t: t.interactions, inst.tasks))
@@ -263,6 +274,8 @@ class Tester:
             # interactions = list(filter(lambda x: x >= 0, interactions))
 
             if not all(map(lambda x: x >= 0, times)):
+                print(f"{inst.name},".ljust(maxl), "error")
+            if not all(map(lambda x: x >= 0, first_times)):
                 print(f"{inst.name},".ljust(maxl), "error")
             # assert all(map(lambda x: x > 0, enumerated))
             # assert all(map(lambda x: x >= 0, interactions))
@@ -284,6 +297,7 @@ class Tester:
                 print(f"{inst.name}:".ljust(maxl), "has different timed_out")
             else:
                 print(f"{inst.name},".ljust(maxl),
+                      f"{round(sum(times) / len(times), 2)},".ljust(10),
                       f"{round(sum(times) / len(times), 2)},".ljust(10),
                       f"{interactions[0]},".ljust(3),
                       f"{enumerators[0]},".ljust(max_enumerators_length),
