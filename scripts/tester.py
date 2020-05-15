@@ -82,7 +82,7 @@ class Task:
             self.process.terminate()
             print("Sending SIGTERM...", end=" ")
             time.sleep(2)
-        print()
+        print(".")
 
     def is_done(self):
         """ Checks if task is done or has timed out. """

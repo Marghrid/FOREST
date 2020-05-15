@@ -1,0 +1,23 @@
+domain names
+[a-zA-Z0-9-.]+\.[a-z]+
+++
+google.com
+goodreads.com
+telegram.org
+wikipedia.org
+cp2020.a4cp.org
+amazon.de
+amazon.co.uk
+passaporta.be
+regexlib.com
+aldi.de
+merriam-webster.com
+css-tricks.com
+--
+
+cp2020a4cporg
+amazon.
+amazon.co.u2
+.com
+**
+[a-z0-9][a-z0-9-.]*\.[a-z]+
