@@ -53,7 +53,7 @@ def main():
 
 
 def show(valid, invalid, ground_truth: str):
-    print("Valid examples:")
+    print(len(valid), "valid examples:")
     max_len = max(map(lambda x: len(x[0]), valid))
     max_len = max(max_len, 6)
     line_len = 0
@@ -66,7 +66,7 @@ def show(valid, invalid, ground_truth: str):
             print()
     print()
 
-    print("Invalid examples:")
+    print(len(invalid), "invalid examples:")
     max_len = max(map(lambda x: len(x[0]), invalid))
     max_len = max(max_len, 6)
     line_len = 0

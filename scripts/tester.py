@@ -71,16 +71,9 @@ class Task:
     def run(self):
         print(colored(f"Running {self.instance} {self.method}: "
                       f"{' '.join(self.command)}", "blue"))
-        if '-s' in self.command:
-            self.process = subprocess.Popen(self.command,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
-        else:
-            interaction_file = open('int_no.txt')
-            self.process = subprocess.Popen(self.command,
-                                            stdin=interaction_file,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE)
+        self.process = subprocess.Popen(self.command,
+                                        stdout=subprocess.PIPE,
+                                        stderr=subprocess.PIPE)
         self.start_time = time.time()
 
     def terminate(self):

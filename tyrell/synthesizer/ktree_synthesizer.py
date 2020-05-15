@@ -1,6 +1,6 @@
 import time
 
-from tyrell.enumerator import KTreeEnumerator
+from tyrell.enumerator import KTreeEnumerator, LinesEnumerator
 from tyrell.logger import get_logger
 from tyrell.synthesizer import MultipleSynthesizer
 
@@ -18,7 +18,7 @@ class KTreeSynthesizer(MultipleSynthesizer):
 
         for dep in range(3, self.max_depth + 1):
             logger.info(f'Synthesizing programs of depth {dep}...')
-            self._enumerator = KTreeEnumerator(self.dsl, depth=dep)
+            self._enumerator = LinesEnumerator(self.dsl, dep)
 
             self.try_for_depth()
 

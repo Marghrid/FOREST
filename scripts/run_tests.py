@@ -13,6 +13,7 @@ def handler(signal_received, frame):
     print('\nSIGINT or CTRL-C detected. Exiting gracefully.')
     if tester is not None:
         tester.terminate_all()
+        tester.print_results()
     exit()
 
 
