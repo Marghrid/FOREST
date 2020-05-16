@@ -61,7 +61,7 @@ class ExampleDecider(Decider):
             return bad()
         else:
             return ok()
-    
+
     def _equal_output(self, program: Node, input, desired_output):
         return desired_output == self._interpreter.eval(program, input)
 
