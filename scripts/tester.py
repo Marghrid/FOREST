@@ -284,8 +284,6 @@ class Tester:
 
             if not all(map(lambda x: x >= 0, times)):
                 print(f"{inst.name},".ljust(maxl), "error")
-            if not all(map(lambda x: x >= 0, first_times)):
-                print(f"{inst.name},".ljust(maxl), "error")
             # assert all(map(lambda x: x > 0, enumerated))
             # assert all(map(lambda x: x >= 0, interactions))
 
@@ -310,7 +308,7 @@ class Tester:
             else:
                 print(f"{inst.name},".ljust(maxl),
                       f"{round(sum(times) / len(times), 2)},".ljust(10),
-                      f"{round(sum(times) / len(times), 2)},".ljust(10),
+                      f"{round(sum(first_times) / len(first_times), 2)},".ljust(10),
                       f"{interactions[0]},".ljust(3),
                       f"{enumerators[0]},".ljust(max_enumerators_length),
                       f"{enumerated[0]},".ljust(max_enumerated_length),
