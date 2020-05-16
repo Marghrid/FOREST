@@ -44,7 +44,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
         valid, invalid = self.split_examples()
 
-        if valid is not None and not self.force_funny:
+        if valid is not None and len(valid[0]) > 1  and not self.force_funny:
             self.valid = valid
             self.invalid = invalid
 

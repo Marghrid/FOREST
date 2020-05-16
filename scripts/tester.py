@@ -1,10 +1,9 @@
+import datetime
 import glob
-import random
 import re
+import socket
 import subprocess
 import time
-import datetime
-import socket
 
 from termcolor import colored
 
@@ -110,7 +109,7 @@ class Task:
         pe = str(pe, encoding='utf-8').splitlines()
 
         if self.process.returncode != 0:
-            print(colored(f"RETURN CODE {self.instance}:"
+            print(colored(f"RETURN CODE {self.instance}: "
                           f"{self.process.returncode}", "red"))
 
         end = False
@@ -128,7 +127,7 @@ class Task:
                 if "Program accepted" in l and not first:
                     m = re.search("Program accepted.*(\d+\.\d+) seconds", l)
                     if m is not None:
-                        self.first_time = m.groups()[0]
+                        self.first_time = float(m.groups()[0])
                     else:
                         print("Somethong went wrong")
                     first = True
@@ -159,12 +158,14 @@ class Task:
 
 class Tester:
     def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1,
-                 timeout=120, show_output=False, resnax=False, max_valid=-1, max_invalid=-1):
+                 timeout=120, show_output=False, resnax=False, max_valid=-1,
+                 max_invalid=-1):
         self.show_output = show_output
         self.timeout = timeout + 2
         self.tasks = []
         self.instances = []
         self.num_processes = num_processes
+        self.poll_time = min(30, self.timeout // 15)
         if method == 'compare-times':
             methods = all_methods
         else:
@@ -206,6 +207,7 @@ class Tester:
                     self.tasks.append(new_task)
 
         print(colored(f"Created {len(self.tasks)} tasks.", "magenta"))
+        print(colored(f"Polling every {self.poll_time} seconds.", "magenta"))
 
         # tasks are ordered randomly
         self.to_run = self.tasks.copy()
@@ -241,7 +243,7 @@ class Tester:
                     f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
                     f"{len(self.to_run) + len(self.running)} to go. "
                     f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
-            time.sleep(30)
+            time.sleep(self.poll_time)
 
     def test_sequentially(self):
         start_time = time.time()
@@ -263,8 +265,10 @@ class Tester:
         max_enumerators_length = max(map(lambda t: len(t.enumerator), self.tasks)) + 2
         max_enumerated_length = max(map(lambda t: len(str(t.enumerated)), self.tasks)) + 2
         now = datetime.datetime.now()
-        print(f"\n =====  RESULTS on {socket.gethostname()}, {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
-        print("instance, time, first-time, interactions, enumerator, enumerated, timed-out, nodes, solution, ground-truth")
+        print(
+            f"\n =====  RESULTS on {socket.gethostname()}, {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
+        print(
+            "instance, time, first-time, interactions, enumerator, enumerated, timed-out, nodes, solution, ground-truth")
         for inst in self.instances:
             times = list(map(lambda t: t.time, inst.tasks))
             first_times = list(map(lambda t: t.first_time, inst.tasks))
@@ -285,15 +289,18 @@ class Tester:
             # assert all(map(lambda x: x > 0, enumerated))
             # assert all(map(lambda x: x >= 0, interactions))
 
-            assert len(times) == len(enumerated) == len(enumerators) == len(interactions)
+            if not len(times) == len(enumerated) == len(enumerators) == len(interactions):
+                print("different lengths")
 
             if len(times) == 0:
                 print(f"{inst.name},".ljust(maxl), "timed out")
                 continue
             if any(map(lambda x: x != enumerated[0], enumerated)):
-                print(f"{inst.name}:".ljust(maxl), "does not always enumerate the same number of programs")
+                print(f"{inst.name}:".ljust(maxl),
+                      "does not always enumerate the same number of programs")
             if any(map(lambda x: x != enumerators[0], enumerators)):
-                print(f"{inst.name}:".ljust(maxl), "does not always use the same enumerator")
+                print(f"{inst.name}:".ljust(maxl),
+                      "does not always use the same enumerator")
             if any(map(lambda x: x != interactions[0], interactions)):
                 print(f"{inst.name}:".ljust(maxl), "has different number of interactions")
             if any(map(lambda x: x != nodes[0], nodes)):
