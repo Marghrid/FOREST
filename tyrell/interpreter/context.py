@@ -8,7 +8,7 @@ class Context:
     _evaluated: List[Node]
     _stack: List[Node]
 
-    def __init__(self):
+    def     __init__(self):
         self._observed = list()
         self._evaluated = list()
         self._stack = list()
