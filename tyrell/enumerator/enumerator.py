@@ -186,3 +186,9 @@ class Enumerator(ABC):
     @abstractmethod
     def build_program(self):
         raise NotImplementedError
+
+    def __str__(self):
+        name = self.__class__.__name__
+        if "Enumerator" in name:
+            name.replace("Enumerator", "")
+        return name

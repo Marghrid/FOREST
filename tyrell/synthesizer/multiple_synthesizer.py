@@ -58,7 +58,7 @@ class MultipleSynthesizer(ABC):
 
     def terminate(self):
         logger.info(f'Synthesizer done.\n'
-                    f'  Enumerator: {self._enumerator.__class__.__name__}'
+                    f'  Enumerator: {self._enumerator}'
                     f'{", no pruning" if not self.pruning else ""}\n'
                     f'  Enumerated: {self.num_attempts}\n'
                     f'  Interactions: {self.num_interactions}\n'

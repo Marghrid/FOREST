@@ -10,7 +10,7 @@ logger = get_logger('tyrell.enumerator.smt')
 
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
-class FunnyEnumerator(Enumerator):
+class DynamicMultiTreeEnumerator(Enumerator):
 
     def __init__(self, dsl: TyrellSpec, depth=None, length=None):
         super().__init__(dsl)
