@@ -191,5 +191,5 @@ class Enumerator(ABC):
     def __str__(self):
         name = self.__class__.__name__
         if "Enumerator" in name:
-            name.replace("Enumerator", "")
+            name = name.replace("Enumerator", "")
         return name

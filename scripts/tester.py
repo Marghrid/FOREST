@@ -58,12 +58,12 @@ class Task:
         self.start_time = 0
         self.time = -1
         self.first_time = -1
-        self.enumerator = ''
+        self.enumerator = 'Enumerator'
         self.enumerated = -1
         self.interactions = -1
         self.nodes = -1
-        self.solution = ''
-        self.ground_truth = ''
+        self.solution = 'Solution'
+        self.ground_truth = 'Ground truth'
 
         m_idx = self.command.index('-m')
         self.method = self.command[m_idx + 1]
@@ -135,19 +135,29 @@ class Task:
             else:
                 if "Elapsed time" in l:
                     regex = r"Elapsed time: (\d+\.\d+)"
-                    self.time = float(re.search(regex, l)[1])
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.time = float(m[1])
                 if "Enumerator" in l:
                     regex = r"Enumerator: (.+)"
-                    self.enumerator = re.search(regex, l)[1]
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.enumerator = m[1]
                 if "Enumerated" in l:
                     regex = r"Enumerated: (\d+)"
-                    self.enumerated = int(re.search(regex, l)[1])
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.enumerated = int(m[1])
                 if "Interactions" in l:
                     regex = r"Interactions: (\d+)"
-                    self.interactions = int(re.search(regex, l)[1])
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.interactions = int(m[1])
                 if "Nodes" in l:
                     regex = r"Nodes: (\d+)"
-                    self.nodes = int(re.search(regex, l)[1])
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.nodes = int(m[1])
                 if "[info]   Solution: " in l:
                     self.solution = l.replace("[info]   Solution: ", "", 1)
                 if "No solution" in l:
