@@ -9,7 +9,7 @@ from ..common_substrings import find_all_cs
 from ..decider import ExampleDecider, ValidationDecider, Example
 from ..distinguisher import Distinguisher
 from ..dslBuilder import DSLBuilder
-from ..enumerator import MultiTreeEnumerator, FunnyEnumerator
+from ..enumerator import StaticMultiTreeEnumerator, DynamicMultiTreeEnumerator
 from ..interpreter import ValidationInterpreter, ValidationPrinter, NodeCounter
 from ..logger import get_logger
 from ..utils import nice_time
@@ -61,7 +61,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                                               split_valid=self.valid)
             for depth in range(3, 10):
                 logger.info(f'Synthesizing programs of depth {depth}...')
-                self._enumerator = MultiTreeEnumerator(self.main_dsl, dsls, depth)
+                self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
 
                 self.try_for_depth()
 
@@ -78,7 +78,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
             for dep, leng in sizes:
                 logger.info(f'Synthesizing programs of depth {dep} and length {leng}...')
-                self._enumerator = FunnyEnumerator(self.main_dsl, depth=dep, length=leng)
+                self._enumerator = DynamicMultiTreeEnumerator(self.main_dsl, depth=dep, length=leng)
 
                 self.try_for_depth()
 

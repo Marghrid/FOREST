@@ -8,7 +8,7 @@
 
 from sys import argv
 
-from .lines import *
+from .lines_enumerator import *
 
 
 def blockModelAux(variables, model, solver):
