@@ -13,6 +13,6 @@ The value should not contain only "%" and if there is a "%" the length should be
 "%12",-
 "%%%",-
 
-
-
 // gt
+^[^%]*$|^(?=.{4,}).*[^%].*
+

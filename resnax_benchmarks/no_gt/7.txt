@@ -1,9 +1,3 @@
-// natural language
-R1:Key and value can contain anything except ""="" and "";"" and cannot be blank or empty with spaces
-
-// visual format
-concat(concat(R1,concat(<=>,R1)),star(concat(<;>,concat(R1,concat(<=>,R1)))))
-
 // examples
 "MAC Address=192.167.235.19",+
 "MAC Address=192.167.235.19;zproduct_id=XYZ",+
@@ -11,5 +5,4 @@ concat(concat(R1,concat(<=>,R1)),star(concat(<;>,concat(R1,concat(<=>,R1)))))
 "MAC =Address=192.167.235.19;zproduct_id=XYZ",-
 
 // gt
-
 concat(concat(repeatatleast(not(contain(or(<=>,<;>))),1),concat(<=>,repeatatleast(not(contain(or(<=>,<;>))),1))),star(concat(<;>,concat(repeatatleast(not(contain(or(<=>,<;>))),1),concat(<=>,repeatatleast(not(contain(or(<=>,<;>))),1))))))

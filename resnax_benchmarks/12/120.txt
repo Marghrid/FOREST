@@ -8,5 +8,5 @@ Is it possible to match lines that do not contain a specific word, e.g. ""hede""
 "hede",-
 
 // gt
-
+h[a-z]*h[a-z]*
 not(contain(concat(concat(<h>,<e>),concat(<d>,<e>))))

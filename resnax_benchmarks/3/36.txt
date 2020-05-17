@@ -8,3 +8,5 @@ I'm trying to validate a value and that value cannot have a zero and then a numb
 "05lb",-
 
 // gt
+[0-9]{0,2}(\.)?(2lb)
+

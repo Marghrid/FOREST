@@ -1,0 +1,13 @@
+// natural language
+I want a regular expression for a string This string can contain ""*"" and ""?"" in it. But should have at least 3 alphanumeric character in it
+
+// example
+"*abc*",+
+"*ab*c",+
+"aaa?",+
+"*aa",-
+"**aaa",-
+
+// gt
+(?=.*[a-z0-9].*[a-z0-9].*[a-z0-9].*)(?!.*[*?]{2,}.*)[a-z0-9?*]*
+and(contain(or(<?>,<*>)),and(not(contain(repeatatleast(or(<?>,<*>),2))),repeatatleast(<alphanum>,3)))
