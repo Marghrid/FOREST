@@ -15,6 +15,7 @@ class Enumerator(ABC):
 
     @abstractmethod
     def __init__(self, dsl):
+        z3.Z3_DEBUG = False
         self.z3_solver = z3.Solver()
         self.variables = {}
         self.variables_fun = []

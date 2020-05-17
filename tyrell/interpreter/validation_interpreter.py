@@ -117,7 +117,3 @@ class ValidationInterpreter(PostOrderInterpreter):
     def eval_match(self, node, args):
         match = re.fullmatch(args[0], args[1])
         return match is not None
-
-    def eval_partial_match(self, node, args):
-        match = re.match(args[0], args[1])
-        return match is not None

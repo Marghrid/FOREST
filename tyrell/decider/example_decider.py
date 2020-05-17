@@ -1,7 +1,9 @@
+import re
 from typing import NamedTuple, List, Any
 
 from .decider import Decider
 from .result import ok, bad
+from ..dsl import Node
 from ..interpreter import Interpreter
 
 Example = NamedTuple('Example', [
@@ -37,22 +39,18 @@ class ExampleDecider(Decider):
         new = Example(ex_in, ex_out)
         self.examples.append(new)
 
-    def get_failed_examples(self, prog):
-        '''
-        Test the program on all examples provided.
-        Return a list of failed examples.
-        '''
-        return list(filter(
-            lambda x: not self._equal_output(prog, x.input, x.output),
-            self._examples
-        ))
-
-    def has_failed_examples(self, prog):
-        '''
+    def has_failed_examples(self, program: Node):
+        """
         Test whether the given program would fail on any of the examples provided.
-        '''
+        """
+        regex = program.children[0]
+        regex = self._interpreter.eval(regex, ["dummy"])
+        re_compiled = re.compile(regex)
+        # return any(
+        #     map(lambda x: not self._equal_output(program, x.input, x.output), self._examples)
+        # )
         return any(
-            map(lambda x: not self._equal_output(prog, x.input, x.output), self._examples)
+            map(lambda x: self._match(re_compiled, x.input) != x.output, self._examples)
         )
 
     def analyze(self, prog):
@@ -64,6 +62,9 @@ class ExampleDecider(Decider):
         else:
             return ok()
 
-    def _equal_output(self, program, input, desired_output):
+    def _equal_output(self, program: Node, input, desired_output):
         return desired_output == self._interpreter.eval(program, input)
+
+    def _match(self, re_compiled, input):
+        return re_compiled.fullmatch(input[0]) is not None
 
