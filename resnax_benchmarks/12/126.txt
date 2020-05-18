@@ -6,5 +6,5 @@ check if that string contains any ""g"" followed by one or more ""e"" ’s in it
 "Graphic era",-
 
 // gt
-[a-zA-Z]*ge[a-zA-Z]*
+.*ge.*
 contain(concat(<g>,<e>))
