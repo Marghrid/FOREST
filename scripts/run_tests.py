@@ -20,7 +20,7 @@ def handler(signal_received, frame):
 # noinspection PyTypeChecker
 def main():
     signal(SIGINT, handler)
-    methods = ('multitree', 'funny', 'ktree', 'nopruning', 'compare-times', 'lines')
+    encodings = ('multitree', 'funny', 'ktree', 'lines', 'compare-times')
 
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -36,10 +36,12 @@ def main():
                         help='Show output.', default=False)
 
     synth_group = parser.add_argument_group(title="Synthesizer options")
-    synth_group.add_argument('-m', '--method', metavar='|'.join(methods), type=str,
-                        default='multitree', help='Method of synthesis.')
+    synth_group.add_argument('-e', '--encoding', metavar='|'.join(encodings), type=str,
+                        default='multitree', help='SMT encoding.')
     synth_group.add_argument('--resnax', action='store_true',
                         help='read resnax i/o examples format.')
+    synth_group.add_argument('--no-pruning', '--nopruning', action='store_true',
+                             help='read resnax i/o examples format.')
     synth_group.add_argument('-v', '--max-valid', type=int, default=-1,
                         help='Limit the number of valid examples. -1: unlimited.')
     synth_group.add_argument('-i', '--max-invalid', type=int, default=-1,
@@ -47,15 +49,15 @@ def main():
 
     args = parser.parse_args()
 
-    if args.method not in methods:
-        raise ValueError('Unknown method ' + args.method)
+    if args.encoding not in encodings:
+        raise ValueError('Unknown encoding ' + args.encoding)
 
     global tester
 
-    tester = Tester(args.directories, args.method, args.processes, args.run_each,
+    tester = Tester(args.directories, args.encoding, args.no_pruning, args.processes, args.run_each,
                     args.timeout, args.out, args.resnax, args.max_valid, args.max_invalid)
     tester.test()
-    if args.method == 'compare-times':
+    if args.encoding == 'compare-times':
         tester.print_time_comparison()
     else:
         tester.print_results()

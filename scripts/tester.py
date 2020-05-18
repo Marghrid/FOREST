@@ -7,7 +7,7 @@ import time
 
 from termcolor import colored
 
-all_methods = ('multitree', 'ktree', 'nopruning')
+all_methods = ('multitree', 'ktree', 'lines', 'funny')
 
 
 def half_true():
@@ -65,11 +65,11 @@ class Task:
         self.solution = 'Solution'
         self.ground_truth = 'Ground truth'
 
-        m_idx = self.command.index('-m')
-        self.method = self.command[m_idx + 1]
+        enc_idx = self.command.index('-e')
+        self.encoding = self.command[enc_idx + 1]
 
     def run(self):
-        print(colored(f"Running {self.instance} {self.method}: "
+        print(colored(f"Running {self.instance} {self.encoding}: "
                       f"{' '.join(self.command)}", "blue"))
         self.process = subprocess.Popen(self.command,
                                         stdout=subprocess.PIPE,
@@ -167,7 +167,7 @@ class Task:
 
 
 class Tester:
-    def __init__(self, instance_dirs, method='multitree', num_processes=1, run_each=1,
+    def __init__(self, instance_dirs, method='multitree', no_pruning=False,  num_processes=1, run_each=1,
                  timeout=120, show_output=False, resnax=False, max_valid=-1,
                  max_invalid=-1):
         self.show_output = show_output
@@ -176,6 +176,7 @@ class Tester:
         self.instances = []
         self.num_processes = num_processes
         self.poll_time = min(30, self.timeout // 15)
+        self.no_pruning = no_pruning
         if method == 'compare-times':
             methods = all_methods
         else:
@@ -186,10 +187,12 @@ class Tester:
             command_base += ["-v", str(max_valid)]
         if max_invalid > 0:
             command_base += ["-i", str(max_invalid)]
+        if no_pruning:
+            command_base.append('--no-pruning')
         if resnax:
             command_base.append('--resnax')
 
-        command_base.append("-m")
+        command_base.append("-e")
 
         now = datetime.datetime.now()
         print(f"Running on {socket.gethostname()}, "
@@ -337,8 +340,8 @@ class Tester:
             print(f"{inst.name},".ljust(maxl), end='')
             for m in all_methods:
                 # check that all methods have tasks.
-                assert any(map(lambda t: t.method == m, inst.tasks))
-                m_tasks = list(filter(lambda t: t.method == m, inst.tasks))
+                assert any(map(lambda t: t.encoding == m, inst.tasks))
+                m_tasks = list(filter(lambda t: t.encoding == m, inst.tasks))
                 times = map(lambda t: t.time, m_tasks)
                 times = list(filter(lambda x: x >= 0, times))
 
