@@ -41,8 +41,11 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
     def synthesize(self):
         self.start_time = time.time()
-
-        valid, invalid = self.split_examples()
+        try:
+            valid, invalid = self.split_examples()
+        except:
+            valid = None
+            invalid = None
 
         if valid is not None and len(valid[0]) > 1  and not self.force_funny:
             self.valid = valid
