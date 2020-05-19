@@ -125,7 +125,7 @@ class Task:
                 if "Synthesizer done" in l:
                     end = True
                 if "Program accepted" in l and not first:
-                    m = re.search("Program accepted.*(\d+\.\d+) seconds", l)
+                    m = re.search("Program accepted.*and (\d+\.\d+) seconds", l)
                     if m is not None:
                         self.first_time = float(m.groups()[0])
                     else:
