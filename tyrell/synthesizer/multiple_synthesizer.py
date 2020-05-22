@@ -130,6 +130,15 @@ class MultipleSynthesizer(ABC):
                 else:
                     self.programs = [self.programs[1]]
                     # self.indistinguishable = 0
+            elif re.match("no+", x.lower().rstrip()):
+                logger.info(f'"{dist_input}" is {colored("invalid", "red")}. I\'m sorry you feel desperate. I\'m doing the best I can. Please keep in mind I am but a machine :).')
+                valid_answer = True
+                self._decider.add_example([dist_input], False)
+                if not self._decider.interpreter.eval(self.programs[0], [dist_input]):
+                    self.programs = [self.programs[0]]
+                else:
+                    self.programs = [self.programs[1]]
+                    # self.indistinguishable = 0
             else:
                 logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
 

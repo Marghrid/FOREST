@@ -166,7 +166,8 @@ class StaticMultiTreeEnumerator(Enumerator):
         tree_idx = pred.args[1]
         self.tree_dsls[tree_idx].add_predicate(pred.name, pred.args)
 
-        # We want to run block_subtree only for nodes in the tree in which the program originally occurred.
+        # We want to run block_subtree only for nodes in the tree in which the program
+        # originally occurred.
         for node in self.nodes_until_depth(self.depth - program.depth() + 1,
                                            tree_idx):
             self.block_subtree(node, program)

@@ -1,5 +1,5 @@
 // natural language
-I am trying to write a regular expression which validates a text box to have only digits with length 5 or 9.”Can any one please help me in modifying or writing a new regular expression which supports below pattern: - valid (ending with comma) -valid (not ending with comma) -Invalid (should not support if 1st digit is length 5 and 2nd less than 9) -valid (must support only digit length 5 or 9)
+I am trying to write a regular expression which validates a text box to have only digits with length 5 or 9. Can any one please help me in modifying or writing a new regular expression which supports below pattern: - valid (ending with comma) -valid (not ending with comma) -Invalid (should not support if 1st digit is length 5 and 2nd less than 9) -valid (must support only digit length 5 or 9)
 
 // example
 "09103,09101,",+

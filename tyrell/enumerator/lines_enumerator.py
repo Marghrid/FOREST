@@ -3,8 +3,7 @@ from collections import defaultdict
 from copy import deepcopy
 from logging import getLogger
 
-from ordered_set import OrderedSet
-from z3 import *
+import z3
 
 from .enumerator import Enumerator
 from .gen_lattices import SymmetryFinder
@@ -70,7 +69,7 @@ class LinesEnumerator(Enumerator):
 
     def __init__(self, spec: TyrellSpec, loc=None, sym_breaker=False, break_sym_online=False):
 
-        self.z3_solver = Solver()
+        self.z3_solver = z3.Solver()
 
         self.z3_solver.set('random_seed', 7)
         self.z3_solver.set('sat.random_seed', 7)
@@ -132,17 +131,17 @@ class LinesEnumerator(Enumerator):
         self.create_lines_constraints()
         self.create_type_constraints()
         self.create_children_constraints()
-        self._production_id_cache = defaultdict(OrderedSet)
+        self._production_id_cache = defaultdict(set)
         for p in self.spec.productions():
             if p.is_enum():
-                self._production_id_cache[p._get_rhs()].append(p.id)
+                self._production_id_cache[p._get_rhs()].add(p.id)
         self.resolve_predicates(self.spec.predicates())
         logger.info('Number of Nodes: {} '.format(len(self.roots + self.leafs)))
         logger.info('Number of Variables: {}'.format(len(self.variables + self.typeVars + self.linesVars)))
         logger.info('Number of Constraints: {}'.format(self.num_constraints))
         logger.info('Time spent encoding: {}'.format(time.time() - self.start_time))
         res = self.z3_solver.check()
-        if res != sat:
+        if res != z3.sat:
             logger.warning(f"There is no solution for current loc ({self.loc}).")
             return
         self.model = self.z3_solver.model()
@@ -204,38 +203,38 @@ class LinesEnumerator(Enumerator):
         lines = []
         for x in range(1, parent):
             name = f'l{str(nb)}_{str(x)}'
-            var = Int(name)
+            var = z3.Int(name)
             self.linesVars.append(var)
             self.line_vars_by_line[x].append(var)
             lines.append(var)
             # variable range constraints
-            self.z3_solver.add(Or(var == 0, var == 1))
+            self.z3_solver.add(z3.Or(var == 0, var == 1))
             self.num_constraints += 1
         return lines
 
     def create_type_variables(self, nb):
-        var = Int(f't{str(nb)}')
+        var = z3.Int(f't{str(nb)}')
         # variable range constraints
         self.typeVars.append(var)
-        self.z3_solver.add(And(var >= 0, var < self.num_types))
+        self.z3_solver.add(z3.And(var >= 0, var < self.num_types))
         self.num_constraints += 1
         return var
 
     def create_root_variables(self, nb):
         name = f'n{str(nb)}'
-        v = Int(name)
+        v = z3.Int(name)
         self.variables.append(v)
         ctr = []
         for p in self.spec.productions():
             if p not in self.leaf_productions:
                 ctr.append(v == p.id)
-        self.z3_solver.add(Or(ctr))
+        self.z3_solver.add(z3.Or(ctr))
         self.num_constraints += 1
         return v
 
     def create_leaf_variables(self, nb, parent):
         name = f'n{nb}'
-        var = Int(name)
+        var = z3.Int(name)
         self.variables.append(var)
 
         ctr = []
@@ -246,7 +245,7 @@ class LinesEnumerator(Enumerator):
             for p in self.line_productions[a]:
                 ctr.append(var == p.id)
 
-        self.z3_solver.add(Or(ctr))
+        self.z3_solver.add(z3.Or(ctr))
         self.num_constraints += 1
         self.parentId[nb] = parent
         return var
@@ -259,7 +258,7 @@ class LinesEnumerator(Enumerator):
             ctr.append(var == p.id)
             for r in range(len(self.roots) - 1):
                 self.z3_solver.add(self.roots[r].var != p.id)
-        self.z3_solver.add(Or(ctr))
+        self.z3_solver.add(z3.Or(ctr))
         self.num_constraints += 1
 
     def create_lines_constraints(self):
@@ -282,7 +281,7 @@ class LinesEnumerator(Enumerator):
             ctr = []
             for y in self.leafs:
                 ctr.append(y.var == prod.id)
-            self.z3_solver.add(Or(ctr))
+            self.z3_solver.add(z3.Or(ctr))
             self.num_constraints += 1
 
     def create_type_constraints(self):
@@ -293,7 +292,7 @@ class LinesEnumerator(Enumerator):
                     continue
                 for p in self.spec.productions():
                     if p.is_function() and p.lhs.name == self.types[t]:
-                        self.z3_solver.add(Implies(r.var == p.id, r.type == t))
+                        self.z3_solver.add(z3.Implies(r.var == p.id, r.type == t))
                         self.num_constraints += 1
 
     def create_children_constraints(self):
@@ -306,7 +305,7 @@ class LinesEnumerator(Enumerator):
                     ctr = []
                     if c >= len(p.rhs):
                         self.num_constraints += 1
-                        self.z3_solver.add(Implies(aux, r.children[c].var == self.leaf_productions[0].id))
+                        self.z3_solver.add(z3.Implies(aux, r.children[c].var == self.leaf_productions[0].id))
                         continue
 
                     for leaf_production in self.leaf_productions:
@@ -319,12 +318,12 @@ class LinesEnumerator(Enumerator):
                                 ctr.append(r.children[c].var == line_production.id)
                                 # if a previous line is used, then its flag must be true
                                 line_var = r.children[c].lines[l]
-                                self.z3_solver.add(Implies(line_var == 1, r.children[c].var == line_production.id))
-                                self.z3_solver.add(Implies(r.children[c].var == line_production.id, line_var == 1))
+                                self.z3_solver.add(z3.Implies(line_var == 1, r.children[c].var == line_production.id))
+                                self.z3_solver.add(z3.Implies(r.children[c].var == line_production.id, line_var == 1))
                                 self.num_constraints += 2
 
                     self.num_constraints += 1
-                    self.z3_solver.add(Implies(aux, Or(*ctr)))
+                    self.z3_solver.add(z3.Implies(aux, z3.Or(*ctr)))
 
     def max_children(self) -> int:
         '''Finds the maximum number of children in the productions'''
@@ -354,7 +353,7 @@ class LinesEnumerator(Enumerator):
                 children = []
                 for c in r.children:
                     children.append(c.lines[s] == 1)
-                self.z3_solver.add(Implies(And(Or(children), self.roots[s].var == prod1.id), r.var != prod0.id))
+                self.z3_solver.add(z3.Implies(z3.And(z3.Or(children), self.roots[s].var == prod1.id), r.var != prod0.id))
 
     def _resolve_distinct_inputs_predicate(self, pred):
         self._check_arg_types(pred, [str])
@@ -365,13 +364,13 @@ class LinesEnumerator(Enumerator):
                 for c2 in range(c1 + 1, len(r.children)):
                     child2 = r.children[c2]
                     # this works because even a inner_join between two filters, the children will have different values for the variables because of the lines produtions
-                    self.z3_solver.add(Implies(r.var == production.id, Or(child1.var != child2.var, And(child1.var == 0, child2.var == 0))))
+                    self.z3_solver.add(z3.Implies(r.var == production.id, z3.Or(child1.var != child2.var, z3.And(child1.var == 0, child2.var == 0))))
 
     def _resolve_distinct_filters_predicate(self, pred):
         self._check_arg_types(pred, [str])
         prod0 = self.spec.get_function_production_or_raise(pred.args[0])
         for r in self.roots:
-            self.z3_solver.add(Implies(r.var == prod0.id, r.children[int(pred.args[1])].var != r.children[int(pred.args[2])].var))
+            self.z3_solver.add(z3.Implies(r.var == prod0.id, r.children[int(pred.args[1])].var != r.children[int(pred.args[2])].var))
 
     def _resolve_constant_occurs_predicate(self, pred):
         conditions = pred.args
@@ -380,7 +379,7 @@ class LinesEnumerator(Enumerator):
             for id in self._production_id_cache[c]:
                 for l in self.leafs:
                     lst.append(l.var == id)
-        self.z3_solver.add(Or(lst))
+        self.z3_solver.add(z3.Or(lst))
 
     def _resolve_happens_before_predicate(self, pred):
         pres = self._production_id_cache[pred.args[1]]
@@ -393,7 +392,7 @@ class LinesEnumerator(Enumerator):
                         for pre in pres:
                             previous_roots.append(c.var == pre)
 
-                self.z3_solver.add(Implies(Or(*(c.var == pos for c in self.roots[r_i].children)), Or(previous_roots)))
+                self.z3_solver.add(z3.Implies(z3.Or(*(c.var == pos for c in self.roots[r_i].children)), z3.Or(previous_roots)))
 
     def _resolve_block_first_tree_predicate(self, pred):
         pass
@@ -458,7 +457,7 @@ class LinesEnumerator(Enumerator):
                         break
                     for c in m:
                         c = c.split("=") if "=" in c else c.split(":")
-                        model[Int(c[0])] = Int(c[1])
+                        model[z3.Int(c[0])] = z3.Int(c[1])
                     models.append(model)
             if lat not in self.lattices:
                 self.lattices[lat] = models
@@ -572,14 +571,14 @@ class LinesEnumerator(Enumerator):
             m_aux[k] = self.model[k]  # NEW
             root_num = t + 1
             type = int(str(self.model[k]))
-            new_node = int(str(model[Int('x_' + str(root_num))]))
+            new_node = int(str(model[z3.Int('x_' + str(root_num))]))
             old_prod = self.line_productions[root_num - 1][type].id
             new_prod = self.line_productions[new_node - 1][type].id
             start = root_num * self.max_children
             for i in range(start, len(self.leafs)):
                 n = self.leafs[i]
                 if self.model[n.var] == old_prod:
-                    m_aux[n.var] = IntVal(new_prod)
+                    m_aux[n.var] = z3.IntVal(new_prod)
                     break
         m_aux[self.typeVars[-1]] = self.model[self.typeVars[-1]]
 
@@ -598,15 +597,15 @@ class LinesEnumerator(Enumerator):
     def get_model_constraint(self):
         block = []
         for x in self.variables:
-            block.append(x != Int('val_' + str(x)))
-        self.modelConstraint = Or(block)
+            block.append(x != z3.Int('val_' + str(x)))
+        self.modelConstraint = z3.Or(block)
 
         for m in self.model:
-            self.cleanedModel[m()] = IntVal(0)
+            self.cleanedModel[m()] = z3.IntVal(0)
 
     def block_model_aux(self, model):
         # block the model using only the variables that correspond to productions (nodes = leafs + roots)
-        const = substitute(self.modelConstraint, [(Int(f'val_{str(x)}'), model[x]) for x in self.variables])
+        const = z3.substitute(self.modelConstraint, [(z3.Int(f'val_{str(x)}'), model[x]) for x in self.variables])
         self.z3_solver.add(const)
 
     def block_model(self):
@@ -687,7 +686,7 @@ class LinesEnumerator(Enumerator):
         res = self.z3_solver.check()
 
         self.solverTime += time.time() - start_time
-        if res != sat:
+        if res != z3.sat:
             return None
 
         self.model = self.z3_solver.model()

@@ -13,7 +13,6 @@ class KTreeSynthesizer(MultipleSynthesizer):
         self.max_depth = 6
 
     def synthesize(self):
-        logger.info("Using FunnyEnumerator.")
         self.start_time = time.time()
 
         for dep in range(3, self.max_depth + 1):
