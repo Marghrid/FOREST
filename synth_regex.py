@@ -41,13 +41,13 @@ def main():
 
     show(valid, invalid, ground_truth)
     if encoding == 'multitree':
-        multitree_synthesize(valid, invalid, self_interact, ground_truth, no_pruning)
+        multitree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
     elif encoding == "funny":
-        funny_synthesize(valid, invalid, self_interact, ground_truth, no_pruning)
+        funny_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
     elif encoding == 'ktree':
-        ktree_synthesize(valid, invalid, self_interact, ground_truth, no_pruning)
+        ktree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
     elif encoding == 'lines':
-        lines_synthesize(valid, invalid, self_interact, ground_truth, no_pruning)
+        lines_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
     else:
         raise ValueError
 
@@ -82,7 +82,7 @@ def show(valid, invalid, ground_truth: str):
     print(colored(ground_truth, "green"))
 
 
-def multitree_synthesize(valid, invalid, self_interact, ground_truth, no_pruning):
+def multitree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
@@ -92,7 +92,7 @@ def multitree_synthesize(valid, invalid, self_interact, ground_truth, no_pruning
     return synthesize(synthesizer, type_validation)
 
 
-def funny_synthesize(valid, invalid, self_interact, ground_truth, no_pruning):
+def funny_synthesize(valid, invalid, ground_truth, self_interact, no_pruning):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
@@ -102,7 +102,7 @@ def funny_synthesize(valid, invalid, self_interact, ground_truth, no_pruning):
     return synthesize(synthesizer, type_validation)
 
 
-def ktree_synthesize(valid, invalid, self_interact, ground_truth, no_pruning):
+def ktree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth,
@@ -110,7 +110,7 @@ def ktree_synthesize(valid, invalid, self_interact, ground_truth, no_pruning):
     return synthesize(synthesizer, type_validation)
 
 
-def lines_synthesize(valid, invalid, self_interact, ground_truth, no_pruning):
+def lines_synthesize(valid, invalid, ground_truth, self_interact, no_pruning):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = LinesSynthesizer(valid, invalid, dsl, ground_truth,
