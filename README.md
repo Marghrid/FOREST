@@ -1,13 +1,15 @@
-# Validations Synthesizer:
+# __FOREST__ 
+:deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree:
+**FO**rm **R**egular **E**xpressions **S**yn**T**hesizer 
+:deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree:
 
-Based on [Trinity](https://github.com/fredfeng/Trinity).
+- [Try the synthesizer](https://colab.research.google.com/drive/1M1fUzgJLzfZ_KrD6oR_BCi-aLLG3kXMB) on Google Colab.
 
-[Try the synthesizer](https://colab.research.google.com/drive/1M1fUzgJLzfZ_KrD6oR_BCi-aLLG3kXMB) on Google Colab.
+- [Benchmarks descriptions](https://docs.google.com/spreadsheets/d/1NcmG0DgNYGOTuBxmWRwGORGCIvjtfbYk2sVo3RR7PyI/edit?usp=sharing).
 
-[Benchmarks descriptions](https://docs.google.com/spreadsheets/d/1NcmG0DgNYGOTuBxmWRwGORGCIvjtfbYk2sVo3RR7PyI/edit?usp=sharing).
+- Based on [Trinity](https://github.com/fredfeng/Trinity).
 
-Dev Environment Setup
-=====================
+## Dev Environment Setup
 - Prerequisite:
     - python 3.6+  
 - It is preferable to have a dedicated virtualenv for this project:
