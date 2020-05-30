@@ -82,27 +82,30 @@ def show(valid, invalid, ground_truth: str):
     print(colored(ground_truth, "green"))
 
 
-def multitree_synthesize(valid, invalid, ground_truth, self_interact=False, no_pruning=False):
+def multitree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
+                         no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
         raise Exception("MultiTree Synthesizer is only for strings.")
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
-                                       pruning=not no_pruning, auto_interaction=self_interact)
+                                       pruning=not no_pruning,
+                                       auto_interaction=self_interact)
     return synthesize(synthesizer, type_validation)
 
 
-def funny_synthesize(valid, invalid, ground_truth, self_interact=False, no_pruning=False):
+def funny_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0]:
         raise Exception("GreedySynthesizer is only for strings.")
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
-                                       pruning=not no_pruning, auto_interaction=self_interact, force_funny=True)
+                                       pruning=not no_pruning,
+                                       auto_interaction=self_interact, force_funny=True)
     return synthesize(synthesizer, type_validation)
 
 
-def ktree_synthesize(valid, invalid, ground_truth, self_interact=False, no_pruning=False):
+def ktree_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth,
@@ -110,15 +113,22 @@ def ktree_synthesize(valid, invalid, ground_truth, self_interact=False, no_pruni
     return synthesize(synthesizer, type_validation)
 
 
-def lines_synthesize(valid, invalid, ground_truth, self_interact=False, no_pruning=False):
+def lines_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = LinesSynthesizer(valid, invalid, dsl, ground_truth,
                                    pruning=not no_pruning, auto_interaction=self_interact)
     return synthesize(synthesizer, type_validation)
 
+
 def prepare_things(valid, invalid):
     type_validation = ["is_string"]
+    if len(valid) == 0:
+        raise ValueError("No valid examples!")
+    if isinstance(valid[0], str):
+        valid = list(map(lambda v: [v], valid))
+    if isinstance(invalid[0], str):
+        invalid = list(map(lambda v: [v], invalid))
     # logger.info("Assuming types: " + str(type_validation))
     builder = DSLBuilder(type_validation, valid, invalid)
     dsl = builder.build()[0]
