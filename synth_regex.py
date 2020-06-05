@@ -5,13 +5,13 @@ from signal import signal, SIGINT, SIGTERM
 
 from termcolor import colored
 
-from tyrell.dslBuilder import DSLBuilder
-from tyrell.interpreter import ValidationPrinter
-from tyrell.logger import get_logger
-from tyrell.parse_examples import parse_file, parse_resnax
-from tyrell.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer
+from forest.dsl.dsl_builder import DSLBuilder
+from forest.visitor import ValidationPrinter
+from forest.logger import get_logger
+from forest.parse_examples import parse_file, parse_resnax
+from forest.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer
 
-logger = get_logger('tyrell')
+logger = get_logger('forest')
 
 synthesizer = None
 
@@ -86,7 +86,7 @@ def multitree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
                          no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
-    if "string" not in type_validation[0]:
+    if "string" not in type_validation[0] and "regex" not in type_validation[0]:
         raise Exception("MultiTree Synthesizer is only for strings.")
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
                                        pruning=not no_pruning,
@@ -101,7 +101,7 @@ def funny_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_
         raise Exception("GreedySynthesizer is only for strings.")
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
                                        pruning=not no_pruning,
-                                       auto_interaction=self_interact, force_funny=True)
+                                       auto_interaction=self_interact, force_dynamic=True)
     return synthesize(synthesizer, type_validation)
 
 
@@ -122,7 +122,7 @@ def lines_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_
 
 
 def prepare_things(valid, invalid):
-    type_validation = ["is_string"]
+    type_validation = ["is_regex"]
     if len(valid) == 0:
         raise ValueError("No valid examples!")
     if isinstance(valid[0], str):

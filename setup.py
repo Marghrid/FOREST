@@ -11,7 +11,7 @@ develop_dependencies = [
     'sphinx',  # for documentation generation
 ]
 setup(
-    name='Validations Synthesizer',
+    name='FOREST',
     version='0.1dev',
     packages=find_packages(),
     license='LICENSE.txt',
@@ -22,7 +22,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'parse-tyrell-spec=tyrell.parse_tyrell_spec:cli',
+            'parse-forest-spec=forest.parse_tyrell_spec:cli',
         ],
     },
 )

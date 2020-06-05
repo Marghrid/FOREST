@@ -291,15 +291,6 @@ class Tester:
             nodes = list(map(lambda t: t.nodes, inst.tasks))
             timed_out = list(map(lambda t: t.timed_out, inst.tasks))
 
-            # times = list(filter(lambda x: x >= 0, times))
-            # enumerated = list(filter(lambda x: x > 0, enumerated))
-            # interactions = list(filter(lambda x: x >= 0, interactions))
-
-            if not all(map(lambda x: x >= 0, times)):
-                print(f"{inst.name},".ljust(maxl), "error")
-            # assert all(map(lambda x: x > 0, enumerated))
-            # assert all(map(lambda x: x >= 0, interactions))
-
             if not len(times) == len(enumerated) == len(enumerators) == len(interactions):
                 print("different lengths")
 
