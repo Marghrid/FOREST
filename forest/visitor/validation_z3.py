@@ -29,13 +29,13 @@ class Validation_z3(PostOrderInterpreter):
     def eval_Bool(self, v):
         return v
 
-    def eval_Char(self, c: str):
+    def eval_regexLit(self, c: str):
         if c.startswith('\\'):
             c = c.replace("\\", '', 1)
             # c = re.sub(r'\\(.)', r'\1', c)
         return c
 
-    def eval_RangeVal(self, v):
+    def eval_RangeLit(self, v):
         s = v.split(',')
         assert len(s) == 2
         return (int(s[0]), int(s[1]))

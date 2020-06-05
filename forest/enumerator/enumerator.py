@@ -65,7 +65,7 @@ class Enumerator(ABC):
     def _get_range_values(self):
         """ Organizes DSL's range values into dictionaries based on their upper and
         lower bounds """
-        range_val_ty = self.dsl.get_type("RangeVal")
+        range_val_ty = self.dsl.get_type("RangeLit")
         if range_val_ty is None:
             return
         range_val_enum = self.dsl.get_productions_with_lhs(range_val_ty)

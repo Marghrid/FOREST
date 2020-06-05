@@ -113,7 +113,7 @@ class RegexDecider(ExampleDecider):
 
             elif production.name == "re":
                 char_node = node.children[0]
-                assert (char_node.is_enum() and char_node.type.name == "Char")
+                assert (char_node.is_enum() and char_node.type.name == "RegexLit")
                 st = str(char_node.data)
                 # FIXME: What if char is always present but it is part of a char class?
                 #  Then it can be the char class that must occur.

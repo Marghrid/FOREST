@@ -20,10 +20,10 @@ class NodeCounter(PostOrderInterpreter):
     def eval_Value(self, v):
         return 0
 
-    def eval_Char(self, v):
+    def eval_RegexLit(self, v):
         return 0
 
-    def eval_RangeVal(selfself, v):
+    def eval_RangeLit(self, v):
         return 1
 
     def eval_conj(self, node: Node, args) -> str:

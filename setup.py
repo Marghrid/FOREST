@@ -15,14 +15,14 @@ setup(
     version='0.1dev',
     packages=find_packages(),
     license='LICENSE.txt',
-    description='User input validatios synthesis tool',
+    description='User input validations synthesis tool',
     install_requires=install_dependencies,
     extras_require={
         'dev': develop_dependencies
     },
     entry_points={
         'console_scripts': [
-            'parse-forest-spec=forest.parse_tyrell_spec:cli',
+            'forest=synth_regex:main',
         ],
     },
 )

@@ -39,29 +39,17 @@ class DSLBuilder:
         with open("forest/dsl/" + re.sub('^is_', '', val_type) + "DSL.tyrell", "r") as dsl_file:
             dsl_base = dsl_file.read()
 
-        if "integer" in val_type:
-            dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(int, valid))) + "}\n"
-
-        elif "real" in val_type:
-            dsl += "enum Value {" + ", ".join(map(lambda x: f'"{x}"', self.get_values(float, valid))) + "}\n"
-
-        elif "string" in val_type:
-            dsl += "enum Value {" + ",".join(map(lambda x: f'"{x}"', self.get_values(len, valid))) + "}\n"
-            dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', self.get_relevant_chars(valid))) + "}\n"
-            range_values = self.get_range_vals(valid)
-            if len(range_values) > 0:
-                range_operator = True
-                dsl += "enum RangeVal {" + ",".join(map(lambda x: f'"{x}"', range_values)) + "}\n"
-
-        elif "regex" in val_type:
-            relevant_chars = self.get_relevant_chars(valid)
-            dsl += "enum Char {" + ",".join(map(lambda x: f'"{x}"', relevant_chars)) + "}\n"
-            if len(relevant_chars) == 1 and all(map(lambda x: re.fullmatch(relevant_chars[0], x) is not None, valid)):
+        if "regex" in val_type:
+            regexlits = self.get_regexlits(valid)
+            dsl += "enum RegexLit {" + ",".join(map(lambda x: f'"{x}"', regexlits)) + "}\n"
+            if len(regexlits) == 1 and all(map(lambda x: re.fullmatch(regexlits[0], x) is not None, valid)):
                 super_simple_dsl = True
-            range_values = self.get_range_vals(valid)
+            range_values = self.get_rangelits(valid)
             if len(range_values) > 0:
                 range_operator = True
-                dsl += "enum RangeVal {" + ",".join(map(lambda x: f'"{x}"', range_values)) + "}\n"
+                dsl += "enum RangeLit {" + ",".join(map(lambda x: f'"{x}"', range_values)) + "}\n"
+        else:
+            logger.error(f"Unknown type validation: {val_type}.")
 
         dsl += dsl_base
         if not super_simple_dsl:
@@ -86,12 +74,12 @@ class DSLBuilder:
             values.add(max(field))
         return sorted(values)
 
-    def get_relevant_chars(self, valid):
+    def get_regexlits(self, valid):
         # IDEA: add chars that occur in many examples. Counterargument: I needed to
         # forcefully add a date that did not contain a 1, and yet a 1 is not a
         # requirement for a date. IDEA: Add individual chars if not all (or almost all)
         # chars occur.
-        relevant_chars = set()
+        regexlits = set()
         substrings = set()
         char_classes = set()
         letters = set()
@@ -100,11 +88,11 @@ class DSLBuilder:
         substrings.update(find_all_cs(valid))
         for substring in substrings:
             if substring in self.special_chars:
-                relevant_chars.add(fr"\{substring}")
+                regexlits.add(fr"\{substring}")
             elif substring == "'":
-                relevant_chars.add(f'{substring}')
+                regexlits.add(f'{substring}')
             else:
-                relevant_chars.add(substring)
+                regexlits.add(substring)
 
         # remove substring occurrence from example
         for sub in substrings:
@@ -128,22 +116,22 @@ class DSLBuilder:
                     numbers.add(char)
                     char_classes.add('[0-9]')
                 elif char in self.special_chars:
-                    relevant_chars.add(fr"\{char}")
+                    regexlits.add(fr"\{char}")
                 elif char == "'":
-                    relevant_chars.add(f'{char}')
+                    regexlits.add(f'{char}')
                 else:
-                    relevant_chars.add(char)
+                    regexlits.add(char)
 
         if len(letters) < 5:
-            relevant_chars.update(letters)
+            regexlits.update(letters)
         if len(numbers) < 5:
-            relevant_chars.update(numbers)
+            regexlits.update(numbers)
 
         self.update_char_classes(char_classes)
-        relevant_chars.update(char_classes)
-        return sorted(relevant_chars)
+        regexlits.update(char_classes)
+        return sorted(regexlits)
 
-    def get_range_vals(self, valid):
+    def get_rangelits(self, valid):
         compressed = valid.copy()
 
         substrings = set()
@@ -185,7 +173,7 @@ class DSLBuilder:
             char_classes.add('[0-9A-Za-z]')
 
     def _range_operator(self):
-        return "func range: Regex -> Regex, RangeVal;\n" \
+        return "func range: Regex -> Regex, RangeLit;\n" \
                "predicate is_not_parent(range, range);\n" \
                "predicate is_not_parent(range, kleene);\n" \
                "predicate is_not_parent(range, posit);\n" \

@@ -7,5 +7,5 @@ program Validate(String) -> Regex;
 
 # Production rules:
 func empty: Empty -> Empty;
-func re:    Regex -> Char;
+func re:    Regex -> RegexLit;
 

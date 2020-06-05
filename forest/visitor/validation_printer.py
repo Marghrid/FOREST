@@ -12,19 +12,7 @@ class ValidationPrinter(PostOrderInterpreter):
     def eval_Regex(self, v):
         return v
 
-    def eval_Input(self, v):
-        return v
-
-    def eval_Number(self, v) -> str:
-        return v
-
-    def eval_Bool(self, v):
-        return v
-
-    def eval_Value(self, v):
-        return v
-
-    def eval_RangeVal(self, v):
+    def eval_RangeLit(self, v):
         s = v.split(',')
         assert len(s) == 2
         return int(s[0]), int(s[1])

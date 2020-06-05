@@ -20,10 +20,10 @@ class ValidationInterpreter(PostOrderInterpreter):
     def eval_Value(self, v):
         return float(v)
 
-    def eval_Char(self, v):
+    def eval_RegexLit(self, v):
         return v
 
-    def eval_RangeVal(self, v):
+    def eval_RangeLit(self, v):
         s = v.split(',')
         assert len(s) == 2
         return (int(s[0]), int(s[1]))
