@@ -20,7 +20,7 @@ def handler(signal_received, frame):
 # noinspection PyTypeChecker
 def main():
     signal(SIGINT, handler)
-    encodings = ('multitree', 'funny', 'ktree', 'lines', 'compare-times')
+    encodings = ('multitree', 'dynamic', 'ktree', 'lines', 'compare-times')
 
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)

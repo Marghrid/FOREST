@@ -42,8 +42,8 @@ def main():
     show(valid, invalid, ground_truth)
     if encoding == 'multitree':
         multitree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
-    elif encoding == "funny":
-        funny_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
+    elif encoding == "dynamic":
+        dynamic_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
     elif encoding == 'ktree':
         ktree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
     elif encoding == 'lines':
@@ -94,11 +94,9 @@ def multitree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
     return synthesize(synthesizer, type_validation)
 
 
-def funny_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_pruning=False):
+def dynamic_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
-    if "string" not in type_validation[0]:
-        raise Exception("GreedySynthesizer is only for strings.")
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
                                        pruning=not no_pruning,
                                        auto_interaction=self_interact, force_dynamic=True)
@@ -150,7 +148,7 @@ def synthesize(synthesizer, type_validation):
 
 # noinspection PyTypeChecker
 def read_cmd_args():
-    encodings = ('multitree', 'funny', 'ktree', 'lines')
+    encodings = ('multitree', 'dynamic', 'ktree', 'lines')
     parser = argparse.ArgumentParser(description='Validations Synthesizer',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('file', type=str, help='File with I/O examples.')

@@ -258,8 +258,6 @@ class LinesEnumerator(Enumerator):
         var = self.roots[-1].var  # last line corresponds to the output line
         for p in self.spec.get_productions_with_lhs(self.spec.output):
             ctr.append(var == p.id)
-            for r in range(len(self.roots) - 1):
-                self.z3_solver.add(self.roots[r].var != p.id)
         self.z3_solver.add(z3.Or(ctr))
         self.num_constraints += 1
 

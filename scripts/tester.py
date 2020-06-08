@@ -7,7 +7,7 @@ import time
 
 from termcolor import colored
 
-all_methods = ('multitree', 'ktree', 'lines', 'funny')
+all_methods = ('multitree', 'ktree', 'lines', 'dynamic')
 
 
 def half_true():

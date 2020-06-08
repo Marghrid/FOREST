@@ -41,7 +41,7 @@ class SingleSynthesizer(ABC):
         return self._decider
 
     def synthesize(self):
-        logger.info("Using FunnyEnumerator.")
+        logger.info("Using Dynamic Multi-tree enumerator.")
         self.start_time = time.time()
 
         for dep in range(3, self.max_depth + 1):
