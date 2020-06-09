@@ -11,17 +11,42 @@
 
 ## Dev Environment Setup
 - Prerequisite:
-    - python 3.6+  
+    - python 3.7+  
 - It is preferable to have a dedicated virtualenv for this project:
 ```
     $ git clone <this repo>
-    $ cd Validations-Synthesizer
+    $ cd FOREST
     $ mkdir venv
     $ python3 -m venv venv
     $ source venv/bin/activate
 ```
-- Make an editable install with `pip`. This automatically handles package dependencies. One of the dependencies, `z3-solver`, takes a long time to build. Please be patient.
+- Make an editable install with `pip`. This automatically handles package dependencies.
 ```
     $ pip install -e ".[dev]"
     $ python setup.py sdist  # for package
+```
+
+## Run benchmarks:
+
+- Using default parameters:
+```
+    $ python scripts/run_all.py benchmarks
+```
+
+- To view options for parameters:
+```
+    $ python scripts/run_all.py --help
+```
+
+## Run single instance:
+
+- Using default parameters:
+
+```
+    $ python synth_regex.py benchmarks/cc.txt
+```
+
+- To view options for parameters:
+```
+    $ python synth_regex.py --help
 ```
