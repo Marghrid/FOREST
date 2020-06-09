@@ -133,8 +133,6 @@ class MultipleSynthesizer(ABC):
         valid_answer = False
         # Do not count time spent waiting for user input: add waiting time to start_time.
         while not valid_answer:
-            for p in self.programs:
-                print(p)
             x = input(f'Is "{dist_input}" valid?\n')
             if x.lower().rstrip() in yes_values:
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')
@@ -158,11 +156,6 @@ class MultipleSynthesizer(ABC):
                     # self.indistinguishable = 0
             else:
                 logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
-
-        print("after")
-
-        for p in self.programs:
-            print(p)
 
     def auto_distinguish(self, dist_input):
         """ Simulate interaction """
