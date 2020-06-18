@@ -24,3 +24,6 @@ def is_regex(tentative_regex: str):
         return True
     except re.error:
         return False
+
+def transpose(lst):
+    return list(map(list, zip(*lst)))

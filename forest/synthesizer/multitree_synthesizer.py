@@ -9,7 +9,7 @@ from .multiple_synthesizer import MultipleSynthesizer
 from ..decider import RegexDecider
 from ..enumerator import StaticMultiTreeEnumerator, DynamicMultiTreeEnumerator
 from ..logger import get_logger
-from ..visitor import ValidationInterpreter
+from ..visitor import RegexInterpreter
 
 logger = get_logger('forest.synthesizer')
 
@@ -52,7 +52,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             dsls = builder.build()
 
             logger.info("Using Static Multi-tree enumerator.")
-            self._decider = RegexDecider(interpreter=ValidationInterpreter(),
+            self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                          examples=self.examples,
                                          split_valid=self.valid)
             for depth in range(3, 10):
@@ -68,7 +68,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
         else:
             logger.info("Using Dynamic Multi-tree enumerator.")
-            self._decider = RegexDecider(interpreter=ValidationInterpreter(),
+            self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                          examples=self.examples)
             sizes = list(itertools.product(range(3, 10), range(1, 10)))
             sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
@@ -94,7 +94,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
         invalid = deepcopy(self.invalid)
         while new_l != l and l < max_l:
             l = new_l
-            transposed_valid = list(map(list, zip(*valid)))
+            transposed_valid = transpose(valid)
 
             for field_idx, field in enumerate(transposed_valid):
                 common_substrings = find_all_cs(field)

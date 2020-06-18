@@ -74,6 +74,8 @@ class Enumerator(ABC):
         for range_val in range_val_enum:
             data = range_val.rhs[0]
             data = data.split(',')
+            if len(data) < 2: #probably sketches
+                break
             range_node = AtomNode(range_val)
             if data[0] not in self.range_lower_bounds:
                 self.range_lower_bounds[data[0]] = []

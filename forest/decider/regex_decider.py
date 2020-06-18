@@ -89,6 +89,8 @@ class RegexDecider(ExampleDecider):
                 '''
                 regex = self.interpreter.eval(node, self.valid_exs[0])
                 bounds = node.args[1].data.split(',')
+                if len(bounds) < 2: #sketches
+                    return
                 n = bounds[0]
                 m = bounds[1]
                 assert len(bounds) == 2

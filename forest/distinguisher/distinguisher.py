@@ -1,11 +1,11 @@
 import z3
 
-from forest.visitor import Validation_z3
+from forest.visitor import ToZ3
 
 
 class Distinguisher:
     def __init__(self):
-        self._validation2z3 = Validation_z3()
+        self._validation2z3 = ToZ3()
 
     def distinguish(self, r1, r2):
         """ Returns a distinguishing input for regexes r1 and r2, or None if they are

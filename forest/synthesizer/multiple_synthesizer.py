@@ -9,7 +9,7 @@ from ..decider import RegexDecider, Example
 from ..distinguisher import Distinguisher
 from ..logger import get_logger
 from ..utils import nice_time, is_regex
-from ..visitor import ValidationInterpreter, ValidationPrinter, NodeCounter
+from ..visitor import RegexInterpreter, ToString, NodeCounter
 
 logger = get_logger('forest.synthesizer')
 
@@ -36,9 +36,9 @@ class MultipleSynthesizer(ABC):
         # If auto-interaction is enabled, the ground truth must be a valid regex.
         if self.auto_interaction:
             assert len(self.ground_truth) > 0 and is_regex(self.ground_truth)
-        self._printer = ValidationPrinter()
+        self._printer = ToString()
         self._distinguisher = Distinguisher()
-        self._decider = RegexDecider(interpreter=ValidationInterpreter(),
+        self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                      examples=self.examples)
 
         self._node_counter = NodeCounter()
@@ -133,6 +133,8 @@ class MultipleSynthesizer(ABC):
         valid_answer = False
         # Do not count time spent waiting for user input: add waiting time to start_time.
         while not valid_answer:
+            for p in self.programs:
+                print(p)
             x = input(f'Is "{dist_input}" valid?\n')
             if x.lower().rstrip() in yes_values:
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')
@@ -156,6 +158,9 @@ class MultipleSynthesizer(ABC):
                     # self.indistinguishable = 0
             else:
                 logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
+
+        for p in self.programs:
+            print(p)
 
     def auto_distinguish(self, dist_input):
         """ Simulate interaction """

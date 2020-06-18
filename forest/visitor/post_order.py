@@ -55,7 +55,7 @@ class NodeVisitor(GenericVisitor):
 
 class PostOrderInterpreter(Interpreter):
 
-    def eval(self, program: Node, inputs: List[Any]) -> Any:
+    def eval(self, program: Node, inputs=None) -> Any:
         """
         Interpret the Given AST in post-order. Assumes the existence of `eval_XXX` method
         where `XXX` is the name of a function defined in the DSL.

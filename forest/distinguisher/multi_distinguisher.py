@@ -5,14 +5,14 @@ from typing import List
 import z3
 
 from forest.distinguisher import Distinguisher
-from forest.visitor import Validation_z3, ValidationPrinter
+from forest.visitor import ToZ3, ToString
 
 
 class MultiDistinguisher:
     def __init__(self):
-        self._validation2z3 = Validation_z3()
+        self._toz3 = ToZ3()
         self.distinguisher = Distinguisher()
-        self.printer = ValidationPrinter()
+        self.printer = ToString()
 
     def distinguish(self, regexes):
         self.fleißig_distinguish(regexes)
@@ -26,7 +26,7 @@ class MultiDistinguisher:
 
         z3_regexes = []
         for regex in regexes:
-            z3_regex = self._validation2z3.eval(regex, ["IN"])
+            z3_regex = self._toz3.eval(regex, ["IN"])
             z3_regexes.append(z3_regex)
 
         dist = z3.String("distinguishing")
@@ -74,7 +74,7 @@ class MultiDistinguisher:
         z3_regexes = []
 
         for regex in regexes:
-            z3_regex = self._validation2z3.eval(regex, ["IN"])
+            z3_regex = self._toz3.eval(regex, ["IN"])
             z3_regexes.append(z3_regex)
 
         dist = z3.String("distinguishing")

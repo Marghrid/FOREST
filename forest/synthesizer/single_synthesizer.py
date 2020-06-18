@@ -6,7 +6,7 @@ from ..distinguisher import Distinguisher
 from ..enumerator import KTreeEnumerator
 from ..logger import get_logger
 from ..utils import nice_time
-from ..visitor import ValidationPrinter, NodeCounter, ValidationInterpreter
+from ..visitor import ToString, NodeCounter, RegexInterpreter
 
 logger = get_logger('forest.synthesizer')
 
@@ -18,9 +18,9 @@ class SingleSynthesizer(ABC):
         self.max_depth = 6
         self.examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
         self.dsl = dsl
-        self._printer = ValidationPrinter()
+        self._printer = ToString()
         self._distinguisher = Distinguisher()
-        self._decider = RegexDecider(interpreter=ValidationInterpreter(), examples=self.examples)
+        self._decider = RegexDecider(interpreter=RegexInterpreter(), examples=self.examples)
         self._node_counter = NodeCounter()
         self.indistinguishable = 0
 

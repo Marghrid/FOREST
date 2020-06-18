@@ -79,9 +79,9 @@ class AtomNode(LeafNode):
             raise ValueError(
                 'Cannot construct an AST atom node from a non-enum production')
         super().__init__(prod)
+        self.data = self.get_data()
 
-    @property
-    def data(self) -> Any:
+    def get_data(self) -> Any:
         prod = cast(EnumProduction, self._prod)
         return prod.rhs[0]
 

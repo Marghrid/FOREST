@@ -4,6 +4,7 @@ import re
 import socket
 import subprocess
 import time
+import random
 
 from termcolor import colored
 
@@ -167,9 +168,10 @@ class Task:
 
 
 class Tester:
-    def __init__(self, instance_dirs, method='multitree', no_pruning=False,  num_processes=1, run_each=1,
-                 timeout=120, show_output=False, resnax=False, max_valid=-1,
-                 max_invalid=-1):
+    def __init__(self, instance_dirs, method='multitree', no_pruning=False,
+                 sketching='none', num_processes=1, run_each=1, timeout=120,
+                 show_output=False, resnax=False, max_valid=-1, max_invalid=-1,
+                 solve_only=-1):
         self.show_output = show_output
         self.timeout = timeout + 2
         self.tasks = []
@@ -191,6 +193,9 @@ class Tester:
             command_base.append('--no-pruning')
         if resnax:
             command_base.append('--resnax')
+        if sketching != 'none':
+            command_base.append('--sketch')
+            command_base.append(sketching)
 
         command_base.append("-e")
 
@@ -209,6 +214,12 @@ class Tester:
 
         # sort instances by name
         print(colored(f"Found {len(self.instances)} instances.", "magenta"))
+
+        if 0 < solve_only < len(self.instances):
+            random.seed("regex")
+            self.instances = random.sample(self.instances, solve_only)
+            print(colored(f"Selected {len(self.instances)} instances.", "magenta"))
+
         self.instances = sorted(self.instances, key=lambda i: i.name)
 
         # create tasks:

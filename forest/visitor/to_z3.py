@@ -3,7 +3,7 @@ import z3
 from .post_order import PostOrderInterpreter
 
 
-class Validation_z3(PostOrderInterpreter):
+class ToZ3(PostOrderInterpreter):
     """
     Returns a z3 regular expression that corresponds to the argument of the match() operation in the program
     """

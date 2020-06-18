@@ -3,6 +3,7 @@ import re
 import forest.spec as spec
 from forest.dsl.common_substrings import find_all_cs
 from forest.logger import get_logger
+from forest.utils import transpose
 
 logger = get_logger('forest.synthesizer')
 
@@ -13,24 +14,48 @@ logger = get_logger('forest.synthesizer')
 #  the list corresponds to the position in the types list
 class DSLBuilder:
 
-    def __init__(self, type_validations, valid, invalid):
+    def __init__(self, type_validations, valid, invalid, sketches=False):
         assert len(valid) > 0
         assert len(type_validations) == len(valid[0])
         assert all(map(lambda l: len(l) == len(valid[0]), valid))
         assert len(invalid) == 0 or all(map(lambda l: len(l) == len(valid[0]), invalid))
         self.types = type_validations
         self.valid = valid
-        self.transposed_valid = list(map(list, zip(*valid)))
+        self.transposed_valid = transpose(valid)
         self.invalid = invalid
-        self.transposed_invalid = list(map(list, zip(*invalid)))
+        self.transposed_invalid = transpose(invalid)
+        self.sketches = sketches
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
                               '{', '}', '[', ']', '"'}
 
     def build(self):
         dsls = []
-        for idx, ty in enumerate(self.types):
-            dsls.append(self.build_dsl(ty, self.transposed_valid[idx]))
+        if not self.sketches:
+            for idx, ty in enumerate(self.types):
+                dsls.append(self.build_dsl(ty, self.transposed_valid[idx]))
+        else:
+            for idx, ty in enumerate(self.types):
+                dsls.append(self.build_sketch_dsl(ty, self.transposed_valid[idx]))
         return dsls
+
+    def build_sketch_dsl(self, val_type, valid):
+        dsl = ''
+        with open("forest/dsl/" + re.sub('^is_', '', val_type) + "DSL.tyrell", "r") as dsl_file:
+            dsl_base = dsl_file.read()
+        if "regex" in val_type:
+            dsl += 'enum RegexLit {"hole"}\n'
+            dsl += 'enum RangeLit {"hole"}\n'
+        else:
+            logger.error(f"Unknown type validation: {val_type}.")
+
+        dsl += dsl_base
+        dsl += self._regex_operators()
+        dsl += self._range_operator()
+        dsl += self._predicates()
+
+        logger.debug("\n" + dsl)
+        dsl = spec.parse(dsl)
+        return dsl
 
     def build_dsl(self, val_type, valid):
         dsl = ''
@@ -42,12 +67,14 @@ class DSLBuilder:
         if "regex" in val_type:
             regexlits = self.get_regexlits(valid)
             dsl += "enum RegexLit {" + ",".join(map(lambda x: f'"{x}"', regexlits)) + "}\n"
-            if len(regexlits) == 1 and all(map(lambda x: re.fullmatch(regexlits[0], x) is not None, valid)):
+            if len(regexlits) == 1 and \
+                all(map(lambda x: re.fullmatch(regexlits[0], x) is not None, valid)):
                 super_simple_dsl = True
             range_values = self.get_rangelits(valid)
             if len(range_values) > 0:
                 range_operator = True
-                dsl += "enum RangeLit {" + ",".join(map(lambda x: f'"{x}"', range_values)) + "}\n"
+                dsl += "enum RangeLit {" + \
+                       ",".join(map(lambda x: f'"{x}"', range_values)) + "}\n"
         else:
             logger.error(f"Unknown type validation: {val_type}.")
 

@@ -6,7 +6,8 @@ from signal import signal, SIGINT, SIGTERM
 from termcolor import colored
 
 from forest.dsl.dsl_builder import DSLBuilder
-from forest.visitor import ValidationPrinter
+from forest.synthesizer.sketch_synthesizer import SketchSynthesizer
+from forest.visitor import ToString
 from forest.logger import get_logger
 from forest.parse_examples import parse_file, parse_resnax
 from forest.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer
@@ -26,7 +27,8 @@ def sig_handler(received_signal, frame):
 def main():
     signal(SIGINT, sig_handler)
     signal(SIGTERM, sig_handler)
-    examples_file, encoding, self_interact, resnax, no_pruning, max_valid, max_invalid = read_cmd_args()
+    examples_file, encoding, self_interact, resnax, no_pruning, max_valid, max_invalid, \
+    sketching_mode = read_cmd_args()
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
@@ -40,7 +42,9 @@ def main():
         invalid = random.sample(invalid, max_invalid)
 
     show(valid, invalid, ground_truth)
-    if encoding == 'multitree':
+    if sketching_mode != 'none':
+        sketch_synthesize(valid, invalid, sketching_mode, ground_truth, self_interact, no_pruning)
+    elif encoding == 'multitree':
         multitree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
     elif encoding == "dynamic":
         dynamic_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
@@ -91,35 +95,49 @@ def multitree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
                                        pruning=not no_pruning,
                                        auto_interaction=self_interact)
-    return synthesize(synthesizer, type_validation)
+    return synthesize(type_validation)
 
 
-def dynamic_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_pruning=False):
+def sketch_synthesize(valid, invalid, sketching_mode, ground_truth=None, self_interact=False,
+                      no_pruning=False, ):
+    global synthesizer
+    dsl, valid, invalid, type_validation = prepare_things(valid, invalid, sketch=True)
+    if "string" not in type_validation[0] and "regex" not in type_validation[0]:
+        raise Exception("MultiTree Synthesizer is only for strings.")
+    synthesizer = SketchSynthesizer(valid, invalid, dsl, ground_truth, sketching_mode,
+                                    auto_interaction=self_interact)
+    return synthesize(type_validation)
+
+
+def dynamic_synthesize(valid, invalid, ground_truth=None, self_interact=False,
+                       no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
                                        pruning=not no_pruning,
                                        auto_interaction=self_interact, force_dynamic=True)
-    return synthesize(synthesizer, type_validation)
+    return synthesize(type_validation)
 
 
-def ktree_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_pruning=False):
+def ktree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
+                     no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth,
                                    pruning=not no_pruning, auto_interaction=self_interact)
-    return synthesize(synthesizer, type_validation)
+    return synthesize(type_validation)
 
 
-def lines_synthesize(valid, invalid, ground_truth=None, self_interact=False, no_pruning=False):
+def lines_synthesize(valid, invalid, ground_truth=None, self_interact=False,
+                     no_pruning=False):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
     synthesizer = LinesSynthesizer(valid, invalid, dsl, ground_truth,
                                    pruning=not no_pruning, auto_interaction=self_interact)
-    return synthesize(synthesizer, type_validation)
+    return synthesize(type_validation)
 
 
-def prepare_things(valid, invalid):
+def prepare_things(valid, invalid, sketch=False):
     type_validation = ["is_regex"]
     if len(valid) == 0:
         raise ValueError("No valid examples!")
@@ -128,7 +146,7 @@ def prepare_things(valid, invalid):
     if isinstance(invalid[0], str):
         invalid = list(map(lambda v: [v], invalid))
     # logger.info("Assuming types: " + str(type_validation))
-    builder = DSLBuilder(type_validation, valid, invalid)
+    builder = DSLBuilder(type_validation, valid, invalid, sketch)
     dsl = builder.build()[0]
     # TODO: build() returns a list of DSLs for each different type of element. Now I'm
     #  just using the first element
@@ -136,12 +154,14 @@ def prepare_things(valid, invalid):
     return dsl, valid, invalid, type_validation
 
 
-def synthesize(synthesizer, type_validation):
-    printer = ValidationPrinter()
+def synthesize(type_validation):
+    global synthesizer
+    assert synthesizer is not None
+    printer = ToString()
     program = synthesizer.synthesize()
     if program is not None:
         logger.info(
-            colored(f'Solution: {printer.eval(program, ["IN"])}', "green"))
+            colored(f'Solution: {printer.eval(program)}', "green"))
     else:
         logger.info('Solution not found!')
 
@@ -149,6 +169,7 @@ def synthesize(synthesizer, type_validation):
 # noinspection PyTypeChecker
 def read_cmd_args():
     encodings = ('multitree', 'dynamic', 'ktree', 'lines')
+    sketching = ('none', 'smt', 'brute-force', 'hybrid')
     parser = argparse.ArgumentParser(description='Validations Synthesizer',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('file', type=str, help='File with I/O examples.')
@@ -165,6 +186,8 @@ def read_cmd_args():
                         help='Limit the number of valid examples. -1: unlimited.')
     parser.add_argument('-i', '--max-invalid', type=int, default=-1,
                         help='Limit the number of invalid examples. -1: unlimited.')
+    parser.add_argument('-k', '--sketch', metavar='|'.join(sketching), type=str,
+                        default='none', help='Enable sketching.')
     args = parser.parse_args()
     if args.debug:
         logger.setLevel("DEBUG")
@@ -173,7 +196,8 @@ def read_cmd_args():
     if args.encoding not in encodings:
         raise ValueError('Unknown encoding ' + args.encoding)
 
-    return args.file, args.encoding, args.self_interact, args.resnax, args.no_pruning, args.max_valid, args.max_invalid
+    return args.file, args.encoding, args.self_interact, args.resnax, args.no_pruning, \
+           args.max_valid, args.max_invalid, args.sketch
 
 
 if __name__ == '__main__':

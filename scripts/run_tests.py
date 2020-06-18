@@ -21,6 +21,7 @@ def handler(signal_received, frame):
 def main():
     signal(SIGINT, handler)
     encodings = ('multitree', 'dynamic', 'ktree', 'lines', 'compare-times')
+    sketching = ('none', 'smt', 'brute-force', 'hybrid')
 
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -34,6 +35,8 @@ def main():
                         help='Timeout in seconds.', default=120)
     parser.add_argument('-o', '--out', action='store_true',
                         help='Show output.', default=False)
+    parser.add_argument('-l', '--solve-only', type=int, default=-1,
+                             help='Limit the number of solved instances. -1: unlimited.')
 
     synth_group = parser.add_argument_group(title="Synthesizer options")
     synth_group.add_argument('-e', '--encoding', metavar='|'.join(encodings), type=str,
@@ -47,6 +50,9 @@ def main():
     synth_group.add_argument('-i', '--max-invalid', type=int, default=-1,
                         help='Limit the number of invalid examples. -1: unlimited.')
 
+    synth_group.add_argument('-k', '--sketch', metavar='|'.join(sketching), type=str,
+                        default='none', help='Enable sketching.')
+
     args = parser.parse_args()
 
     if args.encoding not in encodings:
@@ -54,8 +60,9 @@ def main():
 
     global tester
 
-    tester = Tester(args.directories, args.encoding, args.no_pruning, args.processes, args.run_each,
-                    args.timeout, args.out, args.resnax, args.max_valid, args.max_invalid)
+    tester = Tester(args.directories, args.encoding, args.no_pruning, args.sketch,
+                    args.processes, args.run_each, args.timeout, args.out, args.resnax,
+                    args.max_valid, args.max_invalid, args.solve_only)
     tester.test()
     if args.encoding == 'compare-times':
         tester.print_time_comparison()
