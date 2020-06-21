@@ -27,7 +27,6 @@ class Enumerator(ABC):
         self.max_children = self.max_children()
         self._get_range_values()
 
-
     @abstractmethod
     def update(self, info: Any = None) -> None:
         '''
@@ -74,7 +73,7 @@ class Enumerator(ABC):
         for range_val in range_val_enum:
             data = range_val.rhs[0]
             data = data.split(',')
-            if len(data) < 2: #probably sketches
+            if len(data) < 2:  # probably sketches
                 break
             range_node = AtomNode(range_val)
             if data[0] not in self.range_lower_bounds:

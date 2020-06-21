@@ -90,31 +90,38 @@ class MultipleSynthesizer(ABC):
         """ Generate a distinguishing input between programs (if there is one),
         and interact with the user to disambiguate. """
         start_distinguish = time.time()
-        dist_input = self._distinguisher.distinguish(self.programs[0], self.programs[1])
+        dist_input, keep_if_valid, keep_if_invalid, unknown = \
+            self._distinguisher.distinguish(self.programs)
         if dist_input is not None:
             interaction_start_time = time.time()
             self.num_interactions += 1
             logger.info(
                 f'Distinguishing input "{dist_input}" in '
                 f'{round(time.time() - start_distinguish, 2)} seconds')
+            for regex in unknown:
+                r0 = self._decider.interpreter.eval(regex)
+                if re.fullmatch(r0, dist_input):
+                    keep_if_valid.append(regex)
+                else:
+                    keep_if_invalid.append(regex)
             if not self.auto_interaction:
-                self.interact(dist_input)
+                self.interact(dist_input, keep_if_valid, keep_if_invalid)
             else:
-                self.auto_distinguish(dist_input)
+                self.auto_distinguish(dist_input, keep_if_valid, keep_if_invalid)
             self.start_time += time.time() - interaction_start_time
 
         else:  # programs are indistinguishable
             logger.info("Programs are indistinguishable")
             self.indistinguishable += 1
             smallest_regex = min(self.programs,
-                                 key=lambda r: len(self._printer.eval(r, ["IN"])))
+                                 key=lambda r: len(self._printer.eval(r)))
             self.programs = [smallest_regex]
 
     def enumerate(self):
         """ Request new program from the enumerator. """
         self.num_enumerated += 1
         program = self._enumerator.next()
-        if program is None: # enumerator is exhausted
+        if program is None:  # enumerator is exhausted
             return
         if self._printer is not None:
             logger.debug(f'Enumerator generated: {self._printer.eval(program, ["IN"])}')
@@ -128,59 +135,38 @@ class MultipleSynthesizer(ABC):
 
         return program
 
-    def interact(self, dist_input):
+    def interact(self, dist_input, keep_if_valid, keep_if_invalid):
         """ Interact with user to ascertain whether the distinguishing input is valid """
         valid_answer = False
         # Do not count time spent waiting for user input: add waiting time to start_time.
         while not valid_answer:
-            for p in self.programs:
-                print(p)
             x = input(f'Is "{dist_input}" valid?\n')
             if x.lower().rstrip() in yes_values:
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')
                 valid_answer = True
                 self._decider.add_example([dist_input], True)
-                r0 = self._decider.interpreter.eval(self.programs[0], [])
-                if not re.fullmatch(r0, dist_input):
-                    self.programs.pop(0)
-                else:
-                    self.programs.pop(1)
-                    # self.indistinguishable = 0
+                self.programs = keep_if_valid
+                # self.indistinguishable = 0
             elif x.lower().rstrip() in no_values:
                 logger.info(f'"{dist_input}" is {colored("invalid", "red")}.')
                 valid_answer = True
                 self._decider.add_example([dist_input], False)
-                r0 = self._decider.interpreter.eval(self.programs[0], [])
-                if not re.fullmatch(r0, dist_input):
-                    self.programs.pop(1)
-                else:
-                    self.programs.pop(0)
-                    # self.indistinguishable = 0
+                self.programs = keep_if_invalid
+                # self.indistinguishable = 0
             else:
                 logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
 
-        for p in self.programs:
-            print(p)
-
-    def auto_distinguish(self, dist_input):
+    def auto_distinguish(self, dist_input, keep_if_valid, keep_if_invalid):
         """ Simulate interaction """
         match = re.fullmatch(self.ground_truth, dist_input)
         if match is not None:
             logger.info(f'Auto: "{dist_input}" is {colored("valid", "green")}.')
             self._decider.add_example([dist_input], True)
-            r0 = self._decider.interpreter.eval(self.programs[0], [])
-            if not re.fullmatch(r0, dist_input):
-                self.programs.pop(1)
-            else:
-                self.programs.pop(0)
+            self.programs = keep_if_valid
         else:
             logger.info(f'Auto: "{dist_input}" is {colored("invalid", "red")}.')
             self._decider.add_example([dist_input], False)
-            r0 = self._decider.interpreter.eval(self.programs[0], [])
-            if not re.fullmatch(r0, dist_input):
-                self.programs.pop(1)
-            else:
-                self.programs.pop(0)
+            self.programs = keep_if_invalid
 
     def try_for_depth(self):
         program = self.enumerate()

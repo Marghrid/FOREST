@@ -10,7 +10,6 @@ import z3
 
 from forest.spec import TyrellSpec
 from .enumerator import Enumerator
-from .gen_lattices import SymmetryFinder
 from .. import dsl as D
 
 logger = getLogger('forest.enumerator.smt')

@@ -21,7 +21,7 @@ class Interpreter(ABC):
             args: List[Any],
             index: int,
             cond: Callable[[Any], bool],
-            capture_indices: Iterable[int]=[]) -> None:
+            capture_indices: Iterable[int] = []) -> None:
         '''
         Check the value of `index`-th argument against `cond`. If `cond` is not met, raise AssertionViolation.
         If the assertion refers to the value(s) of other arugments, the indices of those arguments should be passed to `capture_indices` as a list of integer. By default, this list is empty.

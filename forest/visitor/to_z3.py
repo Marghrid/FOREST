@@ -29,7 +29,7 @@ class ToZ3(PostOrderInterpreter):
     def eval_Bool(self, v):
         return v
 
-    def eval_regexLit(self, c: str):
+    def eval_RegexLit(self, c: str):
         if c.startswith('\\'):
             c = c.replace("\\", '', 1)
             # c = re.sub(r'\\(.)', r'\1', c)

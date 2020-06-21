@@ -16,7 +16,7 @@ class ToString(PostOrderInterpreter):
         s = v.split(',')
         if len(s) == 2:
             return int(s[0]), int(s[1])
-        else: #sketches
+        else:  # sketches
             return v
 
     def eval_conj(self, node: Node, args) -> str:

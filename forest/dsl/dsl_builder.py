@@ -40,7 +40,8 @@ class DSLBuilder:
 
     def build_sketch_dsl(self, val_type, valid):
         dsl = ''
-        with open("forest/dsl/" + re.sub('^is_', '', val_type) + "DSL.tyrell", "r") as dsl_file:
+        filename = "forest/dsl/" + re.sub('^is_', '', val_type) + "DSL.tyrell"
+        with open(filename, "r") as dsl_file:
             dsl_base = dsl_file.read()
         if "regex" in val_type:
             dsl += 'enum RegexLit {"hole"}\n'
@@ -61,14 +62,16 @@ class DSLBuilder:
         dsl = ''
         range_operator = False
         super_simple_dsl = False
-        with open("forest/dsl/" + re.sub('^is_', '', val_type) + "DSL.tyrell", "r") as dsl_file:
+        filename = "forest/dsl/" + re.sub('^is_', '', val_type) + "DSL.tyrell"
+        with open(filename, "r") as dsl_file:
             dsl_base = dsl_file.read()
 
         if "regex" in val_type:
             regexlits = self.get_regexlits(valid)
-            dsl += "enum RegexLit {" + ",".join(map(lambda x: f'"{x}"', regexlits)) + "}\n"
+            dsl += "enum RegexLit {" + ",".join(
+                map(lambda x: f'"{x}"', regexlits)) + "}\n"
             if len(regexlits) == 1 and \
-                all(map(lambda x: re.fullmatch(regexlits[0], x) is not None, valid)):
+                    all(map(lambda x: re.fullmatch(regexlits[0], x) is not None, valid)):
                 super_simple_dsl = True
             range_values = self.get_rangelits(valid)
             if len(range_values) > 0:

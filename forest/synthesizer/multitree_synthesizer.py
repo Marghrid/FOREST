@@ -9,6 +9,7 @@ from .multiple_synthesizer import MultipleSynthesizer
 from ..decider import RegexDecider
 from ..enumerator import StaticMultiTreeEnumerator, DynamicMultiTreeEnumerator
 from ..logger import get_logger
+from ..utils import transpose
 from ..visitor import RegexInterpreter
 
 logger = get_logger('forest.synthesizer')

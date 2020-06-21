@@ -13,7 +13,8 @@ logger = get_logger('forest.synthesizer.constraint')
 
 class RegexDecider(ExampleDecider):
 
-    def __init__(self, interpreter: Interpreter, examples: List[Example], split_valid=None):
+    def __init__(self, interpreter: Interpreter, examples: List[Example],
+                 split_valid=None):
         super().__init__(interpreter, examples)
         self.already_must_occur = set()
         self.valid_exs = list(filter(lambda ex: ex.output == True, examples))
@@ -89,7 +90,7 @@ class RegexDecider(ExampleDecider):
                 '''
                 regex = self.interpreter.eval(node, self.valid_exs[0])
                 bounds = node.args[1].data.split(',')
-                if len(bounds) < 2: #sketches
+                if len(bounds) < 2:  # sketches
                     return
                 n = bounds[0]
                 m = bounds[1]

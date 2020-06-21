@@ -15,7 +15,7 @@ class InterpreterError(RuntimeError):
 
 
 class GeneralError(InterpreterError):
-    def __init__(self, msg: str=""):
+    def __init__(self, msg: str = ""):
         super().__init__(msg)
 
 
@@ -25,7 +25,8 @@ class AssertionViolation(InterpreterError):
     _reason: Callable[[Any], bool]
     _captures: Iterable[int]
 
-    def __init__(self, node: Node, index: int, reason: Callable[[Any], bool], captures: Iterable[int]):
+    def __init__(self, node: Node, index: int, reason: Callable[[Any], bool],
+                 captures: Iterable[int]):
         super().__init__()
         self._node = node
         self._index = index

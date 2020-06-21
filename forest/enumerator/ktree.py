@@ -232,7 +232,7 @@ class KTreeEnumerator(Enumerator):
         if node.children is None or len(node.children) < 2:
             return [node]
         else:
-            return [node] + self.get_subtree(node.children[0])\
+            return [node] + self.get_subtree(node.children[0]) \
                    + self.get_subtree(node.children[1])
 
     def block_model(self):

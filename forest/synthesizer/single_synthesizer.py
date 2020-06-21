@@ -2,7 +2,6 @@ import time
 from abc import ABC
 
 from ..decider import RegexDecider, Example
-from ..distinguisher import Distinguisher
 from ..enumerator import KTreeEnumerator
 from ..logger import get_logger
 from ..utils import nice_time
@@ -16,11 +15,12 @@ class SingleSynthesizer(ABC):
 
     def __init__(self, valid_examples, invalid_examples, dsl):
         self.max_depth = 6
-        self.examples = [Example(x, True) for x in valid_examples] + [Example(x, False) for x in invalid_examples]
+        self.examples = [Example(x, True) for x in valid_examples] + \
+                        [Example(x, False) for x in invalid_examples]
         self.dsl = dsl
         self._printer = ToString()
-        self._distinguisher = Distinguisher()
-        self._decider = RegexDecider(interpreter=RegexInterpreter(), examples=self.examples)
+        self._decider = RegexDecider(interpreter=RegexInterpreter(),
+                                     examples=self.examples)
         self._node_counter = NodeCounter()
         self.indistinguishable = 0
 
@@ -71,7 +71,8 @@ class SingleSynthesizer(ABC):
 
         if self.num_attempts > 0 and self.num_attempts % 1000 == 0:
             logger.info(
-                f'Enumerated {self.num_attempts} programs in {nice_time(round(time.time() - self.start_time))}.')
+                f'Enumerated {self.num_attempts} programs in '
+                f'{nice_time(round(time.time() - self.start_time))}.')
 
         return program
 
@@ -82,8 +83,9 @@ class SingleSynthesizer(ABC):
 
             if res.is_ok():  # program satisfies I/O examples
                 logger.info(
-                    f'Program accepted. {self._node_counter.eval(program, [0])} nodes. {self.num_attempts} attempts '
-                    f'and {round(time.time() - self.start_time, 2)} seconds:')
+                    f'Program accepted. {self._node_counter.eval(program, [0])} nodes. '
+                    f'{self.num_attempts} attempts and '
+                    f'{round(time.time() - self.start_time, 2)} seconds:')
                 logger.info(self._printer.eval(program, ["IN"]))
                 return program
 

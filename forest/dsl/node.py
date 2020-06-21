@@ -57,6 +57,7 @@ class Node(ABC):
 
 class LeafNode(Node):
     '''Generic and abstract class for AST nodes that have no children'''
+
     @abstractmethod
     def __init__(self, prod: Production):
         super().__init__(prod)
@@ -212,9 +213,9 @@ class ApplyNode(Node):
         '''
         if isinstance(other, ApplyNode):
             return self.name == other.name and \
-                len(self.args) == len(other.args) and \
-                all(x.deep_eq(y)
-                    for x, y in zip(self.args, other.args))
+                   len(self.args) == len(other.args) and \
+                   all(x.deep_eq(y)
+                       for x, y in zip(self.args, other.args))
         return False
 
     def deep_hash(self) -> int:

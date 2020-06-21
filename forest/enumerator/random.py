@@ -10,7 +10,7 @@ class RandomEnumerator(Enumerator):
     _max_depth: int
     _builder: D.Builder
 
-    def __init__(self, spec: S.TyrellSpec, max_depth: int, seed: Optional[int]=None):
+    def __init__(self, spec: S.TyrellSpec, max_depth: int, seed: Optional[int] = None):
         self._rand = Random(seed)
         self._builder = D.Builder(spec)
         if max_depth <= 0:
@@ -26,8 +26,8 @@ class RandomEnumerator(Enumerator):
             productions = list(
                 filter(lambda x: not x.is_function(), productions))
         if len(productions) == 0:
-            raise RuntimeError('RandomASTGenerator ran out of productions to try for type {} at depth {}'.format(
-                curr_type, curr_depth))
+            raise RuntimeError('RandomASTGenerator ran out of productions to try for type'
+                               '{} at depth {}'.format(curr_type, curr_depth))
 
         # Pick a production rule uniformly at random
         prod = self._rand.choice(productions)

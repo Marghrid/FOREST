@@ -58,4 +58,3 @@ class ExampleDecider(Decider):
 
     def _match(self, re_compiled, input):
         return re_compiled.fullmatch(input[0]) is not None
-
