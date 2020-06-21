@@ -1,13 +1,12 @@
 import argparse
 import glob
-
 # noinspection PyTypeChecker
 from dataclasses import dataclass
 from operator import add
 from statistics import median, mean
 
-from synth_regex import show
 from forest.parse_examples import parse_resnax, parse_file
+from synth_regex import show
 
 
 @dataclass
@@ -29,13 +28,9 @@ def main():
 
     instances = []
 
-
-
     for dir in args.directories:
         instance_paths = glob.glob(dir + "/*.txt")
         instances.extend(instance_paths)
-
-
 
     instance_stats = []
     for instance in instances:

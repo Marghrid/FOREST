@@ -1,14 +1,15 @@
 import datetime
 import glob
+import random
 import re
 import socket
 import subprocess
 import time
-import random
 
 from termcolor import colored
 
 all_methods = ('multitree', 'ktree', 'lines', 'dynamic')
+MAXSIGTERMS = 10
 
 
 def half_true():
@@ -35,14 +36,6 @@ class Instance:
     def __init__(self, name, path):
         self.name = name
         self.path = path
-        self.tasks = []
-
-    def add_task(self, task):
-        self.tasks.append(task)
-
-    def terminate_tasks(self):
-        for t in self.tasks:
-            t.terminate()
 
     def __str__(self):
         return self.name
@@ -52,7 +45,6 @@ class Task:
     def __init__(self, command, instance, timeout):
         self.command = command
         self.instance = instance
-        self.instance.add_task(self)
         self.timeout = timeout
         self.timed_out = False
         self.process = None
@@ -65,6 +57,12 @@ class Task:
         self.nodes = -1
         self.solution = 'Solution'
         self.ground_truth = 'Ground truth'
+        self.total_time_sat = -1
+        self.avg_time_sat = -1
+        self.num_sat = -1
+        self.total_time_unsat = -1
+        self.avg_time_unsat = -1
+        self.num_unsat = -1
 
         enc_idx = self.command.index('-e')
         self.encoding = self.command[enc_idx + 1]
@@ -78,11 +76,16 @@ class Task:
         self.start_time = time.time()
 
     def terminate(self):
-        while self.process.poll() is None:
+        global MAXSIGTERMS
+        count = 0
+        while self.process.poll() is None and count < MAXSIGTERMS:
             self.process.terminate()
-            print("Sending SIGTERM...", end=" ")
             time.sleep(2)
-        print(".")
+            count += 1
+        print(f"Sent SIGTERM x {count}.")
+        if self.process.poll() is None:
+            print("Sending SIGKILL.")
+            self.process.kill()
 
     def is_done(self):
         """ Checks if task is done or has timed out. """
@@ -123,14 +126,30 @@ class Task:
             if show_output:
                 print(" ", l)
             if not end:
+                if "total time sat calls (s)" in l:
+                    self.total_time_sat = float(
+                        l.replace("total time sat calls (s): ", ""))
+                elif "num sat calls (s)" in l:
+                    self.num_sat = int(l.replace("num sat calls (s): ", ""))
+                elif "avg time sat calls (s)" in l:
+                    self.avg_time_sat = float(
+                        l.replace("avg time sat calls (s): ", ""))
+                elif "total time unsat calls" in l:
+                    self.total_time_unsat = float(
+                        l.replace("total time unsat calls (s): ", ""))
+                elif "num unsat calls" in l:
+                    self.num_unsat = int(l.replace("num unsat calls (s): ", ""))
+                elif "avg time unsat calls" in l:
+                    self.avg_time_unsat = float(
+                        l.replace("avg time unsat calls (s): ", ""))
                 if "Synthesizer done" in l:
                     end = True
                 if "Program accepted" in l and not first:
-                    m = re.search("Program accepted.*and (\d+\.\d+) seconds", l)
+                    m = re.search(r"Program accepted.*and (\d+\.\d+) seconds", l)
                     if m is not None:
                         self.first_time = float(m.groups()[0])
                     else:
-                        print("Somethong went wrong")
+                        print("Something went wrong")
                     first = True
 
             else:
@@ -169,9 +188,8 @@ class Task:
 
 class Tester:
     def __init__(self, instance_dirs, method='multitree', no_pruning=False,
-                 sketching='none', num_processes=1, run_each=1, timeout=120,
-                 show_output=False, resnax=False, max_valid=-1, max_invalid=-1,
-                 solve_only=-1):
+                 sketching='none', num_processes=1, timeout=120, show_output=False,
+                 resnax=False, max_valid=-1, max_invalid=-1, solve_only=-1):
         self.show_output = show_output
         self.timeout = timeout + 2
         self.tasks = []
@@ -225,10 +243,9 @@ class Tester:
         # create tasks:
         for inst in self.instances:
             for m in methods:
-                for i in range(run_each):
-                    command = command_base + [m] + [inst.path]
-                    new_task = Task(command=command, instance=inst, timeout=self.timeout)
-                    self.tasks.append(new_task)
+                command = command_base + [m] + [inst.path]
+                new_task = Task(command=command, instance=inst, timeout=self.timeout)
+                self.tasks.append(new_task)
 
         print(colored(f"Created {len(self.tasks)} tasks.", "magenta"))
         print(colored(f"Polling every {self.poll_time} seconds.", "magenta"))
@@ -290,47 +307,24 @@ class Tester:
         max_enumerated_length = max(map(lambda t: len(str(t.enumerated)), self.tasks)) + 2
         now = datetime.datetime.now()
         print(
-            f"\n =====  RESULTS on {socket.gethostname()}, {now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
+            f"\n =====  RESULTS on {socket.gethostname()}, "
+            f"{now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
         print(
-            "instance, time, first-time, interactions, enumerator, enumerated, timed-out, nodes, solution, ground-truth")
-        for inst in self.instances:
-            times = list(map(lambda t: t.time, inst.tasks))
-            first_times = list(map(lambda t: t.first_time, inst.tasks))
-            enumerated = list(map(lambda t: t.enumerated, inst.tasks))
-            enumerators = list(map(lambda t: t.enumerator, inst.tasks))
-            interactions = list(map(lambda t: t.interactions, inst.tasks))
-            nodes = list(map(lambda t: t.nodes, inst.tasks))
-            timed_out = list(map(lambda t: t.timed_out, inst.tasks))
-
-            if not len(times) == len(enumerated) == len(enumerators) == len(interactions):
-                print("different lengths")
-
-            if len(times) == 0:
-                print(f"{inst.name},".ljust(maxl), "timed out")
-                continue
-            if any(map(lambda x: x != enumerated[0], enumerated)):
-                print(f"{inst.name}:".ljust(maxl),
-                      "does not always enumerate the same number of programs")
-            if any(map(lambda x: x != enumerators[0], enumerators)):
-                print(f"{inst.name}:".ljust(maxl),
-                      "does not always use the same enumerator")
-            if any(map(lambda x: x != interactions[0], interactions)):
-                print(f"{inst.name}:".ljust(maxl), "has different number of interactions")
-            if any(map(lambda x: x != nodes[0], nodes)):
-                print(f"{inst.name}:".ljust(maxl), "has different number of nodes")
-            if any(map(lambda x: x != timed_out[0], timed_out)):
-                print(f"{inst.name}:".ljust(maxl), "has different timed_out")
-            else:
-                print(f"{inst.name},".ljust(maxl),
-                      f"{round(sum(times) / len(times), 2)},".ljust(10),
-                      f"{round(sum(first_times) / len(first_times), 2)},".ljust(10),
-                      f"{interactions[0]},".ljust(3),
-                      f"{enumerators[0]},".ljust(max_enumerators_length),
-                      f"{enumerated[0]},".ljust(max_enumerated_length),
-                      f"{int(timed_out[0])},",
-                      f"{nodes[0]},".ljust(3),
-                      f'"{inst.tasks[0].solution}",',
-                      f'"{inst.tasks[0].ground_truth}"')
+            "instance, time, first-time, avg-sat-time, avg-unsat-time, interactions, enumerator, enumerated, "
+            "timed-out, nodes, solution, ground-truth")
+        for task in self.tasks:
+            print(f"{task.instance},".ljust(maxl),
+                  f"{round(task.time, 2)},".ljust(10),
+                  f"{round(task.first_time, 2)},".ljust(10),
+                  f"{round(task.avg_time_sat, 2)},".ljust(10),
+                  f"{round(task.avg_time_unsat, 2)},".ljust(10),
+                  f"{task.interactions},".ljust(3),
+                  f"{task.enumerator},".ljust(max_enumerators_length),
+                  f"{task.enumerated},".ljust(max_enumerated_length),
+                  f"{int(task.timed_out)},",
+                  f"{task.nodes},".ljust(3),
+                  f'"{task.solution}",',
+                  f'"{task.ground_truth}"')
 
     def print_time_comparison(self):
         maxl = max(map(lambda i: len(i.name), self.instances)) + 2

@@ -25,5 +25,6 @@ def is_regex(tentative_regex: str):
     except re.error:
         return False
 
+
 def transpose(lst):
     return list(map(list, zip(*lst)))
