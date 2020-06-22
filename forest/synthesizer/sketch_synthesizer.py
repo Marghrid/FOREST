@@ -49,6 +49,8 @@ class SketchSynthesizer(MultipleSynthesizer):
         self.count_unsat_calls = 0
         self.time_sat_calls = 0
         self.time_unsat_calls = 0
+        self.count_smt_unknown_sat = 0
+        self.count_smt_unknown_unsat = 0
         self.warned = False
 
     def synthesize(self):
@@ -120,7 +122,6 @@ class SketchSynthesizer(MultipleSynthesizer):
                     return self.programs[0]
                 elif self.die:
                     return
-            return None
 
     def try_for_depth(self):
         sketch = self.enumerate()
@@ -176,6 +177,9 @@ class SketchSynthesizer(MultipleSynthesizer):
         if self.count_unsat_calls > 0:
             print("avg time unsat calls (s):",
                   round(self.time_unsat_calls / self.count_unsat_calls, 2))
+
+        print("num unk-sat calls (s):", self.count_smt_unknown_sat)
+        print("num unk-unsat calls (s):", self.count_smt_unknown_unsat)
 
         if len(self.programs) > 0 or self.die:
             self.terminate()
@@ -304,8 +308,10 @@ class SketchSynthesizer(MultipleSynthesizer):
             correct = self.fill_brute_force(sketch)
             if len(correct) > 0:
                 self.time_sat_calls += (stop_time - start)
+                self.count_smt_unknown_sat += 1
             else:
                 self.time_unsat_calls += (stop_time - start)
+                self.count_smt_unknown_unsat += 1
 
             return correct
         else:

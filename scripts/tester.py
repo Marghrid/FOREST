@@ -63,6 +63,8 @@ class Task:
         self.total_time_unsat = -1
         self.avg_time_unsat = -1
         self.num_unsat = -1
+        self.num_unk_sat = -1
+        self.num_unk_unsat = -1
 
         enc_idx = self.command.index('-e')
         self.encoding = self.command[enc_idx + 1]
@@ -142,6 +144,10 @@ class Task:
                 elif "avg time unsat calls" in l:
                     self.avg_time_unsat = float(
                         l.replace("avg time unsat calls (s): ", ""))
+                elif "num unk-sat calls" in l:
+                    self.num_unk_sat = int(l.replace("num unk-sat calls (s): ", ""))
+                elif "num unk-unsat calls" in l:
+                    self.num_unk_unsat = int(l.replace("num unk-unsat calls (s): ", ""))
                 if "Synthesizer done" in l:
                     end = True
                 if "Program accepted" in l and not first:
@@ -310,7 +316,8 @@ class Tester:
             f"\n =====  RESULTS on {socket.gethostname()}, "
             f"{now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
         print(
-            "instance, time, first-time, avg-sat-time, avg-unsat-time, interactions, enumerator, enumerated, "
+            "instance, time, first-time, avg-sat-time, avg-unsat-time, num-sat, "
+            "num-unsat, num-unk-sat, num-unk-unsat, interactions, enumerator, enumerated, "
             "timed-out, nodes, solution, ground-truth")
         for task in self.tasks:
             print(f"{task.instance},".ljust(maxl),
@@ -318,6 +325,10 @@ class Tester:
                   f"{round(task.first_time, 2)},".ljust(10),
                   f"{round(task.avg_time_sat, 2)},".ljust(10),
                   f"{round(task.avg_time_unsat, 2)},".ljust(10),
+                  f"{task.num_sat},".ljust(5),
+                  f"{task.num_unsat},".ljust(5),
+                  f"{task.num_unk_sat},".ljust(5),
+                  f"{task.num_unk_unsat},".ljust(5),
                   f"{task.interactions},".ljust(3),
                   f"{task.enumerator},".ljust(max_enumerators_length),
                   f"{task.enumerated},".ljust(max_enumerated_length),
