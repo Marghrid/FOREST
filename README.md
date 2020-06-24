@@ -10,9 +10,16 @@
 - Based on [Trinity](https://github.com/fredfeng/Trinity).
 
 ## Dev Environment Setup
+
 - Prerequisite:
-    - python 3.7+  
-- It is preferable to have a dedicated virtualenv for this project:
+  - python 3.7+
+  
+- Python packages dependencies:
+  - click
+  - termcolor
+  - z3-solver
+  
+- It is preferable to have a dedicated virtual environment for this project:
 ```
     $ git clone <this repo>
     $ cd FOREST
@@ -20,10 +27,10 @@
     $ python3 -m venv venv
     $ source venv/bin/activate
 ```
-- Make an editable install with `pip`. This automatically handles package dependencies.
+
+- Install dependencies in virtual environment:
 ```
-    $ pip install -e ".[dev]"
-    $ python setup.py sdist  # for package
+    $ pip install click termcolor z3-solver
 ```
 
 ## Run benchmarks:
