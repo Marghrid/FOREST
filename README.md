@@ -2,7 +2,7 @@
 
 **FO**rm **R**egular **E**xpressions **S**yn**T**hesizer 
 
-- [Video demo](https://youtu.be/Xg8vWlHbl7Q)
+- [Video demo](https://youtu.be/Xg8vWlHbl7Q).
 
 - [Try the synthesizer](https://colab.research.google.com/drive/1M1fUzgJLzfZ_KrD6oR_BCi-aLLG3kXMB) on Google Colab.
 
