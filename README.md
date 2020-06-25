@@ -1,7 +1,8 @@
-# __FOREST__ 
-:deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree:
+# __FOREST__ :deciduous_tree::deciduous_tree::deciduous_tree:
+
 **FO**rm **R**egular **E**xpressions **S**yn**T**hesizer 
-:deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree:
+
+- [Video demo](https://youtu.be/Xg8vWlHbl7Q)
 
 - [Try the synthesizer](https://colab.research.google.com/drive/1M1fUzgJLzfZ_KrD6oR_BCi-aLLG3kXMB) on Google Colab.
 
