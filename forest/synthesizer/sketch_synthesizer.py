@@ -48,7 +48,9 @@ class SketchSynthesizer(MultipleSynthesizer):
         self.count_sat_calls = 0
         self.count_unsat_calls = 0
         self.time_sat_calls = 0
+        self.time_sat_encoding = 0
         self.time_unsat_calls = 0
+        self.time_unsat_encoding = 0
         self.count_smt_unknown_sat = 0
         self.count_smt_unknown_unsat = 0
         self.warned = False
@@ -168,15 +170,22 @@ class SketchSynthesizer(MultipleSynthesizer):
         # ----- SMT -------
         print("time (s):", round(solve_time, 2))
         print("total time sat calls (s):", round(self.time_sat_calls, 2))
+        print("total time sat encoding (s):", round(self.time_sat_encoding, 2))
         print("num sat calls (s):", self.count_sat_calls)
         if self.count_sat_calls > 0:
             print("avg time sat calls (s):",
                   round(self.time_sat_calls / self.count_sat_calls, 2))
+            print("avg time sat encoding (s):",
+                  round(self.time_sat_encoding / self.count_sat_calls, 2))
         print("total time unsat calls (s):", round(self.time_unsat_calls, 2))
+        print("total time unsat encoding (s):", round(self.time_unsat_encoding, 2))
         print("num unsat calls (s):", self.count_unsat_calls)
         if self.count_unsat_calls > 0:
             print("avg time unsat calls (s):",
                   round(self.time_unsat_calls / self.count_unsat_calls, 2))
+            print("avg time unsat encoding (s):",
+                  round(self.time_unsat_encoding / self.count_unsat_calls, 2))
+
 
         print("num unk-sat calls (s):", self.count_smt_unknown_sat)
         print("num unk-unsat calls (s):", self.count_smt_unknown_unsat)
@@ -286,7 +295,7 @@ class SketchSynthesizer(MultipleSynthesizer):
             z3_solver.add(m == z3.And(big_and))
 
         z3_solver.add(z3.Or(*m_vars.keys()))
-        z3_solver.set("timeout", 1000)
+        z3_solver.set("timeout", 100)
         print("checking...")
         res = z3_solver.check()
         print("done.")
@@ -369,10 +378,14 @@ class SketchSynthesizer(MultipleSynthesizer):
 
         z3_solver.add(z3.Or(*m_vars.keys()))
 
+        time_encoding = (time.time() - start)
+        
+        start = time.time()
         res = z3_solver.check()
         if res == z3.sat:
             self.count_sat_calls += 1
             self.time_sat_calls += (time.time() - start)
+            self.time_sat_encoding += time_encoding
             ret_val = list(map(lambda k: m_vars[k],
                                filter(lambda m: z3_solver.model()[m], m_vars.keys())))
             assert len(ret_val) > 0
@@ -380,6 +393,7 @@ class SketchSynthesizer(MultipleSynthesizer):
         else:
             self.count_unsat_calls += 1
             self.time_unsat_calls += (time.time() - start)
+            self.time_unsat_encoding += time_encoding
             return []
 
     def traverse_and_save_holes(self, node: Node):
