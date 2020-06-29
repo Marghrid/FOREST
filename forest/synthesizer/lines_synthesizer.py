@@ -4,7 +4,7 @@ from .multiple_synthesizer import MultipleSynthesizer
 from ..enumerator import LinesEnumerator
 from ..logger import get_logger
 
-logger = get_logger('forest.synthesizer')
+logger = get_logger('forest')
 
 
 class LinesSynthesizer(MultipleSynthesizer):
@@ -18,7 +18,6 @@ class LinesSynthesizer(MultipleSynthesizer):
         self.start_time = time.time()
 
         for lines in range(2, self.max_depth + 1):
-            logger.info(f'Synthesizing programs of loc {lines}...')
             self._enumerator = LinesEnumerator(self.dsl, lines)
 
             self.try_for_depth()

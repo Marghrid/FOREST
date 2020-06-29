@@ -8,7 +8,7 @@ from .spec import TypeSpec, ProductionSpec, ProgramSpec, PredicateSpec, TyrellSp
 from .type import Type, EnumType, ValueType
 from .util import enum_set_domain
 
-logger = get_logger('forest.desugar')
+logger = get_logger('forest')
 
 
 class ParseTreeProcessingError(RuntimeError):

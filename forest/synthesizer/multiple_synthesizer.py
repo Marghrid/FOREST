@@ -11,7 +11,7 @@ from ..logger import get_logger
 from ..utils import nice_time, is_regex
 from ..visitor import RegexInterpreter, ToString, NodeCounter
 
-logger = get_logger('forest.synthesizer')
+logger = get_logger('forest')
 
 yes_values = {"yes", "valid", "true", "1", "+", "v", "y", "t"}
 no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}

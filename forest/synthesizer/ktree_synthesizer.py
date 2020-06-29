@@ -4,7 +4,7 @@ from .multiple_synthesizer import MultipleSynthesizer
 from ..enumerator import KTreeEnumerator
 from ..logger import get_logger
 
-logger = get_logger('forest.synthesizer')
+logger = get_logger('forest')
 
 
 class KTreeSynthesizer(MultipleSynthesizer):
@@ -18,7 +18,6 @@ class KTreeSynthesizer(MultipleSynthesizer):
         self.start_time = time.time()
 
         for dep in range(3, self.max_depth + 1):
-            logger.info(f'Synthesizing programs of depth {dep}...')
             self._enumerator = KTreeEnumerator(self.dsl, dep)
 
             self.try_for_depth()

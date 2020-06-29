@@ -7,7 +7,7 @@ from .. import dsl as D
 from ..dsl import Node
 from ..logger import get_logger
 
-logger = get_logger('forest.enumerator.smt')
+logger = get_logger('forest')
 
 
 class KTreeEnumerator(Enumerator):

@@ -14,6 +14,7 @@ def parse_file(filename):
     with open(filename, "r") as in_file:
         next_line = in_file.readline()
         while next_line and not next_line.startswith("++"):
+            # discard comments before examples
             next_line = in_file.readline()
 
         next_line = in_file.readline()  # skip line with "++"

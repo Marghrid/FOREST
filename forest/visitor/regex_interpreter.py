@@ -56,7 +56,7 @@ class RegexInterpreter(PostOrderInterpreter):
         if len(args[0]) == 1 or '[' in args[0]:
             return fr'{args[0]}'
         else:
-            return fr'({args[0]})'
+            return fr'{args[0]}'
 
     def eval_unary_operator(self, arg, node, symbol):
         child_id = node.children[0].production.id
@@ -64,7 +64,7 @@ class RegexInterpreter(PostOrderInterpreter):
         if child_prec >= self.precedences[node.production.id]:
             return f'{arg[0]}{symbol}'
         else:
-            return f'({arg[0]}){symbol}'
+            return f'(?:{arg[0]}){symbol}'
 
     def eval_nary_operator(self, args, node, sep):
         children_str = []
@@ -74,7 +74,7 @@ class RegexInterpreter(PostOrderInterpreter):
             if child_prec >= self.precedences[node.production.id]:
                 ch = f'{args[child_idx]}'
             else:
-                ch = f'({args[child_idx]})'
+                ch = f'(?:{args[child_idx]})'
 
             children_str.append(f'{ch}')
         children_str = sep.join(children_str)
@@ -106,7 +106,7 @@ class RegexInterpreter(PostOrderInterpreter):
         if child_prec >= self.precedences[node.production.id]:
             return f'{args[0]}{{{range_vals_str}}}'
         else:
-            return f'({args[0]}){{{range_vals_str}}}'
+            return f'(?:{args[0]}){{{range_vals_str}}}'
 
     def eval_concat(self, node, args):
         self.precedences[node.production.id] = 2

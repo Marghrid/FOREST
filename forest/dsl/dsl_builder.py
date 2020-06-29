@@ -5,7 +5,7 @@ from forest.dsl.common_substrings import find_all_cs
 from forest.logger import get_logger
 from forest.utils import transpose
 
-logger = get_logger('forest.synthesizer')
+logger = get_logger('forest')
 
 
 # TODO: Because different input fields have different types, I must have a different
