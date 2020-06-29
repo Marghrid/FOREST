@@ -1,7 +1,8 @@
-# __FOREST__ 
-:deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree:
+# __FOREST__ :deciduous_tree::deciduous_tree::deciduous_tree:
+
 **FO**rm **R**egular **E**xpressions **S**yn**T**hesizer 
-:deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree::deciduous_tree:
+
+- [Video demo](https://youtu.be/Xg8vWlHbl7Q).
 
 - [Try the synthesizer](https://colab.research.google.com/drive/1M1fUzgJLzfZ_KrD6oR_BCi-aLLG3kXMB) on Google Colab.
 
@@ -10,9 +11,16 @@
 - Based on [Trinity](https://github.com/fredfeng/Trinity).
 
 ## Dev Environment Setup
+
 - Prerequisite:
-    - python 3.7+  
-- It is preferable to have a dedicated virtualenv for this project:
+  - python 3.7+
+  
+- Python packages dependencies:
+  - click
+  - termcolor
+  - z3-solver
+  
+- It is preferable to have a dedicated virtual environment for this project:
 ```
     $ git clone <this repo>
     $ cd FOREST
@@ -20,10 +28,10 @@
     $ python3 -m venv venv
     $ source venv/bin/activate
 ```
-- Make an editable install with `pip`. This automatically handles package dependencies.
+
+- Install dependencies in virtual environment:
 ```
-    $ pip install -e ".[dev]"
-    $ python setup.py sdist  # for package
+    $ pip install click termcolor z3-solver
 ```
 
 ## Run benchmarks:
