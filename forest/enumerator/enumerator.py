@@ -8,7 +8,7 @@ from .ast import AST, ASTNode
 from ..dsl import Node, AtomNode
 from ..logger import get_logger
 
-logger = get_logger('forest.enumerator.smt')
+logger = get_logger('forest')
 
 
 class Enumerator(ABC):
@@ -197,4 +197,6 @@ class Enumerator(ABC):
         name = self.__class__.__name__
         if "Enumerator" in name:
             name = name.replace("Enumerator", "")
+        if "MultiTree" in name:
+            name = name.replace("MultiTree", "MT")
         return name

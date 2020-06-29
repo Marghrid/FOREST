@@ -15,7 +15,7 @@ from forest.synthesizer import MultipleSynthesizer
 from forest.utils import transpose
 from forest.visitor import RegexInterpreter, ToZ3
 
-logger = get_logger('forest.synthesizer')
+logger = get_logger('forest')
 m_counter = 0
 sketching = ('smt', 'brute-force', 'hybrid')
 
@@ -79,7 +79,6 @@ class SketchSynthesizer(MultipleSynthesizer):
                                          examples=self.examples,
                                          split_valid=valid)
             for depth in range(2, 10):
-                logger.info(f'Synthesizing programs of depth {depth}...')
                 self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
 
                 self.try_for_depth()

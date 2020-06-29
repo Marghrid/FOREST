@@ -5,7 +5,7 @@ from .enumerator import Enumerator
 from ..dsl import Node, Builder
 from ..logger import get_logger
 
-logger = get_logger('forest.enumerator.smt')
+logger = get_logger('forest')
 
 
 class DynamicMultiTreeEnumerator(Enumerator):

@@ -5,6 +5,7 @@ from .post_order import PostOrderInterpreter
 class ToString(PostOrderInterpreter):
     # */+/? concat |
     # {"kleene":3, "range":3, "posit":3, "option":3, "concat":2, "union":1}
+    # there is a problem with 're'. Multi character 're's should behave like a 'concat'.
     def __init__(self):
         super().__init__()
         self.precedences = {}
@@ -60,7 +61,7 @@ class ToString(PostOrderInterpreter):
         if len(args[0]) == 1 or '[' in args[0]:
             return args[0]
         else:
-            return fr'({args[0]})'
+            return fr'{args[0]}'
 
     def eval_unary_operator(self, args, node, symbol):
         child_id = node.children[0].production.id
@@ -68,7 +69,7 @@ class ToString(PostOrderInterpreter):
         if child_prec >= self.precedences[node.production.id]:
             return f'{args[0]}{symbol}'
         else:
-            return f'({args[0]}){symbol}'
+            return f'(?:{args[0]}){symbol}'
 
     def eval_nary_operator(self, args, node, sep):
         children_str = []
@@ -78,7 +79,7 @@ class ToString(PostOrderInterpreter):
             if child_prec >= self.precedences[node.production.id]:
                 ch = f'{args[child_idx]}'
             else:
-                ch = f'({args[child_idx]})'
+                ch = f'(?:{args[child_idx]})'
 
             children_str.append(f'{ch}')
         children_str = sep.join(children_str)
@@ -110,7 +111,7 @@ class ToString(PostOrderInterpreter):
         if child_prec >= self.precedences[node.production.id]:
             return f'{args[0]}{{{range_vals_str}}}'
         else:
-            return f'({args[0]}){{{range_vals_str}}}'
+            return f'(?:{args[0]}){{{range_vals_str}}}'
 
     def eval_concat(self, node, args):
         self.precedences[node.production.id] = 2
@@ -122,6 +123,3 @@ class ToString(PostOrderInterpreter):
 
     def eval_match(self, node, args):
         return f"match({args[0]}, {args[1]})"
-
-    def eval_partial_match(self, node, args):
-        return f"partial_match({args[0]}, {args[1]})"

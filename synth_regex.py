@@ -36,14 +36,15 @@ def main():
         valid, invalid, ground_truth = parse_file(examples_file)
 
     random.seed("regex")
-    if max_valid > 0 and max_valid < len(valid):
+    if 0 < max_valid < len(valid):
         valid = random.sample(valid, max_valid)
-    if max_invalid > 0 and max_invalid < len(invalid):
+    if 0 < max_invalid < len(invalid):
         invalid = random.sample(invalid, max_invalid)
 
     show(valid, invalid, ground_truth)
     if sketching_mode != 'none':
-        sketch_synthesize(valid, invalid, sketching_mode, ground_truth, self_interact, no_pruning)
+        sketch_synthesize(valid, invalid, sketching_mode, ground_truth, self_interact,
+                          no_pruning)
     elif encoding == 'multitree':
         multitree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
     elif encoding == "dynamic":
@@ -98,7 +99,8 @@ def multitree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
     return synthesize(type_validation)
 
 
-def sketch_synthesize(valid, invalid, sketching_mode, ground_truth=None, self_interact=False,
+def sketch_synthesize(valid, invalid, sketching_mode, ground_truth=None,
+                      self_interact=False,
                       no_pruning=False, ):
     global synthesizer
     dsl, valid, invalid, type_validation = prepare_things(valid, invalid, sketch=True)
@@ -164,6 +166,7 @@ def synthesize(type_validation):
             colored(f'Solution: {printer.eval(program)}', "green"))
     else:
         logger.info('Solution not found!')
+    return program
 
 
 # noinspection PyTypeChecker

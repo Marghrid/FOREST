@@ -8,7 +8,7 @@ from ..dsl import ApplyNode
 from ..logger import get_logger
 from ..visitor import Interpreter
 
-logger = get_logger('forest.synthesizer.constraint')
+logger = get_logger('forest')
 
 
 class RegexDecider(ExampleDecider):

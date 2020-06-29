@@ -12,7 +12,7 @@ from ..logger import get_logger
 from ..utils import transpose
 from ..visitor import RegexInterpreter
 
-logger = get_logger('forest.synthesizer')
+logger = get_logger('forest')
 
 yes_values = {"yes", "valid", "true", "1", "+", "v", "y", "t"}
 no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
@@ -57,7 +57,6 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                                          examples=self.examples,
                                          split_valid=self.valid)
             for depth in range(3, 10):
-                logger.info(f'Synthesizing programs of depth {depth}...')
                 self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
 
                 self.try_for_depth()
@@ -74,7 +73,6 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             sizes = list(itertools.product(range(3, 10), range(1, 10)))
             sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
             for dep, leng in sizes:
-                logger.info(f'Synthesizing programs of depth {dep} and length {leng}...')
                 self._enumerator = DynamicMultiTreeEnumerator(self.main_dsl, depth=dep,
                                                               length=leng)
 

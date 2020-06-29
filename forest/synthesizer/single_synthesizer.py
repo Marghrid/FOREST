@@ -7,7 +7,7 @@ from ..logger import get_logger
 from ..utils import nice_time
 from ..visitor import ToString, NodeCounter, RegexInterpreter
 
-logger = get_logger('forest.synthesizer')
+logger = get_logger('forest')
 
 
 class SingleSynthesizer(ABC):
@@ -45,7 +45,6 @@ class SingleSynthesizer(ABC):
         self.start_time = time.time()
 
         for dep in range(3, self.max_depth + 1):
-            logger.info(f'Synthesizing programs of depth {dep}...')
             self._enumerator = KTreeEnumerator(self.dsl, depth=dep)
 
             self.program = self.try_for_depth()
