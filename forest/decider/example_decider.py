@@ -1,10 +1,12 @@
 import re
 from typing import NamedTuple, List, Any
 
+import z3
+
 from .decider import Decider
 from .result import ok, bad
 from ..dsl import Node
-from ..visitor import Interpreter
+from ..visitor import Interpreter, ToZ3
 
 Example = NamedTuple('Example', [
     ('input', List[Any]),
@@ -12,12 +14,12 @@ Example = NamedTuple('Example', [
 
 
 class ExampleDecider(Decider):
-    _interpreter: Interpreter
-    _examples: List[Example]
 
     def __init__(self, interpreter: Interpreter, examples: List[Example]):
         super().__init__()
         self._interpreter = interpreter
+        self._to_z3 = ToZ3()
+        self.use_smt = False
         if len(examples) == 0:
             raise ValueError(
                 'ExampleDecider cannot take an empty list of examples')
@@ -40,11 +42,25 @@ class ExampleDecider(Decider):
         """
         Test whether the given program would fail on any of the examples provided.
         """
-        regex = self._interpreter.eval(regex, [])
-        re_compiled = re.compile(regex)
-        return any(
-            map(lambda x: self._match(re_compiled, x.input) != x.output, self._examples)
-        )
+        if not self.use_smt:
+            regex = self._interpreter.eval(regex, [])
+            re_compiled = re.compile(regex)
+            return any(
+                map(lambda x: self._match(re_compiled, x.input) != x.output, self._examples)
+            )
+        else:
+            regex_z3 = self._to_z3.eval(regex)
+            z3_solver = z3.Solver()
+            big_and = []
+            for x in self._examples:
+                if x.output:
+                    big_and.append(z3.InRe(x.input[0], regex_z3))
+                else:
+                    big_and.append(z3.Not(z3.InRe(x.input[0], regex_z3)))
+            z3_solver.add(z3.And(big_and))
+            res = z3_solver.check()
+
+            return res == z3.unsat
 
     def analyze(self, prog):
         '''
