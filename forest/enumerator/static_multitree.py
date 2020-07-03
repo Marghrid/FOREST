@@ -118,9 +118,8 @@ class StaticMultiTreeEnumerator(Enumerator):
                 union_id = dsl.get_function_production("union").id
                 node_is_union = node_var == z3.IntVal(union_id)
 
-                subtree0, subtree1 = self._get_subtree(node.children[0]), \
-                                     self._get_subtree(node.children[1])
-
+                subtree0, subtree1 = node.children[0].get_subtree(), \
+                                     node.children[1].get_subtree()
                 big_or = []
                 for i in range(len(subtree0)):
                     var_i0 = self.variables[subtree0[i]]
@@ -279,10 +278,10 @@ class StaticMultiTreeEnumerator(Enumerator):
 
         for x in commutative_op_nodes:
             tree_id, node_id = x.tree_id, x.id
-            subtree0, subtree1 = self._get_subtree(self.trees[tree_id - 1].
-                                                   nodes[node_id - 1].children[0]), \
-                                 self._get_subtree(self.trees[tree_id - 1].
-                                                   nodes[node_id - 1].children[1])
+            subtree0, subtree1 = self.trees[tree_id - 1].nodes[node_id - 1]\
+                                     .children[0].get_subtree(), \
+                                 self.trees[tree_id - 1].nodes[node_id - 1]\
+                                     .children[1].get_subtree()
 
             # block model with subtrees swapped:
             block2 = []

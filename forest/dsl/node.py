@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from itertools import chain
 from typing import cast, List, Any
 
 from forest.spec import Type, Production, EnumProduction, ParamProduction, \
@@ -53,6 +54,16 @@ class Node(ABC):
 
     def has_children(self):
         return self.children is not None and len(self.children) > 0
+
+    def get_subtree(self):
+        """ Return as an ordered list all the descendant nodes """
+        if not self.is_apply():
+            assert not self.has_children()
+            return []
+        if not self.has_children():
+            return [self]
+        else:
+            return [self] + list(chain(*map(lambda c: c.get_subtree(), self.children)))
 
 
 class LeafNode(Node):

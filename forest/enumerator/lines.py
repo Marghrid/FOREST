@@ -69,7 +69,8 @@ def write_lattice(node, pos):
 
 class LinesEnumerator(Enumerator):
 
-    def __init__(self, spec: TyrellSpec, loc=None, sym_breaker=False, break_sym_online=False):
+    def __init__(self, spec: TyrellSpec, loc=None, sym_breaker=False,
+                 break_sym_online=False):
 
         self.z3_solver = z3.Solver()
 
@@ -139,7 +140,8 @@ class LinesEnumerator(Enumerator):
                 self._production_id_cache[p._get_rhs()].add(p.id)
         self.resolve_predicates(self.spec.predicates())
         logger.info('Number of Nodes: {} '.format(len(self.roots + self.leafs)))
-        logger.info('Number of Variables: {}'.format(len(self.variables + self.typeVars + self.linesVars)))
+        logger.info('Number of Variables: {}'.format(
+            len(self.variables + self.typeVars + self.linesVars)))
         logger.info('Number of Constraints: {}'.format(self.num_constraints))
         logger.info('Time spent encoding: {}'.format(time.time() - self.start_time))
         res = self.z3_solver.check()
@@ -159,7 +161,8 @@ class LinesEnumerator(Enumerator):
             line_productions = []
             for t in self.types:
                 self.num_prods += 1
-                line_productions.append(LineProduction(self.num_prods, self.spec.get_type(t)))
+                line_productions.append(
+                    LineProduction(self.num_prods, self.spec.get_type(t)))
             self.line_productions.append(line_productions)
 
     def find_types(self):
@@ -304,7 +307,8 @@ class LinesEnumerator(Enumerator):
                     ctr = []
                     if c >= len(p.rhs):
                         self.num_constraints += 1
-                        self.z3_solver.add(z3.Implies(aux, r.children[c].var == self.leaf_productions[0].id))
+                        self.z3_solver.add(z3.Implies(aux, r.children[c].var ==
+                                                      self.leaf_productions[0].id))
                         continue
 
                     for leaf_production in self.leaf_productions:
@@ -317,8 +321,10 @@ class LinesEnumerator(Enumerator):
                                 ctr.append(r.children[c].var == line_production.id)
                                 # if a previous line is used, then its flag must be true
                                 line_var = r.children[c].lines[l]
-                                self.z3_solver.add(z3.Implies(line_var == 1, r.children[c].var == line_production.id))
-                                self.z3_solver.add(z3.Implies(r.children[c].var == line_production.id, line_var == 1))
+                                self.z3_solver.add(z3.Implies(line_var == 1,
+                                                r.children[c].var == line_production.id))
+                                self.z3_solver.add(z3.Implies(r.children[c].var ==
+                                                    line_production.id, line_var == 1))
                                 self.num_constraints += 2
 
                     self.num_constraints += 1
@@ -335,11 +341,12 @@ class LinesEnumerator(Enumerator):
     @staticmethod
     def _check_arg_types(pred, python_tys):
         if pred.num_args() < len(python_tys):
-            msg = 'Predicate "{}" must have at least {} arugments. Only {} is found.'.format(pred.name, len(python_tys), pred.num_args())
+            msg = 'Predicate "{}" must have at least {} arugments. Only {} is found.'.format(
+                pred.name, len(python_tys), pred.num_args())
             raise ValueError(msg)
         for index, (arg, python_ty) in enumerate(zip(pred.args, python_tys)):
             if not isinstance(arg, python_ty):
-                msg = 'Argument {} of predicate {} has unexpected type.'.format(index, pred.name)
+                msg = f'Argument {index} of predicate {pred.name} has unexpected type.'
                 raise ValueError(msg)
 
     def _resolve_is_not_parent_predicate(self, pred):
@@ -352,7 +359,9 @@ class LinesEnumerator(Enumerator):
                 children = []
                 for c in r.children:
                     children.append(c.lines[s] == 1)
-                self.z3_solver.add(z3.Implies(z3.And(z3.Or(children), self.roots[s].var == prod1.id), r.var != prod0.id))
+                self.z3_solver.add(
+                    z3.Implies(z3.And(z3.Or(children), self.roots[s].var == prod1.id),
+                               r.var != prod0.id))
 
     def _resolve_distinct_inputs_predicate(self, pred):
         self._check_arg_types(pred, [str])
@@ -363,13 +372,18 @@ class LinesEnumerator(Enumerator):
                 for c2 in range(c1 + 1, len(r.children)):
                     child2 = r.children[c2]
                     # this works because even a inner_join between two filters, the children will have different values for the variables because of the lines produtions
-                    self.z3_solver.add(z3.Implies(r.var == production.id, z3.Or(child1.var != child2.var, z3.And(child1.var == 0, child2.var == 0))))
+                    self.z3_solver.add(z3.Implies(r.var == production.id,
+                                                  z3.Or(child1.var != child2.var,
+                                                        z3.And(child1.var == 0,
+                                                               child2.var == 0))))
 
     def _resolve_distinct_filters_predicate(self, pred):
         self._check_arg_types(pred, [str])
         prod0 = self.spec.get_function_production_or_raise(pred.args[0])
         for r in self.roots:
-            self.z3_solver.add(z3.Implies(r.var == prod0.id, r.children[int(pred.args[1])].var != r.children[int(pred.args[2])].var))
+            self.z3_solver.add(z3.Implies(r.var == prod0.id,
+                                          r.children[int(pred.args[1])].var != r.children[
+                                              int(pred.args[2])].var))
 
     def _resolve_constant_occurs_predicate(self, pred):
         conditions = pred.args
@@ -391,7 +405,9 @@ class LinesEnumerator(Enumerator):
                         for pre in pres:
                             previous_roots.append(c.var == pre)
 
-                self.z3_solver.add(z3.Implies(z3.Or(*(c.var == pos for c in self.roots[r_i].children)), z3.Or(previous_roots)))
+                self.z3_solver.add(
+                    z3.Implies(z3.Or(*(c.var == pos for c in self.roots[r_i].children)),
+                               z3.Or(previous_roots)))
 
     def _resolve_block_first_tree_predicate(self, pred):
         pass
@@ -410,7 +426,6 @@ class LinesEnumerator(Enumerator):
 
     def _resolve_char_must_occur_predicate(self, pred):
         pass
-
 
     def resolve_predicates(self, predicates):
         try:
@@ -585,7 +600,8 @@ class LinesEnumerator(Enumerator):
         for v in model:
             var, new_node_pos = v, int(str(model[v]))
             node_pos = int(str(var).split("_")[1])
-            n_model[self.roots[new_node_pos - 1].var] = self.model[self.roots[node_pos - 1].var]
+            n_model[self.roots[new_node_pos - 1].var] = self.model[
+                self.roots[node_pos - 1].var]
             self.change_node(node_pos, new_node_pos, n_model, m_aux)
 
         n_model[self.roots[-1].var] = self.model[self.roots[-1].var]
@@ -604,7 +620,9 @@ class LinesEnumerator(Enumerator):
 
     def block_model_aux(self, model):
         # block the model using only the variables that correspond to productions (nodes = leafs + roots)
-        const = z3.substitute(self.modelConstraint, [(z3.Int(f'val_{str(x)}'), model[x]) for x in self.variables])
+        const = z3.substitute(self.modelConstraint,
+                              [(z3.Int(f'val_{str(x)}'), model[x]) for x in
+                               self.variables])
         self.z3_solver.add(const)
 
     def block_model(self):
@@ -647,7 +665,9 @@ class LinesEnumerator(Enumerator):
                     children.append(builder_nodes[r_c.nb - 1])
                     self.program2tree[builder_nodes[r_c.nb - 1]] = r_c.var
 
-                builder_nodes[c.nb - 1] = builder.make_node(c.production.id, [c for c in children if c is not None])
+                builder_nodes[c.nb - 1] = builder.make_node(c.production.id,
+                                                            [c for c in children if
+                                                             c is not None])
                 self.program2tree[builder_nodes[c.nb - 1]] = c.var
 
     def build_program(self):

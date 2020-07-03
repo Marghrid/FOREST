@@ -5,7 +5,7 @@ from itertools import combinations
 import z3
 
 from forest.logger import get_logger
-from forest.visitor import ToZ3, ToString
+from forest.visitor import ToZ3, RegexInterpreter
 
 logger = get_logger('forest')
 
@@ -13,7 +13,7 @@ logger = get_logger('forest')
 class Distinguisher:
     def __init__(self):
         self._toz3 = ToZ3()
-        self._printer = ToString()
+        self._printer = RegexInterpreter()
         self.force_multi_distinguish = False
         self.force_distinguish2 = False
 

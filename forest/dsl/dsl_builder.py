@@ -16,9 +16,9 @@ class DSLBuilder:
 
     def __init__(self, type_validations, valid, invalid, sketches=False):
         assert len(valid) > 0
-        assert len(type_validations) == len(valid[0])
+        # assert len(type_validations) == len(valid[0])
         assert all(map(lambda l: len(l) == len(valid[0]), valid))
-        assert len(invalid) == 0 or all(map(lambda l: len(l) == len(valid[0]), invalid))
+        assert len(invalid) == 0 or all(map(lambda l: len(l) <= len(valid[0]), invalid))
         self.types = type_validations
         self.valid = valid
         self.transposed_valid = transpose(valid)
@@ -62,7 +62,7 @@ class DSLBuilder:
         dsl = ''
         range_operator = False
         super_simple_dsl = False
-        filename = "forest/dsl/" + re.sub('^is_', '', val_type) + "DSL.tyrell"
+        filename = "forest/dsl/" + val_type + "DSL.tyrell"
         with open(filename, "r") as dsl_file:
             dsl_base = dsl_file.read()
 

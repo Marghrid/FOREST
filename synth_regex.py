@@ -7,7 +7,7 @@ from termcolor import colored
 
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.synthesizer.sketch_synthesizer import SketchSynthesizer
-from forest.visitor import ToString
+from forest.visitor import RegexInterpreter
 from forest.logger import get_logger
 from forest.parse_examples import parse_file, parse_resnax
 from forest.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer
@@ -28,7 +28,7 @@ def main():
     signal(SIGINT, sig_handler)
     signal(SIGTERM, sig_handler)
     examples_file, encoding, self_interact, resnax, no_pruning, max_valid, max_invalid, \
-    sketching_mode = read_cmd_args()
+        sketching_mode = read_cmd_args()
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
@@ -140,7 +140,7 @@ def lines_synthesize(valid, invalid, ground_truth=None, self_interact=False,
 
 
 def prepare_things(valid, invalid, sketch=False):
-    type_validation = ["is_regex"]
+    type_validation = ["regex"]
     if len(valid) == 0:
         raise ValueError("No valid examples!")
     if isinstance(valid[0], str):
@@ -159,11 +159,10 @@ def prepare_things(valid, invalid, sketch=False):
 def synthesize(type_validation):
     global synthesizer
     assert synthesizer is not None
-    printer = ToString()
+    printer = RegexInterpreter()
     program = synthesizer.synthesize()
     if program is not None:
-        logger.info(
-            colored(f'Solution: {printer.eval(program)}', "green"))
+        logger.info(colored(f'Solution: {printer.eval(*program)}', "green"))
     else:
         logger.info('Solution not found!')
     return program

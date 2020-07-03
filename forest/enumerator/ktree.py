@@ -1,7 +1,6 @@
 import z3
 
 from forest.spec import TyrellSpec
-from .ast import ASTNode
 from .enumerator import Enumerator
 from .. import dsl as D
 from ..dsl import Node
@@ -226,14 +225,6 @@ class KTreeEnumerator(Enumerator):
                 self._resolve_block_range_upper_bound_predicate(pred)
             else:
                 logger.warning('Predicate not handled: {}'.format(pred))
-
-    def get_subtree(self, node: ASTNode):
-        """ Get all nodes in node's subtree, in BFS order. """
-        if node.children is None or len(node.children) < 2:
-            return [node]
-        else:
-            return [node] + self.get_subtree(node.children[0]) \
-                   + self.get_subtree(node.children[1])
 
     def block_model(self):
         """ Block current model and all others equivalent to it """
