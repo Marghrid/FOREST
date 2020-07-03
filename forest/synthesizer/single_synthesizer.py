@@ -5,7 +5,7 @@ from ..decider import RegexDecider, Example
 from ..enumerator import KTreeEnumerator
 from ..logger import get_logger
 from ..utils import nice_time
-from ..visitor import ToString, NodeCounter, RegexInterpreter
+from ..visitor import NodeCounter, RegexInterpreter
 
 logger = get_logger('forest')
 

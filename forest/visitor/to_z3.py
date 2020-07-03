@@ -1,6 +1,9 @@
+from typing import Union, Tuple, Any
+
 import z3
 
 from .post_order import PostOrderInterpreter
+from ..dsl import Node
 
 
 class ToZ3(PostOrderInterpreter):
@@ -10,6 +13,15 @@ class ToZ3(PostOrderInterpreter):
 
     def __init__(self):
         super().__init__()
+
+    def eval(self, program: Union[Node, Tuple], inputs=None) -> Any:
+        """
+        Interpret the Given AST in post-order. Assumes the existence of `eval_XXX` method
+        where `XXX` is the name of a function defined in the DSL.
+        """
+        if isinstance(program, Tuple):
+            program = program[0]
+        return PostOrderInterpreter.eval(self, program, inputs)
 
     def eval_Input(self, v):
         return None

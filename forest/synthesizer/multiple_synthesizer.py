@@ -5,11 +5,12 @@ from abc import ABC, abstractmethod
 from termcolor import colored
 
 from forest.spec import TyrellSpec
+from ..capturer import Capturer
 from ..decider import RegexDecider, Example
 from ..distinguisher import Distinguisher
 from ..logger import get_logger
 from ..utils import nice_time, is_regex
-from ..visitor import RegexInterpreter, ToString, NodeCounter
+from ..visitor import RegexInterpreter, NodeCounter
 
 logger = get_logger('forest')
 
@@ -27,6 +28,9 @@ class MultipleSynthesizer(ABC):
 
         self.examples = [Example(x, True) for x in valid_examples] \
                         + [Example(x, False) for x in invalid_examples]
+        self.valid = list(map(lambda x: [x[0]], valid_examples))
+        self.captures = list(map(lambda x: x[1:], valid_examples))
+        self.invalid = invalid_examples
         self.dsl = dsl
         self.pruning = pruning
         if not pruning:
@@ -36,11 +40,11 @@ class MultipleSynthesizer(ABC):
         # If auto-interaction is enabled, the ground truth must be a valid regex.
         if self.auto_interaction:
             assert len(self.ground_truth) > 0 and is_regex(self.ground_truth)
-        self._printer = ToString()
+        self._printer = RegexInterpreter()
         self._distinguisher = Distinguisher()
         self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                      examples=self.examples)
-
+        self._capturer = Capturer(self.valid, self.captures)
         self._node_counter = NodeCounter()
 
         # Subclass decides which enumerator to use
@@ -78,8 +82,9 @@ class MultipleSynthesizer(ABC):
                     f'  Interactions: {self.num_interactions}\n'
                     f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n')
         if len(self.programs) > 0:
-            logger.info(f'  Solution: {self._printer.eval(self.programs[0], ["IN"])}\n'
-                        f'  Nodes: {self._node_counter.eval(self.programs[0], [0])}')
+            logger.info(
+                f'  Solution: {self._decider.interpreter.eval(*self.programs[0])}\n'
+                f'  Nodes: {self._node_counter.eval(*self.programs[0])}')
         else:
             logger.info(f'  No solution.')
 
@@ -130,7 +135,7 @@ class MultipleSynthesizer(ABC):
 
         if self.num_enumerated > 0 and self.num_enumerated % 1000 == 0:
             logger.info(
-                f'Enumerated {self.num_enumerated} programs in'
+                f'Enumerated {self.num_enumerated} programs in '
                 f'{nice_time(time.time() - self.start_time)}.')
 
         return program
@@ -169,18 +174,21 @@ class MultipleSynthesizer(ABC):
             self.programs = keep_if_invalid
 
     def try_for_depth(self):
-        program = self.enumerate()
-        while program is not None and not self.die:
+        regex = self.enumerate()
+        while regex is not None and not self.die:
             new_predicates = None
 
-            res = self._decider.analyze(program)
+            res = self._decider.analyze(regex)
 
             if res.is_ok():  # program satisfies I/O examples
                 logger.info(
-                    f'Program accepted. {self._node_counter.eval(program, [0])} nodes. {self.num_enumerated} attempts '
+                    f'Regex accepted. {self._node_counter.eval(regex, [0])} nodes. '
+                    f'{self.num_enumerated} attempts '
                     f'and {round(time.time() - self.start_time, 2)} seconds:')
-                logger.info(self._printer.eval(program, ["IN"]))
-                self.programs.append(program)
+                logger.info(self._printer.eval(regex, ["IN"]))
+                captures = self._capturer.capture(regex)
+                if captures is not None:
+                    self.programs.append((regex, captures))
                 if len(self.programs) >= 2:
                     self.distinguish()
                 if self.indistinguishable >= self.max_indistinguishable:
@@ -189,11 +197,7 @@ class MultipleSynthesizer(ABC):
                 new_predicates = res.why()
                 if new_predicates is not None:
                     for pred in new_predicates:
-                        if pred.name.startswith("block_range"):
-                            logger.debug(
-                                f'New predicate: {pred.name} {pred.args[0]}')
-                            continue
-                        pred_str = self._printer.eval(pred.args[0], ["IN"])
+                        pred_str = self._printer.eval(pred.args[0])
                         if len(pred.args) > 1:
                             pred_str = str(pred.args[1]) + " " + pred_str
                         logger.debug(f'New predicate: {pred.name} {pred_str}')
@@ -202,7 +206,7 @@ class MultipleSynthesizer(ABC):
                 self._enumerator.update(new_predicates)
             else:
                 self._enumerator.update(None)
-            program = self.enumerate()
+            regex = self.enumerate()
 
         if len(self.programs) > 0 or self.die:
             self.terminate()
