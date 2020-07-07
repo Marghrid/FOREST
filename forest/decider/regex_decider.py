@@ -53,7 +53,7 @@ class RegexDecider(ExampleDecider):
             if node.name == "concat" and node.has_children():
                 # if one child does not have a match in any of the examples,
                 # then it cannot happen as a direct top concat node
-                regex = self.interpreter.eval(tree, self.valid_exs[0])
+                regex = self.interpreter.eval(tree)
                 if not self.always_matches_examples(regex):
                     new_predicate = Predicate("block_tree", [tree, tree_idx])
                     new_predicates.append(new_predicate)
@@ -78,7 +78,7 @@ class RegexDecider(ExampleDecider):
         production = node.production
         if production.is_function():
             if production.name == "concat":
-                regex = self.interpreter.eval(node, self.valid_exs[0])
+                regex = self.interpreter.eval(node)
                 if self.never_matches_examples(regex):
                     new_predicates.append(Predicate("block_subtree", [node, tree_idx]))
 
@@ -107,8 +107,7 @@ class RegexDecider(ExampleDecider):
                         Predicate("block_range_upper_bound", [node, tree_idx]))
 
             elif production.name == "kleene" or production.name == "posit":
-                regex = self.interpreter.eval(node.children[0],
-                                              self.valid_exs[0])
+                regex = self.interpreter.eval(node.children[0])
                 regex = regex + regex
                 if self.never_matches_examples(regex):
                     new_predicates.append(

@@ -8,7 +8,7 @@ from ..dsl import Node
 class Interpreter(ABC):
 
     @abstractmethod
-    def eval(self, prog: Node, inputs: List[Any]) -> Any:
+    def eval(self, prog: Node, inputs: List[Any] = None) -> Any:
         '''
         Evaluate a DSL `prog` on input `inputs`. The output is returned.
         This is a covenient wrapper over `eval_step` that repeatedly invoke the generator until we get the final result.

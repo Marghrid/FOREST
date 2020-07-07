@@ -24,9 +24,6 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                  pruning=True, auto_interaction=False, force_dynamic=False):
         super().__init__(valid_examples, invalid_examples, main_dsl, ground_truth,
                          pruning, auto_interaction)
-        self.valid = valid_examples
-        self.invalid = invalid_examples
-
         self.main_dsl = main_dsl
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
                               '{', '}', '[', ']', '"'}
@@ -48,7 +45,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             assert all(map(lambda l: len(l) == len(self.valid[0]), self.valid))
             assert all(map(lambda l: len(l) == len(self.invalid[0]), self.invalid))
 
-            type_validations = ['is_regex'] * len(self.valid[0])
+            type_validations = ['regex'] * len(self.valid[0])
             builder = DSLBuilder(type_validations, self.valid, self.invalid)
             dsls = builder.build()
 
@@ -75,7 +72,6 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             for dep, leng in sizes:
                 self._enumerator = DynamicMultiTreeEnumerator(self.main_dsl, depth=dep,
                                                               length=leng)
-
                 self.try_for_depth()
 
                 if len(self.programs) > 0:

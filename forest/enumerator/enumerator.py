@@ -158,15 +158,6 @@ class Enumerator(ABC):
             logger.debug(f'Enumerator exhausted.')
             return None
 
-    def _get_subtree(self, node: ASTNode):
-        """ Return as an ordered list all the descendant nodes """
-        if not node.has_children():
-            return [node]
-        else:
-            assert len(node.children) == 2
-            return [node] + self._get_subtree(node.children[0]) + \
-                   self._get_subtree(node.children[1])
-
     def _block_subtree_rec(self, subtree: ASTNode, program: Node):
         """ Auxiliary function for block_subtree. """
         head_var = self.variables[subtree]

@@ -7,7 +7,7 @@ from termcolor import colored
 
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.synthesizer.sketch_synthesizer import SketchSynthesizer
-from forest.visitor import ToString
+from forest.visitor import RegexInterpreter
 from forest.logger import get_logger
 from forest.parse_examples import parse_file, parse_resnax
 from forest.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer
@@ -28,7 +28,7 @@ def main():
     signal(SIGINT, sig_handler)
     signal(SIGTERM, sig_handler)
     examples_file, encoding, self_interact, resnax, no_pruning, max_valid, max_invalid, \
-    sketching_mode = read_cmd_args()
+        sketching_mode = read_cmd_args()
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
@@ -59,11 +59,11 @@ def main():
 
 def show(valid, invalid, ground_truth: str):
     print(len(valid), "valid examples:")
-    max_len = max(map(lambda x: len(x[0]), valid))
+    max_len = max(map(lambda x: sum(map(len, x)) + 2*len(x), valid))
     max_len = max(max_len, 6)
     line_len = 0
     for ex in valid:
-        s = f'{ex[0]}'.center(max_len)
+        s = ', '.join(ex).center(max_len)
         line_len += len(s)
         print(colored(s, "blue"), end='  ')
         if line_len > 70:
@@ -140,7 +140,7 @@ def lines_synthesize(valid, invalid, ground_truth=None, self_interact=False,
 
 
 def prepare_things(valid, invalid, sketch=False):
-    type_validation = ["is_regex"]
+    type_validation = ["regex"]
     if len(valid) == 0:
         raise ValueError("No valid examples!")
     if isinstance(valid[0], str):
@@ -159,13 +159,14 @@ def prepare_things(valid, invalid, sketch=False):
 def synthesize(type_validation):
     global synthesizer
     assert synthesizer is not None
-    printer = ToString()
+    printer = RegexInterpreter()
     program = synthesizer.synthesize()
     if program is not None:
-        logger.info(
-            colored(f'Solution: {printer.eval(program)}', "green"))
+        p = program[0]
+        c = program[1]
+        print(colored(f'Solution: {printer.eval(p, captures=c)}', "green"))
     else:
-        logger.info('Solution not found!')
+        print('Solution not found!')
     return program
 
 

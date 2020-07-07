@@ -43,10 +43,11 @@ class ExampleDecider(Decider):
         Test whether the given program would fail on any of the examples provided.
         """
         if not self.use_smt:
-            regex = self._interpreter.eval(regex, [])
+            regex = self._interpreter.eval(regex)
             re_compiled = re.compile(regex)
             return any(
-                map(lambda x: self._match(re_compiled, x.input) != x.output, self._examples)
+                map(lambda x: self._match(re_compiled, x.input) != x.output,
+                    self._examples)
             )
         else:
             regex_z3 = self._to_z3.eval(regex)

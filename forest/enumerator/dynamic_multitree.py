@@ -97,8 +97,8 @@ class DynamicMultiTreeEnumerator(Enumerator):
             union_id = self.dsl.get_function_production("union").id
             node_is_union = node_var == z3.IntVal(union_id)
 
-            subtree0, subtree1 = self._get_subtree(node.children[0]), \
-                                 self._get_subtree(node.children[1])
+            subtree0, subtree1 = node.children[0].get_subtree(), \
+                                 node.children[1].get_subtree()
 
             bigOr = []
             for i in range(len(subtree0)):
@@ -223,22 +223,20 @@ class DynamicMultiTreeEnumerator(Enumerator):
 
         for x in commutative_op_nodes:
             tree_id, node_id = x.tree_id, x.id
-            subtree0 = self._get_subtree(
-                self.trees[tree_id - 1].nodes[node_id - 1].children[0])
-            subtree1 = self._get_subtree(
-                self.trees[tree_id - 1].nodes[node_id - 1].children[1])
+            subt0 = self.trees[tree_id - 1].nodes[node_id - 1].children[0].get_subtree()
+            subt1 = self.trees[tree_id - 1].nodes[node_id - 1].children[1].get_subtree()
             # block model with subtrees swapped:
             block2 = []
             unblocked = set(self.variables.keys())
-            for i, node in enumerate(subtree0):
+            for i, node in enumerate(subt0):
                 node_x = self.variables[node]
-                other_node = subtree1[i]
+                other_node = subt1[i]
                 block2.append(node_x != self.model[other_node])
                 unblocked.remove(node)
 
-            for i, node in enumerate(subtree1):
+            for i, node in enumerate(subt1):
                 node_x = self.variables[node]
-                other_node = subtree0[i]
+                other_node = subt0[i]
                 block2.append(node_x != self.model[other_node])
                 unblocked.remove(node)
 
@@ -248,7 +246,8 @@ class DynamicMultiTreeEnumerator(Enumerator):
 
     def update(self, predicates=None):
         """
-        :param predicates: information about the program. If None, enumerator will block complete model.
+        :param predicates: information about the program. If None, enumerator will
+        block complete model.
         """
         if predicates is not None:
             self.resolve_predicates(predicates)
