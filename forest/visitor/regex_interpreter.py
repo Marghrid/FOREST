@@ -11,7 +11,7 @@ class RegexInterpreter(PostOrderInterpreter):
         self.precedences = {}
         self.captures = []
 
-    def eval(self, program: Union[Node, Tuple], captures=None, inputs=None) -> Any:
+    def eval(self, program: Union[Node, Tuple], inputs=None, captures=None) -> Any:
         """
         Interpret the Given AST in post-order. Assumes the existence of `eval_XXX` method
         where `XXX` is the name of a function defined in the DSL.
@@ -57,14 +57,14 @@ class RegexInterpreter(PostOrderInterpreter):
 
     def eval_re(self, node, args):
         self.precedences[node.production.id] = 5
-        # if len(args[0]) == 1 or '[' in args[0]:
-        #     return fr'{args[0]}'
-        # else:
-        #     return fr'{args[0]}'
-        if node in self.captures:
-            return f'({args[0]})'
-        else:
-            return f'{args[0]}'
+        ret = f'{args[0]}'
+        if any(map(lambda cap: node in cap, self.captures)):
+            for cap in self.captures:
+                if node == cap[0]:
+                    ret = '(' + ret
+                if node == cap[-1]:
+                    ret = ret + ')'
+        return ret
 
     def eval_unary_operator(self, arg, node, symbol):
         child_id = node.children[0].production.id
@@ -73,10 +73,13 @@ class RegexInterpreter(PostOrderInterpreter):
             ret = f'{arg[0]}{symbol}'
         else:
             ret = f'(?:{arg[0]}){symbol}'
-        if node in self.captures:
-            return '(' + ret + ')'
-        else:
-            return ret
+        if any(map(lambda cap: node in cap, self.captures)):
+            for cap in self.captures:
+                if node == cap[0]:
+                    ret = '(' + ret
+                if node == cap[-1]:
+                    ret = ret + ')'
+        return ret
 
     def eval_nary_operator(self, args, node, sep):
         children_str = []
@@ -90,10 +93,13 @@ class RegexInterpreter(PostOrderInterpreter):
 
             children_str.append(f'{ch}')
         children_str = sep.join(children_str)
-        if node in self.captures:
-            return '(' + children_str + ')'
-        else:
-            return children_str
+        if any(map(lambda cap: node in cap, self.captures)):
+            for cap in self.captures:
+                if node == cap[0]:
+                    children_str = '(' + children_str
+                if node == cap[-1]:
+                    children_str = children_str + ')'
+        return children_str
 
     def eval_kleene(self, node, args):
         self.precedences[node.production.id] = 4
@@ -122,10 +128,13 @@ class RegexInterpreter(PostOrderInterpreter):
             ret = f'{args[0]}{{{range_vals_str}}}'
         else:
             ret = f'(?:{args[0]}){{{range_vals_str}}}'
-        if node in self.captures:
-            return '(' + ret + ')'
-        else:
-            return ret
+        if any(map(lambda cap: node in cap, self.captures)):
+            for cap in self.captures:
+                if node == cap[0]:
+                    ret = '(' + ret
+                if node == cap[-1]:
+                    ret = ret + ')'
+        return ret
 
     def eval_concat(self, node, args):
         self.precedences[node.production.id] = 2

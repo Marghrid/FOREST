@@ -82,9 +82,12 @@ class MultipleSynthesizer(ABC):
                     f'  Interactions: {self.num_interactions}\n'
                     f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n')
         if len(self.programs) > 0:
+            p = self.programs[0][0]
+            c = self.programs[0][1]
             logger.info(
-                f'  Solution: {self._decider.interpreter.eval(*self.programs[0])}\n'
-                f'  Nodes: {self._node_counter.eval(*self.programs[0])}')
+                f'  Solution: {self._decider.interpreter.eval(p, captures=c)}\n'
+                f'  Nodes: {self._node_counter.eval(*self.programs[0])}\n'
+                f'  Cap. groups: {len(c)}')
         else:
             logger.info(f'  No solution.')
 
@@ -129,7 +132,7 @@ class MultipleSynthesizer(ABC):
         if program is None:  # enumerator is exhausted
             return
         if self._printer is not None:
-            logger.debug(f'Enumerator generated: {self._printer.eval(program, ["IN"])}')
+            logger.debug(f'Enumerator generated: {self._printer.eval(program)}')
         else:
             logger.debug(f'Enumerator generated: {program}')
 

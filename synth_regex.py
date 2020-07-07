@@ -59,11 +59,11 @@ def main():
 
 def show(valid, invalid, ground_truth: str):
     print(len(valid), "valid examples:")
-    max_len = max(map(lambda x: len(x[0]), valid))
+    max_len = max(map(lambda x: sum(map(len, x)) + 2*len(x), valid))
     max_len = max(max_len, 6)
     line_len = 0
     for ex in valid:
-        s = f'{ex[0]}'.center(max_len)
+        s = ', '.join(ex).center(max_len)
         line_len += len(s)
         print(colored(s, "blue"), end='  ')
         if line_len > 70:
@@ -162,9 +162,11 @@ def synthesize(type_validation):
     printer = RegexInterpreter()
     program = synthesizer.synthesize()
     if program is not None:
-        logger.info(colored(f'Solution: {printer.eval(*program)}', "green"))
+        p = program[0]
+        c = program[1]
+        print(colored(f'Solution: {printer.eval(p, captures=c)}', "green"))
     else:
-        logger.info('Solution not found!')
+        print('Solution not found!')
     return program
 
 
