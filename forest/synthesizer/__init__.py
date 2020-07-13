@@ -3,3 +3,4 @@ from .lines_synthesizer import LinesSynthesizer
 from .multiple_synthesizer import MultipleSynthesizer
 from .multitree_synthesizer import MultiTreeSynthesizer
 from .single_synthesizer import SingleSynthesizer
+from .sketch_synthesizer import SketchSynthesizer

@@ -24,18 +24,18 @@ class RegexDecider(ExampleDecider):
         assert self.split_valid is None or all(
             map(lambda x: len(x) == len(self.split_valid[0]), self.split_valid))
 
-    def analyze(self, program: ApplyNode):
+    def analyze(self, regex: ApplyNode):
         """
         Analyze the reason why a synthesized program fails if it does not
         pass all the tests.
         """
-        if not self.has_failed_examples(program):
+        if not self.has_failed_examples(regex):
             return ok()
         else:
-            if program.production.lhs.name == "Regex":
-                new_predicates = self.traverse_regex(program)
+            if regex.production.lhs.name == "Regex":
+                new_predicates = self.traverse_regex(regex)
             else:
-                new_predicates = self.traverse_program(program, self._examples)
+                new_predicates = self.traverse_program(regex, self._examples)
 
             if len(new_predicates) == 0:
                 return bad()

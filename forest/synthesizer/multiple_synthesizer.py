@@ -58,6 +58,11 @@ class MultipleSynthesizer(ABC):
         self.num_interactions = 0
         self.programs = []
         self.start_time = None
+        self.regex_synthesis_time = 0
+        self.capture_synthesis_time = 0
+        self.distinguish_time = 0
+        self.last_print_time = time.time()
+        self.depth_times = {}
 
         # Used in signal handling:
         self.die = False
@@ -80,7 +85,11 @@ class MultipleSynthesizer(ABC):
                     f'{" (no pruning)" if not self.pruning else ""}\n'
                     f'  Enumerated: {self.num_enumerated}\n'
                     f'  Interactions: {self.num_interactions}\n'
-                    f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n')
+                    f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n'
+                    f'  Regex time: {round(self.regex_synthesis_time, 2)}\n'
+                    f'  Distinguish time: {round(self.distinguish_time, 2)}\n'
+                    f'  Capture time: {round(self.capture_synthesis_time, 2)}\n'
+                    f'  Time per depth: {self.depth_times}')
         if len(self.programs) > 0:
             p = self.programs[0][0]
             c = self.programs[0][1]
@@ -119,7 +128,7 @@ class MultipleSynthesizer(ABC):
             self.start_time += time.time() - interaction_start_time
 
         else:  # programs are indistinguishable
-            logger.info("Programs are indistinguishable")
+            logger.info("Regexes are indistinguishable")
             self.indistinguishable += 1
             smallest_regex = min(self.programs,
                                  key=lambda r: len(self._printer.eval(r)))
@@ -136,10 +145,11 @@ class MultipleSynthesizer(ABC):
         else:
             logger.debug(f'Enumerator generated: {program}')
 
-        if self.num_enumerated > 0 and self.num_enumerated % 1000 == 0:
+        if self.num_enumerated > 0 and time.time() - self.last_print_time > 30:
             logger.info(
-                f'Enumerated {self.num_enumerated} programs in '
+                f'Enumerated {self.num_enumerated} regexes in '
                 f'{nice_time(time.time() - self.start_time)}.')
+            self.last_print_time = time.time()
 
         return program
 
@@ -177,23 +187,36 @@ class MultipleSynthesizer(ABC):
             self.programs = keep_if_invalid
 
     def try_for_depth(self):
-        regex = self.enumerate()
-        while regex is not None and not self.die:
+        while True:
             new_predicates = None
 
+            regex_synthesis_start = time.time()
+            regex = self.enumerate()
+
+            if regex is None or self.die:
+                break
+
             res = self._decider.analyze(regex)
+            self.regex_synthesis_time += time.time() - regex_synthesis_start
 
             if res.is_ok():  # program satisfies I/O examples
-                logger.info(
+                logger.debug(
                     f'Regex accepted. {self._node_counter.eval(regex, [0])} nodes. '
                     f'{self.num_enumerated} attempts '
                     f'and {round(time.time() - self.start_time, 2)} seconds:')
-                logger.info(self._printer.eval(regex, ["IN"]))
+                logger.debug(self._printer.eval(regex))
+
+                captures_synthesis_start = time.time()
                 captures = self._capturer.capture(regex)
+                self.capture_synthesis_time += time.time() - captures_synthesis_start
+
                 if captures is not None:
                     self.programs.append((regex, captures))
                 if len(self.programs) >= 2:
+                    distinguish_start = time.time()
                     self.distinguish()
+                    self.distinguish_time += time.time() - distinguish_start
+
                 if self.indistinguishable >= self.max_indistinguishable:
                     break
             else:
@@ -209,7 +232,6 @@ class MultipleSynthesizer(ABC):
                 self._enumerator.update(new_predicates)
             else:
                 self._enumerator.update(None)
-            regex = self.enumerate()
 
         if len(self.programs) > 0 or self.die:
-            self.terminate()
+            return

@@ -132,45 +132,45 @@ class DynamicMultiTreeEnumerator(Enumerator):
 
     def _resolve_block_subtree_predicate(self, pred):
         self._check_arg_types(pred, [Node])
-        program = pred.args[0]
+        regex = pred.args[0]
 
-        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
-            self.block_subtree(node, program)
+        for node in self.nodes_until_depth(self.depth - regex.depth() + 1):
+            self.block_subtree(node, regex)
 
     def _resolve_block_tree_predicate(self, pred):
         self._check_arg_types(pred, [Node])
-        program = pred.args[0]
+        regex = pred.args[0]
 
-        if self.depth < program.depth():
+        if self.depth < regex.depth():
             return
         for tree in self.trees:
             node = tree.head
-            self.block_subtree(node, program)
+            self.block_subtree(node, regex)
 
     def _resolve_block_first_tree_predicate(self, pred):
         self._check_arg_types(pred, [Node])
-        program = pred.args[0]
-        if self.depth < program.depth():
+        regex = pred.args[0]
+        if self.depth < regex.depth():
             return
         node = self.trees[0].head
-        self.block_subtree(node, program)
+        self.block_subtree(node, regex)
 
     def _resolve_char_must_occur_predicate(self, pred):
         self._check_arg_types(pred, [Node])
-        program = pred.args[0]
+        regex = pred.args[0]
 
         big_or = []
-        for node in self.nodes_until_depth(self.depth - program.depth() + 1):
-            big_or.append(self.variables[node] == z3.IntVal(program.production.id))
+        for node in self.nodes_until_depth(self.depth - regex.depth() + 1):
+            big_or.append(self.variables[node] == z3.IntVal(regex.production.id))
 
         self.z3_solver.add(z3.Or(big_or))
 
     def _resolve_block_range_lower_bound_predicate(self, pred):
         self._check_arg_types(pred, [Node, int])
-        program = pred.args[0]
+        regex = pred.args[0]
         tree_idx = pred.args[1]
 
-        bounds = program.args[1].data.split(',')
+        bounds = regex.args[1].data.split(',')
         assert len(bounds) == 2
         lower_bound = bounds[0]
 
@@ -178,19 +178,19 @@ class DynamicMultiTreeEnumerator(Enumerator):
         ranges_to_block = self.range_lower_bounds[lower_bound]
 
         for range_node in ranges_to_block:
-            program_to_block = program
-            program_to_block.args[1] = range_node
+            to_block = regex
+            to_block.args[1] = range_node
             # We want to run block_subtree only for nodes in the tree in which
-            # the program originally occurred.
-            for node in self.nodes_until_depth(self.depth - program_to_block.depth() + 1):
-                self.block_subtree(node, program_to_block)
+            # the regex originally occurred.
+            for node in self.nodes_until_depth(self.depth - to_block.depth() + 1):
+                self.block_subtree(node, to_block)
 
     def _resolve_block_range_upper_bound_predicate(self, pred):
         self._check_arg_types(pred, [Node, int])
-        program = pred.args[0]
+        regex = pred.args[0]
         tree_idx = pred.args[1]
 
-        bounds = program.args[1].data.split(',')
+        bounds = regex.args[1].data.split(',')
         assert len(bounds) == 2
         upper_bound = bounds[1]
 
@@ -198,12 +198,12 @@ class DynamicMultiTreeEnumerator(Enumerator):
         ranges_to_block = self.range_upper_bounds[upper_bound]
 
         for range_node in ranges_to_block:
-            program_to_block = program
-            program_to_block.args[1] = range_node
+            to_block = regex
+            to_block.args[1] = range_node
             # We want to run block_subtree only for nodes in the tree in which
-            # the program originally occurred.
-            for node in self.nodes_until_depth(self.depth - program_to_block.depth() + 1):
-                self.block_subtree(node, program_to_block)
+            # the regex originally occurred.
+            for node in self.nodes_until_depth(self.depth - to_block.depth() + 1):
+                self.block_subtree(node, to_block)
 
     def block_model(self):
         """ Block current model and all others equivalent to it """

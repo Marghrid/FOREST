@@ -9,6 +9,8 @@ from forest.visitor import ToZ3, RegexInterpreter
 
 logger = get_logger('forest')
 
+use_derivatives = True
+
 
 class Distinguisher:
     def __init__(self):
@@ -18,7 +20,8 @@ class Distinguisher:
         self.force_distinguish2 = False
 
     def distinguish(self, programs):
-        print("distinguishing", len(programs), list(map(self._printer.eval, programs)))
+        logger.info(f"Distinguishing {len(programs)}: "
+                    f"{','.join(map(self._printer.eval, programs))}")
         assert len(programs) >= 2
         if not self.force_multi_distinguish and len(programs) == 2:
             return self.distinguish2(programs[0], programs[1])
@@ -30,14 +33,17 @@ class Distinguisher:
             return self.multi_distinguish(programs)
 
     def distinguish2(self, r1, r2):
+        global use_derivatives
         solver = z3.Solver()
         solver.set('random_seed', 7)
         solver.set('sat.random_seed', 7)
-        try:
-            solver.set('smt.seq.use_derivatives', True)
-            solver.check()
-        except:
-            logger.warning("'use_derivatives' option not available.")
+        if use_derivatives:
+            try:
+                solver.set('smt.seq.use_derivatives', True)
+                solver.check()
+            except:
+                logger.warning("'use_derivatives' option not available.")
+                use_derivatives = False  # prevents additional calls to check
 
         z3_r1 = self._toz3.eval(r1)
         z3_r2 = self._toz3.eval(r2)

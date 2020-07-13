@@ -6,11 +6,11 @@ from signal import signal, SIGINT, SIGTERM
 from termcolor import colored
 
 from forest.dsl.dsl_builder import DSLBuilder
-from forest.synthesizer.sketch_synthesizer import SketchSynthesizer
-from forest.visitor import RegexInterpreter
 from forest.logger import get_logger
 from forest.parse_examples import parse_file, parse_resnax
-from forest.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer
+from forest.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer, \
+    SketchSynthesizer
+from forest.visitor import RegexInterpreter
 
 logger = get_logger('forest')
 
@@ -28,7 +28,7 @@ def main():
     signal(SIGINT, sig_handler)
     signal(SIGTERM, sig_handler)
     examples_file, encoding, self_interact, resnax, no_pruning, max_valid, max_invalid, \
-        sketching_mode = read_cmd_args()
+    sketching_mode = read_cmd_args()
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
@@ -59,7 +59,7 @@ def main():
 
 def show(valid, invalid, ground_truth: str):
     print(len(valid), "valid examples:")
-    max_len = max(map(lambda x: sum(map(len, x)) + 2*len(x), valid))
+    max_len = max(map(lambda x: sum(map(len, x)) + 2 * len(x), valid))
     max_len = max(max_len, 6)
     line_len = 0
     for ex in valid:

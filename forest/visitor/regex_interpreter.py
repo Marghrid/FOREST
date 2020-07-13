@@ -11,21 +11,21 @@ class RegexInterpreter(PostOrderInterpreter):
         self.precedences = {}
         self.captures = []
 
-    def eval(self, program: Union[Node, Tuple], inputs=None, captures=None) -> Any:
+    def eval(self, regex: Union[Node, Tuple], inputs=None, captures=None) -> Any:
         """
         Interpret the Given AST in post-order. Assumes the existence of `eval_XXX` method
         where `XXX` is the name of a function defined in the DSL.
         """
-        if isinstance(program, Tuple):
-            if len(program) > 1:
-                captures = program[1]
+        if isinstance(regex, Tuple):
+            if len(regex) > 1:
+                captures = regex[1]
             else:
                 captures = None
-            program = program[0]
+            regex = regex[0]
         if captures is None:
             captures = []
         self.captures = captures
-        return PostOrderInterpreter.eval(self, program, inputs)
+        return PostOrderInterpreter.eval(self, regex, inputs)
 
     def eval_Input(self, v):
         return v

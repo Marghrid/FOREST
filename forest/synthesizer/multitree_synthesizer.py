@@ -55,12 +55,14 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                                          split_valid=self.valid)
             for depth in range(3, 10):
                 self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
-
+                depth_start = time.time()
                 self.try_for_depth()
-
+                self.depth_times[depth] = time.time() - depth_start
                 if len(self.programs) > 0:
+                    self.terminate()
                     return self.programs[0]
                 elif self.die:
+                    self.terminate()
                     return
 
         else:
@@ -72,7 +74,9 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             for dep, leng in sizes:
                 self._enumerator = DynamicMultiTreeEnumerator(self.main_dsl, depth=dep,
                                                               length=leng)
+                depth_start = time.time()
                 self.try_for_depth()
+                self.depth_times[(dep, leng)] = time.time() - depth_start
 
                 if len(self.programs) > 0:
                     return self.programs[0]

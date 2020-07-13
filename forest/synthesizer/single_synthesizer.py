@@ -18,7 +18,7 @@ class SingleSynthesizer(ABC):
         self.examples = [Example(x, True) for x in valid_examples] + \
                         [Example(x, False) for x in invalid_examples]
         self.dsl = dsl
-        self._printer = ToString()
+        self._printer = RegexInterpreter()
         self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                      examples=self.examples)
         self._node_counter = NodeCounter()
