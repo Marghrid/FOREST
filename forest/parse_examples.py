@@ -10,6 +10,7 @@ def parse_file(filename):
     logger.info("Parsing examples from file " + filename)
     invalid_exs = []
     valid_exs = []
+    condition_invalid_exs = []
     ground_truth = ''
     with open(filename, "r") as in_file:
         next_line = in_file.readline()
@@ -25,10 +26,17 @@ def parse_file(filename):
             next_line = in_file.readline()
 
         next_line = in_file.readline()  # skip line with "--"
-        while next_line and not next_line.startswith("**"):
+        while next_line and not next_line.startswith("+-"):
             next_line = next_line.rstrip()
             exs = read_example(filename, next_line)
             invalid_exs.extend(exs)
+            next_line = in_file.readline()
+
+        next_line = in_file.readline()  # skip line with "+-"
+        while next_line and not next_line.startswith("**"):
+            next_line = next_line.rstrip()
+            exs = read_example(filename, next_line)
+            condition_invalid_exs.extend(exs)
             next_line = in_file.readline()
 
         while next_line:
@@ -38,7 +46,7 @@ def parse_file(filename):
                 break
             next_line = in_file.readline()
 
-    return valid_exs, invalid_exs, ground_truth
+    return valid_exs, invalid_exs, condition_invalid_exs, ground_truth
 
 
 def parse_resnax(filename):
