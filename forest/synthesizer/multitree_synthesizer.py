@@ -20,10 +20,11 @@ no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 class MultiTreeSynthesizer(MultipleSynthesizer):
 
-    def __init__(self, valid_examples, invalid_examples, main_dsl, ground_truth,
-                 pruning=True, auto_interaction=False, force_dynamic=False):
-        super().__init__(valid_examples, invalid_examples, main_dsl, ground_truth,
-                         pruning, auto_interaction)
+    def __init__(self, valid_examples, invalid_examples, captures, condition_invalid,
+                 main_dsl, ground_truth, pruning=True, auto_interaction=False,
+                 force_dynamic=False):
+        super().__init__(valid_examples, invalid_examples, captures, condition_invalid,
+                         main_dsl, ground_truth, pruning, auto_interaction)
         self.main_dsl = main_dsl
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
                               '{', '}', '[', ']', '"'}

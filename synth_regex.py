@@ -33,7 +33,7 @@ def main():
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
     else:
-        valid, invalid, ground_truth = parse_file(examples_file)
+        valid, invalid, condition_invalid, ground_truth = parse_file(examples_file)
 
     random.seed("regex")
     if 0 < max_valid < len(valid):
@@ -41,23 +41,23 @@ def main():
     if 0 < max_invalid < len(invalid):
         invalid = random.sample(invalid, max_invalid)
 
-    show(valid, invalid, ground_truth)
+    show(valid, invalid, condition_invalid, ground_truth)
     if sketching_mode != 'none':
-        sketch_synthesize(valid, invalid, sketching_mode, ground_truth, self_interact,
+        sketch_synthesize(valid, invalid, condition_invalid, sketching_mode, ground_truth, self_interact,
                           no_pruning)
     elif encoding == 'multitree':
-        multitree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
+        multitree_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, no_pruning)
     elif encoding == "dynamic":
-        dynamic_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
+        dynamic_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, no_pruning)
     elif encoding == 'ktree':
-        ktree_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
+        ktree_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, no_pruning)
     elif encoding == 'lines':
-        lines_synthesize(valid, invalid, ground_truth, self_interact, no_pruning)
+        lines_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, no_pruning)
     else:
         raise ValueError
 
 
-def show(valid, invalid, ground_truth: str):
+def show(valid, invalid, condition_invalid, ground_truth: str):
     print(len(valid), "valid examples:")
     max_len = max(map(lambda x: sum(map(len, x)) + 2 * len(x), valid))
     max_len = max(max_len, 6)
@@ -83,18 +83,31 @@ def show(valid, invalid, ground_truth: str):
             line_len = 0
             print()
     print()
+
+    print(len(condition_invalid), "condition invalid examples:")
+    max_len = max(map(lambda x: len(x[0]), condition_invalid))
+    max_len = max(max_len, 6)
+    line_len = 0
+    for ex in condition_invalid:
+        s = f'{ex[0]}'.center(max_len)
+        line_len += len(s)
+        print(colored(s, "magenta"), end='  ')
+        if line_len > 70:
+            line_len = 0
+            print()
+    print()
     print("Ground truth:")
     print(colored(ground_truth, "green"))
 
 
-def multitree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
+def multitree_synthesize(valid, invalid, condition_invalid, ground_truth=None, self_interact=False,
                          no_pruning=False):
     global synthesizer
-    dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
+    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0] and "regex" not in type_validation[0]:
         raise Exception("MultiTree Synthesizer is only for strings.")
-    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
-                                       pruning=not no_pruning,
+    synthesizer = MultiTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                       ground_truth, pruning=not no_pruning,
                                        auto_interaction=self_interact)
     return synthesize(type_validation)
 
@@ -103,7 +116,7 @@ def sketch_synthesize(valid, invalid, sketching_mode, ground_truth=None,
                       self_interact=False,
                       no_pruning=False, ):
     global synthesizer
-    dsl, valid, invalid, type_validation = prepare_things(valid, invalid, sketch=True)
+    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid, sketch=True)
     if "string" not in type_validation[0] and "regex" not in type_validation[0]:
         raise Exception("MultiTree Synthesizer is only for strings.")
     synthesizer = SketchSynthesizer(valid, invalid, dsl, ground_truth, sketching_mode,
@@ -111,10 +124,10 @@ def sketch_synthesize(valid, invalid, sketching_mode, ground_truth=None,
     return synthesize(type_validation)
 
 
-def dynamic_synthesize(valid, invalid, ground_truth=None, self_interact=False,
+def dynamic_synthesize(valid, invalid, condition_invalid, ground_truth=None, self_interact=False,
                        no_pruning=False):
     global synthesizer
-    dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
+    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
     synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
                                        pruning=not no_pruning,
                                        auto_interaction=self_interact, force_dynamic=True)
@@ -124,7 +137,7 @@ def dynamic_synthesize(valid, invalid, ground_truth=None, self_interact=False,
 def ktree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
                      no_pruning=False):
     global synthesizer
-    dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
+    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
     synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth,
                                    pruning=not no_pruning, auto_interaction=self_interact)
     return synthesize(type_validation)
@@ -133,7 +146,7 @@ def ktree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
 def lines_synthesize(valid, invalid, ground_truth=None, self_interact=False,
                      no_pruning=False):
     global synthesizer
-    dsl, valid, invalid, type_validation = prepare_things(valid, invalid)
+    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
     synthesizer = LinesSynthesizer(valid, invalid, dsl, ground_truth,
                                    pruning=not no_pruning, auto_interaction=self_interact)
     return synthesize(type_validation)
@@ -148,12 +161,14 @@ def prepare_things(valid, invalid, sketch=False):
     if isinstance(invalid[0], str):
         invalid = list(map(lambda v: [v], invalid))
     # logger.info("Assuming types: " + str(type_validation))
+    captures = list(map(lambda x: x[1:], valid))
+    valid = list(map(lambda x: [x[0]], valid))
     builder = DSLBuilder(type_validation, valid, invalid, sketch)
     dsl = builder.build()[0]
     # TODO: build() returns a list of DSLs for each different type of element. Now I'm
     #  just using the first element
 
-    return dsl, valid, invalid, type_validation
+    return dsl, valid, invalid, captures, type_validation
 
 
 def synthesize(type_validation):

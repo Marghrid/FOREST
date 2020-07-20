@@ -1,5 +1,8 @@
 import re
 from itertools import combinations
+from typing import List
+
+import z3
 
 
 def nice_time(seconds):
@@ -25,6 +28,26 @@ def is_regex(tentative_regex: str):
         return True
     except re.error:
         return False
+
+
+def is_int(arg):
+    if isinstance(arg, int):
+        return True
+    try:
+        int(arg)
+    except ValueError:
+        return False
+    return True
+
+
+def is_float(arg):
+    if isinstance(arg, float) or isinstance(arg, int):
+        return True
+    try:
+        float(arg)
+    except ValueError:
+        return False
+    return True
 
 
 def transpose(lst):
@@ -78,13 +101,12 @@ def all_sublists_n(iterable, n):
     if n == 1:
         yield from map(lambda l: [l], all_sublists_gen(iterable, min_len=1))
     else:
-        for split_idx in range(1, len(iterable) - (n-2)):
+        for split_idx in range(1, len(iterable) - (n - 2)):
             for left in all_sublists_gen(iterable[:split_idx], min_len=1):
-                if left[-1] != iterable[split_idx-1]:
+                if left[-1] != iterable[split_idx - 1]:
                     continue
                 for right in all_sublists_n(iterable[split_idx:], n - 1):
                     yield [left] + right
-
 
 # l = [1, 2, 3, 4, 5]
 # all = []
@@ -94,3 +116,8 @@ def all_sublists_n(iterable, n):
 #     else:
 #         all.append(a)
 #     print(a)
+
+def make_z3_and(args: List):
+    if len(args) == 1:
+        return args[0]
+    return z3.And(args)

@@ -21,11 +21,11 @@ sketching = ('smt', 'brute-force', 'hybrid')
 
 
 class SketchSynthesizer(MultipleSynthesizer):
-    def __init__(self, valid_examples, invalid_examples, main_dsl, ground_truth,
-                 sketching_mode, pruning=False, auto_interaction=False,
-                 force_dynamic=False):
-        super().__init__(valid_examples, invalid_examples, main_dsl, ground_truth,
-                         pruning, auto_interaction)
+    def __init__(self, valid_examples, invalid_examples, captures, condition_invalid,
+                 main_dsl, ground_truth, sketching_mode, pruning=False,
+                 auto_interaction=False, force_dynamic=False):
+        super().__init__(valid_examples, invalid_examples, captures, condition_invalid,
+                         main_dsl, ground_truth, pruning, auto_interaction)
 
         self.valid = valid_examples
         self.invalid = invalid_examples
@@ -184,7 +184,6 @@ class SketchSynthesizer(MultipleSynthesizer):
                   round(self.time_unsat_calls / self.count_unsat_calls, 2))
             print("avg time unsat encoding (s):",
                   round(self.time_unsat_encoding / self.count_unsat_calls, 2))
-
 
         print("num unk-sat calls (s):", self.count_smt_unknown_sat)
         print("num unk-unsat calls (s):", self.count_smt_unknown_unsat)
@@ -378,7 +377,7 @@ class SketchSynthesizer(MultipleSynthesizer):
         z3_solver.add(z3.Or(*m_vars.keys()))
 
         time_encoding = (time.time() - start)
-        
+
         start = time.time()
         res = z3_solver.check()
         if res == z3.sat:

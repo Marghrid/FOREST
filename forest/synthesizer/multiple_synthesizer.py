@@ -22,15 +22,16 @@ class MultipleSynthesizer(ABC):
     """ Interactive synthesizer. Finds more than one program consistent with the
     examples. """
 
-    def __init__(self, valid_examples, invalid_examples, dsl: TyrellSpec,
-                 ground_truth: str,
-                 pruning=True, auto_interaction=False):
+    def __init__(self, valid_examples, invalid_examples, captures, condition_invalid,
+                 dsl: TyrellSpec, ground_truth: str, pruning=True,
+                 auto_interaction=False):
 
         self.examples = [Example(x, True) for x in valid_examples] \
                         + [Example(x, False) for x in invalid_examples]
-        self.valid = list(map(lambda x: [x[0]], valid_examples))
-        self.captures = list(map(lambda x: x[1:], valid_examples))
+        self.valid = valid_examples
         self.invalid = invalid_examples
+        self.captures = captures
+        self.condition_invalid = condition_invalid
         self.dsl = dsl
         self.pruning = pruning
         if not pruning:
@@ -44,7 +45,7 @@ class MultipleSynthesizer(ABC):
         self._distinguisher = Distinguisher()
         self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                      examples=self.examples)
-        self._capturer = Capturer(self.valid, self.captures)
+        self._capturer = Capturer(self.valid, self.captures, self.condition_invalid)
         self._node_counter = NodeCounter()
 
         # Subclass decides which enumerator to use
@@ -207,8 +208,11 @@ class MultipleSynthesizer(ABC):
                 logger.debug(self._printer.eval(regex))
 
                 captures_synthesis_start = time.time()
-                captures = self._capturer.capture(regex)
+                captures = self._capturer.synthesize_capturing_groups(regex)
                 self.capture_synthesis_time += time.time() - captures_synthesis_start
+
+                # Can I synthesize conditions that remove condition_invalid
+                self._capturer.synthesize_capture_conditions(regex)
 
                 if captures is not None:
                     self.programs.append((regex, captures))
