@@ -108,6 +108,7 @@ def all_sublists_n(iterable, n):
                 for right in all_sublists_n(iterable[split_idx:], n - 1):
                     yield [left] + right
 
+
 # l = [1, 2, 3, 4, 5]
 # all = []
 # for a in all_sublists_n(l, 2):

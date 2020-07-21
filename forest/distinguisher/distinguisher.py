@@ -106,7 +106,7 @@ class Distinguisher:
         res = solver.check()
         print("took", round(time.time() - start, 2), "seconds")
         if res == z3.sat:
-            print(solver.model())
+            # print(solver.model())
             keep_if_valid = []
             keep_if_invalid = []
             dist_input = str(solver.model()[dist]).strip('"')
@@ -118,7 +118,8 @@ class Distinguisher:
             if len(keep_if_valid) == 0 or len(keep_if_invalid) == 0:
                 if len(others) == 0:
                     return None, None, None, None
-                else:  # selected_regexes are equivalent, but the regexes in others may not be.
+                else:  # selected_regexes are equivalent, but the regexes in others may
+                    # not be.
                     smallest_regex = min(selected_regexes,
                                          key=lambda r: len(self._printer.eval(r)))
                     others.append(smallest_regex)
