@@ -2,14 +2,17 @@
 import argparse
 import random
 from signal import signal, SIGINT, SIGTERM
+from typing import List, Tuple
 
 from termcolor import colored
 
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.logger import get_logger
 from forest.parse_examples import parse_file, parse_resnax
+from forest.spec import TyrellSpec
 from forest.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer, \
     SketchSynthesizer
+from forest.utils import conditions_to_str
 from forest.visitor import RegexInterpreter
 
 logger = get_logger('forest')
@@ -32,6 +35,7 @@ def main():
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
+        condition_invalid = []
     else:
         valid, invalid, condition_invalid, ground_truth = parse_file(examples_file)
 
@@ -43,16 +47,20 @@ def main():
 
     show(valid, invalid, condition_invalid, ground_truth)
     if sketching_mode != 'none':
-        sketch_synthesize(valid, invalid, condition_invalid, sketching_mode, ground_truth, self_interact,
-                          no_pruning)
+        sketch_synthesize(valid, invalid, condition_invalid, sketching_mode, ground_truth,
+                          self_interact)
     elif encoding == 'multitree':
-        multitree_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, no_pruning)
+        multitree_synthesize(valid, invalid, condition_invalid, ground_truth,
+                             self_interact, no_pruning)
     elif encoding == "dynamic":
-        dynamic_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, no_pruning)
+        dynamic_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact,
+                           no_pruning)
     elif encoding == 'ktree':
-        ktree_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, no_pruning)
+        ktree_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact,
+                         no_pruning)
     elif encoding == 'lines':
-        lines_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, no_pruning)
+        lines_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact,
+                         no_pruning)
     else:
         raise ValueError
 
@@ -100,8 +108,9 @@ def show(valid, invalid, condition_invalid, ground_truth: str):
     print(colored(ground_truth, "green"))
 
 
-def multitree_synthesize(valid, invalid, condition_invalid, ground_truth=None, self_interact=False,
-                         no_pruning=False):
+def multitree_synthesize(valid: List[List], invalid: List[List],
+                         condition_invalid: List[List], ground_truth: str = None,
+                         self_interact: bool = False, no_pruning: bool = False):
     global synthesizer
     dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
     if "string" not in type_validation[0] and "regex" not in type_validation[0]:
@@ -112,47 +121,60 @@ def multitree_synthesize(valid, invalid, condition_invalid, ground_truth=None, s
     return synthesize(type_validation)
 
 
-def sketch_synthesize(valid, invalid, sketching_mode, ground_truth=None,
-                      self_interact=False,
-                      no_pruning=False, ):
+def sketch_synthesize(valid: List[List], invalid: List[List],
+                      condition_invalid: List[List], sketching_mode: str,
+                      ground_truth: str = None, self_interact: bool = False,
+                      no_pruning: bool = False):
     global synthesizer
-    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid, sketch=True)
+    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid,
+                                                                    sketch=True)
     if "string" not in type_validation[0] and "regex" not in type_validation[0]:
         raise Exception("MultiTree Synthesizer is only for strings.")
-    synthesizer = SketchSynthesizer(valid, invalid, dsl, ground_truth, sketching_mode,
+    synthesizer = SketchSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                    ground_truth, sketching_mode,
                                     auto_interaction=self_interact)
     return synthesize(type_validation)
 
 
-def dynamic_synthesize(valid, invalid, condition_invalid, ground_truth=None, self_interact=False,
-                       no_pruning=False):
+def dynamic_synthesize(valid: List[List], invalid: List[List],
+                       condition_invalid: List[List], ground_truth: str = None,
+                       self_interact: bool = False, no_pruning: bool = False):
     global synthesizer
     dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
-    synthesizer = MultiTreeSynthesizer(valid, invalid, dsl, ground_truth,
+    synthesizer = MultiTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                       ground_truth,
                                        pruning=not no_pruning,
                                        auto_interaction=self_interact, force_dynamic=True)
     return synthesize(type_validation)
 
 
-def ktree_synthesize(valid, invalid, ground_truth=None, self_interact=False,
-                     no_pruning=False):
+def ktree_synthesize(valid: List[List], invalid: List[List],
+                     condition_invalid: List[List],
+                     ground_truth: str = None, self_interact: bool = False,
+                     no_pruning: bool = False):
     global synthesizer
     dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
-    synthesizer = KTreeSynthesizer(valid, invalid, dsl, ground_truth,
+    synthesizer = KTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                   ground_truth,
                                    pruning=not no_pruning, auto_interaction=self_interact)
     return synthesize(type_validation)
 
 
-def lines_synthesize(valid, invalid, ground_truth=None, self_interact=False,
-                     no_pruning=False):
+def lines_synthesize(valid: List[List], invalid: List[List],
+                     condition_invalid: List[List],
+                     ground_truth: str = None, self_interact: bool = False,
+                     no_pruning: bool = False):
     global synthesizer
     dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
-    synthesizer = LinesSynthesizer(valid, invalid, dsl, ground_truth,
+    synthesizer = LinesSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                   ground_truth,
                                    pruning=not no_pruning, auto_interaction=self_interact)
     return synthesize(type_validation)
 
 
-def prepare_things(valid, invalid, sketch=False):
+def prepare_things(valid, invalid, sketch=False) \
+        -> Tuple[TyrellSpec, List[List], List[List], List[List], List[str]]:
+    """  returns dsl, valid_examples, invalid_examples, captures, and type_validation """
     type_validation = ["regex"]
     if len(valid) == 0:
         raise ValueError("No valid examples!")
@@ -177,9 +199,11 @@ def synthesize(type_validation):
     printer = RegexInterpreter()
     program = synthesizer.synthesize()
     if program is not None:
-        p = program[0]
-        c = program[1]
-        print(colored(f'Solution: {printer.eval(p, captures=c)}', "green"))
+        regex, captures, conditions, condition_captures = program
+        solution_str = printer.eval(regex, captures=condition_captures)
+        solution_str += ', ' + conditions_to_str(conditions)
+        print(f'\nSolution:\n  {solution_str}\n'
+              f'Captures:\n  {printer.eval(regex, captures=captures)}')
     else:
         print('Solution not found!')
     return program

@@ -125,7 +125,6 @@ class Enumerator(ABC):
         raise NotImplementedError
 
     def resolve_predicates(self, predicates):
-        pass
         for pred in predicates:
             if pred.name == 'is_not_parent':
                 self._resolve_is_not_parent_predicate(pred)
@@ -145,8 +144,7 @@ class Enumerator(ABC):
                 logger.warning('Predicate not handled: {}'.format(pred))
 
     def next(self):
-        res = self.z3_solver.check()
-        if res == z3.sat:
+        if self.z3_solver.check() == z3.sat:
             self.model = {}
             for var in self.variables:
                 self.model[var] = int(str(self.z3_solver.model()[self.variables[var]]))

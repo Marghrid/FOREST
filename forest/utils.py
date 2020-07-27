@@ -1,8 +1,13 @@
+import operator
 import re
 from itertools import combinations
 from typing import List
 
 import z3
+
+condition_operators = {'<=': operator.le, '>=': operator.ge}
+yes_values = {"yes", "valid", "true", "1", "+", "v", "y", "t"}
+no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 
 def nice_time(seconds):
@@ -31,6 +36,7 @@ def is_regex(tentative_regex: str):
 
 
 def is_int(arg):
+    """ Returns True iff arg is a valid integer """
     if isinstance(arg, int):
         return True
     try:
@@ -41,6 +47,7 @@ def is_int(arg):
 
 
 def is_float(arg):
+    """ Returns True iff arg is a valid float """
     if isinstance(arg, float) or isinstance(arg, int):
         return True
     try:
@@ -51,6 +58,7 @@ def is_float(arg):
 
 
 def transpose(lst):
+    """ Transposes a matrix. """
     return list(map(list, zip(*lst)))
 
 
@@ -109,16 +117,11 @@ def all_sublists_n(iterable, n):
                     yield [left] + right
 
 
-# l = [1, 2, 3, 4, 5]
-# all = []
-# for a in all_sublists_n(l, 2):
-#     if a in all:
-#         print("REPEATED")
-#     else:
-#         all.append(a)
-#     print(a)
-
 def make_z3_and(args: List):
     if len(args) == 1:
         return args[0]
     return z3.And(args)
+
+
+def conditions_to_str(conditions):
+    return ', '.join(map(lambda c: f"${c[0]} {c[1]} {c[2]}", conditions))

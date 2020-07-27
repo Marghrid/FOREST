@@ -14,9 +14,6 @@ from ..visitor import RegexInterpreter
 
 logger = get_logger('forest')
 
-yes_values = {"yes", "valid", "true", "1", "+", "v", "y", "t"}
-no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
-
 
 class MultiTreeSynthesizer(MultipleSynthesizer):
 
@@ -61,7 +58,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                 self.depth_times[depth] = time.time() - depth_start
                 if len(self.programs) > 0:
                     self.terminate()
-                    return self.programs[0]
+                    return self.programs[0] + self.capture_conditions
                 elif self.die:
                     self.terminate()
                     return

@@ -59,9 +59,8 @@ class ExampleDecider(Decider):
                 else:
                     big_and.append(z3.Not(z3.InRe(x.input[0], regex_z3)))
             z3_solver.add(z3.And(big_and))
-            res = z3_solver.check()
 
-            return res == z3.unsat
+            return z3_solver.check() == z3.unsat
 
     def analyze(self, prog):
         '''

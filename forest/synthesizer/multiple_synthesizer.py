@@ -7,15 +7,12 @@ from termcolor import colored
 from forest.spec import TyrellSpec
 from ..capturer import Capturer
 from ..decider import RegexDecider, Example
-from ..distinguisher import Distinguisher
+from ..distinguisher import RegexDistinguisher
 from ..logger import get_logger
-from ..utils import nice_time, is_regex
+from ..utils import nice_time, is_regex, yes_values, no_values, conditions_to_str
 from ..visitor import RegexInterpreter, NodeCounter
 
 logger = get_logger('forest')
-
-yes_values = {"yes", "valid", "true", "1", "+", "v", "y", "t"}
-no_values = {"no", "invalid", "false", "0", "-", "i", "n", "f"}
 
 
 class MultipleSynthesizer(ABC):
@@ -42,7 +39,7 @@ class MultipleSynthesizer(ABC):
         if self.auto_interaction:
             assert len(self.ground_truth) > 0 and is_regex(self.ground_truth)
         self._printer = RegexInterpreter()
-        self._distinguisher = Distinguisher()
+        self._distinguisher = RegexDistinguisher()
         self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                      examples=self.examples)
         self._capturer = Capturer(self.valid, self.captures, self.condition_invalid)
@@ -58,6 +55,7 @@ class MultipleSynthesizer(ABC):
         self.num_enumerated = 0
         self.num_interactions = 0
         self.programs = []
+        self.capture_conditions = None
         self.start_time = None
         self.regex_synthesis_time = 0
         self.capture_synthesis_time = 0
@@ -92,12 +90,16 @@ class MultipleSynthesizer(ABC):
                     f'  Capture time: {round(self.capture_synthesis_time, 2)}\n'
                     f'  Time per depth: {self.depth_times}')
         if len(self.programs) > 0:
-            p = self.programs[0][0]
-            c = self.programs[0][1]
+            regex, captures = self.programs[0]
+            conditions, conditions_captures = self.capture_conditions
+            solution_str = self._decider.interpreter.eval(regex,
+                                                          captures=conditions_captures)
+            solution_str += ', ' + conditions_to_str(conditions)
             logger.info(
-                f'  Solution: {self._decider.interpreter.eval(p, captures=c)}\n'
+                f'  Solution: {solution_str}\n'
+                f'  Captures: {self._decider.interpreter.eval(regex, captures=captures)}\n'
                 f'  Nodes: {self._node_counter.eval(*self.programs[0])}\n'
-                f'  Cap. groups: {len(c)}')
+                f'  Cap. groups: {len(captures)}')
         else:
             logger.info(f'  No solution.')
 
@@ -131,8 +133,7 @@ class MultipleSynthesizer(ABC):
         else:  # programs are indistinguishable
             logger.info("Regexes are indistinguishable")
             self.indistinguishable += 1
-            smallest_regex = min(self.programs,
-                                 key=lambda r: len(self._printer.eval(r)))
+            smallest_regex = min(self.programs, key=lambda r: len(self._printer.eval(r)))
             self.programs = [smallest_regex]
 
     def enumerate(self):
@@ -211,19 +212,27 @@ class MultipleSynthesizer(ABC):
                 captures = self._capturer.synthesize_capturing_groups(regex)
                 self.capture_synthesis_time += time.time() - captures_synthesis_start
 
-                # Can I synthesize conditions that remove condition_invalid
-                self._capturer.synthesize_capture_conditions(regex)
+                if captures is None:
+                    logger.info("Failed to find capture groups for the given captures.")
 
-                if captures is not None:
-                    self.programs.append((regex, captures))
+                self.programs.append((regex, captures))
                 if len(self.programs) >= 2:
                     distinguish_start = time.time()
                     self.distinguish()
                     self.distinguish_time += time.time() - distinguish_start
 
+                # Can I synthesize conditions that remove condition_invalid
+                assert len(self.programs) == 1
+                self.capture_conditions = \
+                    self._capturer.synthesize_capture_conditions(self.programs[0][0])
+
+                if self.capture_conditions[0] is None:
+                    logger.info("Failed to find capture conditions that invalidate "
+                                "condition_invalid.")
+
                 if self.indistinguishable >= self.max_indistinguishable:
                     break
-            else:
+            elif self.pruning:
                 new_predicates = res.why()
                 if new_predicates is not None:
                     for pred in new_predicates:
@@ -231,11 +240,9 @@ class MultipleSynthesizer(ABC):
                         if len(pred.args) > 1:
                             pred_str = str(pred.args[1]) + " " + pred_str
                         logger.debug(f'New predicate: {pred.name} {pred_str}')
-
-            if self.pruning:
                 self._enumerator.update(new_predicates)
-            else:
-                self._enumerator.update(None)
+                continue
+            self._enumerator.update(None)
 
         if len(self.programs) > 0 or self.die:
             return

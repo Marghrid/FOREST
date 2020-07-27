@@ -26,7 +26,7 @@ class _ColorFormatter(logging.Formatter):
 
 
 class _ClickHandler(logging.Handler):
-    _use_stderr = False
+    _use_stderr = True
 
     def emit(self, record):
         try:

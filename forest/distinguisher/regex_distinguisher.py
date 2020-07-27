@@ -12,7 +12,7 @@ logger = get_logger('forest')
 use_derivatives = True
 
 
-class Distinguisher:
+class RegexDistinguisher:
     def __init__(self):
         self._toz3 = ToZ3()
         self._printer = RegexInterpreter()
@@ -56,9 +56,8 @@ class Distinguisher:
         solver.add(ro_2 == z3.InRe(dist, z3_r2))
 
         solver.add(ro_1 != ro_2)
-        res = solver.check()
 
-        if res == z3.sat:
+        if solver.check() == z3.sat:
             if solver.model()[ro_1]:
                 return str(solver.model()[dist]).strip('"'), [r1], [r2], []
             else:
@@ -103,10 +102,9 @@ class Distinguisher:
 
         # PbLe([(Bool('b%i' % i), 1) for i in range(200)], 10)
 
-        res = solver.check()
-        print("took", round(time.time() - start, 2), "seconds")
-        if res == z3.sat:
+        if solver.check() == z3.sat:
             # print(solver.model())
+            print("took", round(time.time() - start, 2), "seconds")
             keep_if_valid = []
             keep_if_invalid = []
             dist_input = str(solver.model()[dist]).strip('"')
