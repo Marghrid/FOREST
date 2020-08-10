@@ -71,11 +71,11 @@ class Node(ABC):
             return []
         else:
             if len(self.children) == 1 and self.children[0].is_apply() and self.children[0].name == "re":
-                return [self] + list(chain(*map(lambda c: c.get_leaves(), self.children)))
+                return [self] + list(chain.from_iterable(map(lambda c: c.get_leaves(), self.children)))
             if not self.children[0].is_apply():
-                return [self] + list(chain(*map(lambda c: c.get_leaves(), self.children)))
+                return [self] + list(chain.from_iterable(map(lambda c: c.get_leaves(), self.children)))
             if len(self.children) > 1 and not self.children[1].is_apply():
-                return [self] + list(chain(*map(lambda c: c.get_leaves(), self.children)))
+                return [self] + list(chain.from_iterable(map(lambda c: c.get_leaves(), self.children)))
             else:
                 return list(chain(*map(lambda c: c.get_leaves(), self.children)))
 
