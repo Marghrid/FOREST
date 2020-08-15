@@ -3,7 +3,7 @@ from typing import List
 import z3
 
 from forest.spec import TyrellSpec
-from .enumerator import Enumerator
+from .regex_enumerator import RegexEnumerator
 from ..dsl import Node, Builder
 from ..logger import get_logger
 
@@ -11,7 +11,7 @@ logger = get_logger('forest')
 
 
 # FIXME: Currently this enumerator requires an "Empty" production to function properly
-class StaticMultiTreeEnumerator(Enumerator):
+class StaticMultiTreeEnumerator(RegexEnumerator):
 
     def __init__(self, main_dsl: TyrellSpec, tree_dsls: List[TyrellSpec], depth):
         super().__init__(main_dsl)

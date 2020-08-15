@@ -11,7 +11,7 @@ from ..logger import get_logger
 logger = get_logger('forest')
 
 
-class Enumerator(ABC):
+class RegexEnumerator(ABC):
 
     @abstractmethod
     def __init__(self, dsl):

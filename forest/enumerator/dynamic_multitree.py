@@ -1,14 +1,14 @@
 import z3
 
 from forest.spec import TyrellSpec
-from .enumerator import Enumerator
+from .regex_enumerator import RegexEnumerator
 from ..dsl import Node, Builder
 from ..logger import get_logger
 
 logger = get_logger('forest')
 
 
-class DynamicMultiTreeEnumerator(Enumerator):
+class DynamicMultiTreeEnumerator(RegexEnumerator):
 
     def __init__(self, dsl: TyrellSpec, depth=None, length=None):
         super().__init__(dsl)

@@ -9,7 +9,7 @@ from logging import getLogger
 import z3
 
 from forest.spec import TyrellSpec
-from .enumerator import Enumerator
+from .regex_enumerator import RegexEnumerator
 from .. import dsl as D
 
 logger = getLogger('forest.enumerator.smt')
@@ -67,7 +67,7 @@ def write_lattice(node, pos):
     return string
 
 
-class LinesEnumerator(Enumerator):
+class LinesEnumerator(RegexEnumerator):
 
     def __init__(self, spec: TyrellSpec, loc=None, sym_breaker=False,
                  break_sym_online=False):

@@ -53,7 +53,7 @@ class ConditionDistinguisher:
                 compiled_re = re.compile(regex_str)
                 cap_substr = compiled_re.fullmatch(valid_ex).groups()[0]
                 c_val = c_val.rjust(len(cap_substr), '0')
-                valid_ex = valid_ex.replace(cap_substr, c_val)
+                valid_ex = valid_ex.replace(cap_substr, c_val, 1)
                 if solver.model()[sat_m1]:
                     return valid_ex, model1, model2
                 else:

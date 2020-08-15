@@ -123,5 +123,9 @@ def make_z3_and(args: List):
     return z3.And(args)
 
 
+def z3_abs(x):
+    return z3.If(x >= 0, x, -x)
+
+
 def conditions_to_str(conditions):
     return ', '.join(map(lambda c: f"${c[0]} {c[1]} {c[2]}", conditions))

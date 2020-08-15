@@ -1,7 +1,7 @@
 import z3
 
 from forest.spec import TyrellSpec
-from .enumerator import Enumerator
+from .regex_enumerator import RegexEnumerator
 from .. import dsl as D
 from ..dsl import Node
 from ..logger import get_logger
@@ -9,7 +9,7 @@ from ..logger import get_logger
 logger = get_logger('forest')
 
 
-class KTreeEnumerator(Enumerator):
+class KTreeEnumerator(RegexEnumerator):
     def __init__(self, dsl: TyrellSpec, depth):
         super().__init__(dsl)
         if depth <= 0:
