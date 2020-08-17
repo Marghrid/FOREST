@@ -120,11 +120,7 @@ class Task:
 
         end = False
         first = False
-        for l in pe:
-            print(l)
-        for l in po:
-            # print(l)
-            # if re.search("[\w+]", l) is not None and show_output:
+        for l in pe + po:
             if show_output:
                 print(" ", l)
             if not end:
