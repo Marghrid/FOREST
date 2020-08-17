@@ -13,11 +13,12 @@ logger = get_logger('forest')
 
 class RegexDecider(ExampleDecider):
 
-    def __init__(self, interpreter: Interpreter, examples: List[Example],
-                 split_valid=None):
-        super().__init__(interpreter, examples)
+    def __init__(self, interpreter: Interpreter, valid_examples: List[Example],
+                 invalid_examples: List[Example], split_valid=None):
+        super().__init__(interpreter, examples=[Example(x, True) for x in valid_examples] \
+                        + [Example(x, False) for x in invalid_examples])
         self.already_must_occur = set()
-        self.valid_exs = list(filter(lambda ex: ex.output == True, examples))
+        self.valid_exs = valid_examples
         self.split_valid = split_valid
 
         # Ensure the split examples all have the same number of substrings
@@ -138,14 +139,13 @@ class RegexDecider(ExampleDecider):
     def never_matches_examples(self, regex: str):
         """ Returns True if no example contains the given regex """
         rec = re.compile(regex)
-        return not any(map(lambda ex: rec.search(ex.input[0]) is not None,
+        return not any(map(lambda ex: rec.search(ex[0]) is not None,
                            self.valid_exs))
 
     def always_matches_examples(self, regex: str):
         """ Returns True if all examples contain the given regex """
         rec = re.compile(regex)
-        return all(map(lambda ex: rec.search(ex.input[0]) is not None,
-                       self.valid_exs))
+        return all(map(lambda ex: rec.search(ex[0]) is not None, self.valid_exs))
 
     def traverse_program(self, program, examples):
         """ Traverse eventually non-regex programs """

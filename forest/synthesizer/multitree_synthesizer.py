@@ -17,10 +17,10 @@ logger = get_logger('forest')
 
 class MultiTreeSynthesizer(MultipleSynthesizer):
 
-    def __init__(self, valid_examples, invalid_examples, captures, condition_invalid,
+    def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  main_dsl, ground_truth, pruning=True, auto_interaction=False,
                  force_dynamic=False):
-        super().__init__(valid_examples, invalid_examples, captures, condition_invalid,
+        super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
                          main_dsl, ground_truth, pruning, auto_interaction)
         self.main_dsl = main_dsl
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
@@ -37,6 +37,10 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             invalid = None
 
         if valid is not None and len(valid[0]) > 1 and not self.force_dynamic:
+            self._decider = RegexDecider(interpreter=RegexInterpreter(),
+                                         valid_examples=self.valid, invalid_examples=self.invalid,
+                                         split_valid=valid)
+
             self.valid = valid
             self.invalid = invalid
 
@@ -48,17 +52,15 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             dsls = builder.build()
 
             logger.info("Using Static Multi-tree enumerator.")
-            self._decider = RegexDecider(interpreter=RegexInterpreter(),
-                                         examples=self.examples,
-                                         split_valid=self.valid)
+
             for depth in range(3, 10):
                 self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
                 depth_start = time.time()
                 self.try_for_depth()
-                self.depth_times[depth] = time.time() - depth_start
-                if len(self.programs) > 0:
+                self.per_depth_times[depth] = time.time() - depth_start
+                if len(self.regexes) > 0:
                     self.terminate()
-                    return self.programs[0] + self.capture_conditions
+                    return self.regexes[0] + self.capture_conditions
                 elif self.die:
                     self.terminate()
                     return
@@ -66,7 +68,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
         else:
             logger.info("Using Dynamic Multi-tree enumerator.")
             self._decider = RegexDecider(interpreter=RegexInterpreter(),
-                                         examples=self.examples)
+                                         valid_examples=self.valid, invalid_examples=self.invalid)
             sizes = list(itertools.product(range(3, 10), range(1, 10)))
             sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
             for dep, leng in sizes:
@@ -74,11 +76,13 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                                                               length=leng)
                 depth_start = time.time()
                 self.try_for_depth()
-                self.depth_times[(dep, leng)] = time.time() - depth_start
+                self.per_depth_times[(dep, leng)] = time.time() - depth_start
 
-                if len(self.programs) > 0:
-                    return self.programs[0]
+                if len(self.regexes) > 0:
+                    self.terminate()
+                    return self.regexes[0] + self.capture_conditions
                 elif self.die:
+                    self.terminate()
                     return
 
         return None
@@ -114,8 +118,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
 
         if not all(map(lambda l: len(l) == len(valid[0]), valid)):
             return None, None
-        if len(invalid) > 0 and \
-                not all(map(lambda l: len(l) == len(valid[0]), invalid)):
+        if len(invalid) > 0 and not all(map(lambda l: len(l) == len(valid[0]), invalid)):
             return None, None
 
         return valid, invalid

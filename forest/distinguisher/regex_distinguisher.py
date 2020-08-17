@@ -20,8 +20,8 @@ class RegexDistinguisher:
         self.force_distinguish2 = False
 
     def distinguish(self, programs):
-        logger.info(f"Distinguishing {len(programs)}: "
-                    f"{','.join(map(self._printer.eval, programs))}")
+        logger.debug(f"Distinguishing {len(programs)}: "
+                     f"{','.join(map(self._printer.eval, programs))}")
         assert len(programs) >= 2
         if not self.force_multi_distinguish and len(programs) == 2:
             return self.distinguish2(programs[0], programs[1])

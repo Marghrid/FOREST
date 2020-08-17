@@ -19,49 +19,56 @@ class MultipleSynthesizer(ABC):
     """ Interactive synthesizer. Finds more than one program consistent with the
     examples. """
 
-    def __init__(self, valid_examples, invalid_examples, captures, condition_invalid,
+    def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  dsl: TyrellSpec, ground_truth: str, pruning=True,
                  auto_interaction=False):
 
-        self.examples = [Example(x, True) for x in valid_examples] \
-                        + [Example(x, False) for x in invalid_examples]
+
         self.valid = valid_examples
         self.invalid = invalid_examples
-        self.captures = captures
+        self.captured = captured
         self.condition_invalid = condition_invalid
         self.dsl = dsl
         self.pruning = pruning
-        if not pruning:
-            logger.warning('Synthesizing without pruning the search space.')
         self.ground_truth = ground_truth
         self.auto_interaction = auto_interaction
+
+        if not pruning:
+            logger.warning('Synthesizing without pruning the search space.')
         # If auto-interaction is enabled, the ground truth must be a valid regex.
         if self.auto_interaction:
             assert len(self.ground_truth) > 0 and is_regex(self.ground_truth)
-        self._printer = RegexInterpreter()
+
+        # Initialize components
+        self._printer = RegexInterpreter()  # Works like to_string
         self._distinguisher = RegexDistinguisher()
         self._decider = RegexDecider(interpreter=RegexInterpreter(),
-                                     examples=self.examples)
-        self._capturer = Capturer(self.valid, self.captures, self.condition_invalid)
+                                     valid_examples=self.valid+self.condition_invalid,
+                                     invalid_examples=self.invalid)
+
+        # Capturer works like a synthesizer of capturing groups
+        self._capturer = Capturer(self.valid, self.captured, self.condition_invalid)
         self._node_counter = NodeCounter()
 
         # Subclass decides which enumerator to use
         self._enumerator = None
 
+        # To store synthesized regexes and captures:
+        self.regexes = []
+        self.capture_conditions = None
+
+        # counters and timers:
         self.indistinguishable = 0
         # Number of indistinguishable programs after which the synthesizer returns.
         self.max_indistinguishable = 3
-
         self.num_enumerated = 0
         self.num_interactions = 0
-        self.programs = []
-        self.capture_conditions = None
         self.start_time = None
         self.regex_synthesis_time = 0
         self.capture_synthesis_time = 0
         self.distinguish_time = 0
         self.last_print_time = time.time()
-        self.depth_times = {}
+        self.per_depth_times = {}
 
         # Used in signal handling:
         self.die = False
@@ -76,6 +83,7 @@ class MultipleSynthesizer(ABC):
 
     @abstractmethod
     def synthesize(self):
+        """ Main synthesis procedure. Implemented in subclasses. """
         raise NotImplementedError
 
     def terminate(self):
@@ -88,18 +96,20 @@ class MultipleSynthesizer(ABC):
                     f'  Regex time: {round(self.regex_synthesis_time, 2)}\n'
                     f'  Distinguish time: {round(self.distinguish_time, 2)}\n'
                     f'  Capture time: {round(self.capture_synthesis_time, 2)}\n'
-                    f'  Time per depth: {self.depth_times}')
-        if len(self.programs) > 0:
-            regex, captures = self.programs[0]
+                    f'  Time per depth: {self.per_depth_times}')
+        if len(self.regexes) > 0:
+            regex, captures = self.regexes[0]
             conditions, conditions_captures = self.capture_conditions
-            solution_str = self._decider.interpreter.eval(regex,
-                                                          captures=conditions_captures)
-            solution_str += ', ' + conditions_to_str(conditions)
-            logger.info(
-                f'  Solution: {solution_str}\n'
-                f'  Captures: {self._decider.interpreter.eval(regex, captures=captures)}\n'
-                f'  Nodes: {self._node_counter.eval(*self.programs[0])}\n'
-                f'  Cap. groups: {len(captures)}')
+            solution_str = self._decider.interpreter.eval(regex, captures=conditions_captures)
+            if len(conditions) > 0:
+                solution_str += ', ' + conditions_to_str(conditions)
+            logger.info(f'  Solution: {solution_str}\n'
+                        f'  Nodes: {self._node_counter.eval(*self.regexes[0])}\n')
+            if len(captures) > 0:
+                logger.info(f'  Captures: {self._decider.interpreter.eval(regex, captures=captures)}\n'
+                            f'  Cap. groups: {len(captures)}')
+            else:
+                logger.info("  No capturing groups.")
         else:
             logger.info(f'  No solution.')
 
@@ -111,7 +121,7 @@ class MultipleSynthesizer(ABC):
         and interact with the user to disambiguate. """
         start_distinguish = time.time()
         dist_input, keep_if_valid, keep_if_invalid, unknown = \
-            self._distinguisher.distinguish(self.programs)
+            self._distinguisher.distinguish(self.regexes)
         if dist_input is not None:
             interaction_start_time = time.time()
             self.num_interactions += 1
@@ -133,8 +143,8 @@ class MultipleSynthesizer(ABC):
         else:  # programs are indistinguishable
             logger.info("Regexes are indistinguishable")
             self.indistinguishable += 1
-            smallest_regex = min(self.programs, key=lambda r: len(self._printer.eval(r)))
-            self.programs = [smallest_regex]
+            smallest_regex = min(self.regexes, key=lambda r: len(self._printer.eval(r)))
+            self.regexes = [smallest_regex]
 
     def enumerate(self):
         """ Request new program from the enumerator. """
@@ -165,13 +175,13 @@ class MultipleSynthesizer(ABC):
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')
                 valid_answer = True
                 self._decider.add_example([dist_input], True)
-                self.programs = keep_if_valid
+                self.regexes = keep_if_valid
                 # self.indistinguishable = 0
             elif x.lower().rstrip() in no_values:
                 logger.info(f'"{dist_input}" is {colored("invalid", "red")}.')
                 valid_answer = True
                 self._decider.add_example([dist_input], False)
-                self.programs = keep_if_invalid
+                self.regexes = keep_if_invalid
                 # self.indistinguishable = 0
             else:
                 logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
@@ -182,11 +192,11 @@ class MultipleSynthesizer(ABC):
         if match is not None:
             logger.info(f'Auto: "{dist_input}" is {colored("valid", "green")}.')
             self._decider.add_example([dist_input], True)
-            self.programs = keep_if_valid
+            self.regexes = keep_if_valid
         else:
             logger.info(f'Auto: "{dist_input}" is {colored("invalid", "red")}.')
             self._decider.add_example([dist_input], False)
-            self.programs = keep_if_invalid
+            self.regexes = keep_if_invalid
 
     def try_for_depth(self):
         while True:
@@ -195,7 +205,7 @@ class MultipleSynthesizer(ABC):
             regex_synthesis_start = time.time()
             regex = self.enumerate()
 
-            if regex is None or self.die:
+            if regex is None or self.die:  # enumerator is exhausted or user interrupted synthesizer
                 break
 
             res = self._decider.analyze(regex)
@@ -209,29 +219,34 @@ class MultipleSynthesizer(ABC):
                 logger.debug(self._printer.eval(regex))
 
                 captures_synthesis_start = time.time()
+                # synthesize captures that reflect the desired captured strings.
                 captures = self._capturer.synthesize_capturing_groups(regex)
                 self.capture_synthesis_time += time.time() - captures_synthesis_start
 
                 if captures is None:
                     logger.info("Failed to find capture groups for the given captures.")
-
-                self.programs.append((regex, captures))
-                if len(self.programs) >= 2:
-                    distinguish_start = time.time()
-                    self.distinguish()
-                    self.distinguish_time += time.time() - distinguish_start
+                    continue
 
                 # Can I synthesize conditions that remove condition_invalid
-                assert len(self.programs) == 1
-                self.capture_conditions = \
-                    self._capturer.synthesize_capture_conditions(self.programs[0][0])
+                self.capture_conditions = self._capturer.synthesize_capture_conditions(regex)
 
                 if self.capture_conditions[0] is None:
                     logger.info("Failed to find capture conditions that invalidate "
                                 "condition_invalid.")
+                    continue
+
+                self.regexes.append((regex, captures))
+
+                if len(self.regexes) >= 2:  # if there are more than 2 solutions, disambiguate.
+                    distinguish_start = time.time()
+                    self.distinguish()
+                    self.distinguish_time += time.time() - distinguish_start
+
+                assert len(self.regexes) == 1  # only one regex remains
 
                 if self.indistinguishable >= self.max_indistinguishable:
                     break
+
             elif self.pruning:
                 new_predicates = res.why()
                 if new_predicates is not None:
@@ -244,5 +259,5 @@ class MultipleSynthesizer(ABC):
                 continue
             self._enumerator.update(None)
 
-        if len(self.programs) > 0 or self.die:
+        if len(self.regexes) > 0 or self.die:
             return

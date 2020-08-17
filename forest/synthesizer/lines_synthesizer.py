@@ -8,9 +8,9 @@ logger = get_logger('forest')
 
 
 class LinesSynthesizer(MultipleSynthesizer):
-    def __init__(self, valid_examples, invalid_examples, captures, condition_invalid, dsl,
+    def __init__(self, valid_examples, invalid_examples, captured, condition_invalid, dsl,
                  ground_truth, pruning=True, auto_interaction=False):
-        super().__init__(valid_examples, invalid_examples, captures, condition_invalid,
+        super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
                          dsl, ground_truth, pruning, auto_interaction)
         self.max_depth = 6
 
@@ -22,5 +22,5 @@ class LinesSynthesizer(MultipleSynthesizer):
 
             self.try_for_depth()
 
-            if len(self.programs) > 0:
-                return self.programs[0]
+            if len(self.regexes) > 0:
+                return self.regexes[0]

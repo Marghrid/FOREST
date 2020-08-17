@@ -21,10 +21,10 @@ sketching = ('smt', 'brute-force', 'hybrid')
 
 
 class SketchSynthesizer(MultipleSynthesizer):
-    def __init__(self, valid_examples, invalid_examples, captures, condition_invalid,
+    def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  main_dsl, ground_truth, sketching_mode, pruning=False,
                  auto_interaction=False, force_dynamic=False):
-        super().__init__(valid_examples, invalid_examples, captures, condition_invalid,
+        super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
                          main_dsl, ground_truth, pruning, auto_interaction)
 
         self.valid = valid_examples
@@ -91,10 +91,10 @@ class SketchSynthesizer(MultipleSynthesizer):
                 print("good sketches", self.count_good_sketches)
                 print("\ntotal sketches", self.count_total_sketches)
                 if self.count_good_sketches > 0:
-                    return self.programs[0]
+                    return self.regexes[0]
                 self.count_good_sketches = 0
-                if len(self.programs) > 0:
-                    return self.programs[0]
+                if len(self.regexes) > 0:
+                    return self.regexes[0]
                 elif self.die:
                     return
 
@@ -117,10 +117,10 @@ class SketchSynthesizer(MultipleSynthesizer):
                 print("good sketches", self.count_good_sketches)
                 print("\ntotal sketches", self.count_total_sketches)
                 if self.count_good_sketches > 0:
-                    return self.programs[0]
+                    return self.regexes[0]
                 self.count_good_sketches = 0
-                if len(self.programs) > 0:
-                    return self.programs[0]
+                if len(self.regexes) > 0:
+                    return self.regexes[0]
                 elif self.die:
                     return
 
@@ -149,7 +149,7 @@ class SketchSynthesizer(MultipleSynthesizer):
                 logger.error("Unknown sketching method:", self.sketching_mode)
                 return
 
-            self.programs.extend(filled)
+            self.regexes.extend(filled)
 
             if len(filled) > 0:
                 self.count_good_sketches += 1
@@ -161,7 +161,7 @@ class SketchSynthesizer(MultipleSynthesizer):
                     # f'{self.num_enumerated} attempts '
                     # f'and {round(time.time() - self.start_time, 2)} seconds:')
 
-            while len(self.programs) > 1:
+            while len(self.regexes) > 1:
                 self.distinguish()
 
             sketch = self.enumerate()
@@ -188,7 +188,7 @@ class SketchSynthesizer(MultipleSynthesizer):
         print("num unk-sat calls (s):", self.count_smt_unknown_sat)
         print("num unk-unsat calls (s):", self.count_smt_unknown_unsat)
 
-        if len(self.programs) > 0 or self.die:
+        if len(self.regexes) > 0 or self.die:
             self.terminate()
 
     def fill_brute_force(self, sketch):

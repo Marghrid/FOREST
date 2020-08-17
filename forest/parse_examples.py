@@ -26,18 +26,19 @@ def parse_file(filename):
             next_line = in_file.readline()
 
         next_line = in_file.readline()  # skip line with "--"
-        while next_line and not next_line.startswith("+-"):
+        while next_line and not next_line.startswith("+-") and not next_line.startswith("**"):
             next_line = next_line.rstrip()
             exs = read_example(filename, next_line)
             invalid_exs.extend(exs)
             next_line = in_file.readline()
 
-        next_line = in_file.readline()  # skip line with "+-"
-        while next_line and not next_line.startswith("**"):
-            next_line = next_line.rstrip()
-            exs = read_example(filename, next_line)
-            condition_invalid_exs.extend(exs)
-            next_line = in_file.readline()
+        if next_line.startswith("+-"):
+            next_line = in_file.readline()  # skip line with "+-"
+            while next_line and not next_line.startswith("**"):
+                next_line = next_line.rstrip()
+                exs = read_example(filename, next_line)
+                condition_invalid_exs.extend(exs)
+                next_line = in_file.readline()
 
         while next_line:
             next_line = next_line.rstrip()

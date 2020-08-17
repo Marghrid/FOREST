@@ -121,7 +121,7 @@ class Task:
         end = False
         first = False
         for l in pe:
-            print(colored("ERROR: " + l, "red"))
+            print(l)
         for l in po:
             # print(l)
             # if re.search("[\w+]", l) is not None and show_output:
