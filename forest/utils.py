@@ -62,35 +62,8 @@ def transpose(lst):
     return list(map(list, zip(*lst)))
 
 
-def powerset(iterable, min_size=-1, max_size=-1):
-    if min_size < 0:
-        min_size = 0
-    if max_size < 0:
-        max_size = len(iterable) + 1
-    for i in range(min_size, max_size):
-        combinations(iterable, i)
-
-
 def all_sublists(iterable, min_len=-1, max_len=-1):
-    if min_len < 0:
-        min_len = 0
-    if max_len < 0:
-        max_len = len(iterable)
-
-    if min_len == 0:
-        sublist = [[]]
-        min_len = 1
-    else:
-        sublist = []
-
-    for i in range(len(iterable) + 1):
-        for j in range(i + min_len, min(i + max_len + 1, len(iterable) + 1)):
-            sublist.append(iterable[i:j])
-
-    return sublist
-
-
-def all_sublists_gen(iterable, min_len=-1, max_len=-1):
+    """ Generate all possible sublists of iterable of size min_len up to max_len. """
     if min_len < 0:
         min_len = 0
     if max_len < 0:
@@ -107,10 +80,10 @@ def all_sublists_gen(iterable, min_len=-1, max_len=-1):
 
 def all_sublists_n(iterable, n):
     if n == 1:
-        yield from map(lambda l: [l], all_sublists_gen(iterable, min_len=1))
+        yield from map(lambda l: [l], all_sublists(iterable, min_len=1))
     else:
         for split_idx in range(1, len(iterable) - (n - 2)):
-            for left in all_sublists_gen(iterable[:split_idx], min_len=1):
+            for left in all_sublists(iterable[:split_idx], min_len=1):
                 if left[-1] != iterable[split_idx - 1]:
                     continue
                 for right in all_sublists_n(iterable[split_idx:], n - 1):

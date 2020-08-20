@@ -91,10 +91,10 @@ class SketchSynthesizer(MultipleSynthesizer):
                 print("good sketches", self.count_good_sketches)
                 print("\ntotal sketches", self.count_total_sketches)
                 if self.count_good_sketches > 0:
-                    return self.regexes[0]
+                    return self.solutions[0]
                 self.count_good_sketches = 0
-                if len(self.regexes) > 0:
-                    return self.regexes[0]
+                if len(self.solutions) > 0:
+                    return self.solutions[0]
                 elif self.die:
                     return
 
@@ -117,10 +117,10 @@ class SketchSynthesizer(MultipleSynthesizer):
                 print("good sketches", self.count_good_sketches)
                 print("\ntotal sketches", self.count_total_sketches)
                 if self.count_good_sketches > 0:
-                    return self.regexes[0]
+                    return self.solutions[0]
                 self.count_good_sketches = 0
-                if len(self.regexes) > 0:
-                    return self.regexes[0]
+                if len(self.solutions) > 0:
+                    return self.solutions[0]
                 elif self.die:
                     return
 
@@ -149,7 +149,7 @@ class SketchSynthesizer(MultipleSynthesizer):
                 logger.error("Unknown sketching method:", self.sketching_mode)
                 return
 
-            self.regexes.extend(filled)
+            self.solutions.extend(filled)
 
             if len(filled) > 0:
                 self.count_good_sketches += 1
@@ -161,7 +161,7 @@ class SketchSynthesizer(MultipleSynthesizer):
                     # f'{self.num_enumerated} attempts '
                     # f'and {round(time.time() - self.start_time, 2)} seconds:')
 
-            while len(self.regexes) > 1:
+            while len(self.solutions) > 1:
                 self.distinguish()
 
             sketch = self.enumerate()
@@ -188,7 +188,7 @@ class SketchSynthesizer(MultipleSynthesizer):
         print("num unk-sat calls (s):", self.count_smt_unknown_sat)
         print("num unk-unsat calls (s):", self.count_smt_unknown_unsat)
 
-        if len(self.regexes) > 0 or self.die:
+        if len(self.solutions) > 0 or self.die:
             self.terminate()
 
     def fill_brute_force(self, sketch):

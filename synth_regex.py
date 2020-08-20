@@ -202,11 +202,12 @@ def synthesize(type_validation):
     printer = RegexInterpreter()
     program = synthesizer.synthesize()
     if program is not None:
-        regex, captures, conditions, condition_captures = program
+        regex, capturing_groups, capture_conditions = program
+        conditions, condition_captures = capture_conditions
         solution_str = printer.eval(regex, captures=condition_captures)
         solution_str += ', ' + conditions_to_str(conditions)
         print(f'\nSolution:\n  {solution_str}\n'
-              f'Captures:\n  {printer.eval(regex, captures=captures)}')
+              f'Captures:\n  {printer.eval(regex, captures=capturing_groups)}')
     else:
         print('Solution not found!')
     return program

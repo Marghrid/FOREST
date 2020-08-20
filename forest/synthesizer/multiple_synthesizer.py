@@ -1,6 +1,7 @@
 import re
 import time
 from abc import ABC, abstractmethod
+from typing import List
 
 from termcolor import colored
 
@@ -30,14 +31,21 @@ class MultipleSynthesizer(ABC):
         self.condition_invalid = condition_invalid
         self.dsl = dsl
         self.pruning = pruning
-        self.ground_truth = ground_truth
+        if ground_truth is None:
+            self.ground_truth_conditions = None
+            self.ground_truth_regex = None
+        else:
+            ground_truth = ground_truth.split(',')
+            ground_truth_conditions = list(filter(lambda s: s.lstrip().startswith("$"), ground_truth))
+            self.ground_truth_conditions = list(map(lambda s: s.lstrip(), ground_truth_conditions))
+            self.ground_truth_regex = "".join(filter(lambda s: not s.lstrip().startswith("$"), ground_truth))
         self.auto_interaction = auto_interaction
 
         if not pruning:
             logger.warning('Synthesizing without pruning the search space.')
         # If auto-interaction is enabled, the ground truth must be a valid regex.
         if self.auto_interaction:
-            assert len(self.ground_truth) > 0 and is_regex(self.ground_truth)
+            assert len(self.ground_truth_regex) > 0 and is_regex(self.ground_truth_regex)
 
         # Initialize components
         self._printer = RegexInterpreter()  # Works like to_string
@@ -47,15 +55,16 @@ class MultipleSynthesizer(ABC):
                                      invalid_examples=self.invalid)
 
         # Capturer works like a synthesizer of capturing groups
-        self._capturer = Capturer(self.valid, self.captured, self.condition_invalid)
+        self._capturer = Capturer(self.valid, self.captured, self.condition_invalid,
+                                  self.ground_truth_regex, self.ground_truth_conditions,
+                                  self.auto_interaction)
         self._node_counter = NodeCounter()
 
         # Subclass decides which enumerator to use
         self._enumerator = None
 
         # To store synthesized regexes and captures:
-        self.regexes = []
-        self.capture_conditions = None
+        self.solutions = []
 
         # counters and timers:
         self.indistinguishable = 0
@@ -65,7 +74,8 @@ class MultipleSynthesizer(ABC):
         self.num_interactions = 0
         self.start_time = None
         self.regex_synthesis_time = 0
-        self.capture_synthesis_time = 0
+        self.capturing_groups_synthesis_time = 0
+        self.capture_conditions_synthesis_time = 0
         self.distinguish_time = 0
         self.last_print_time = time.time()
         self.per_depth_times = {}
@@ -95,56 +105,61 @@ class MultipleSynthesizer(ABC):
                     f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n'
                     f'  Regex time: {round(self.regex_synthesis_time, 2)}\n'
                     f'  Distinguish time: {round(self.distinguish_time, 2)}\n'
-                    f'  Capture time: {round(self.capture_synthesis_time, 2)}\n'
+                    f'  Cap. groups time: {round(self.capturing_groups_synthesis_time, 2)}\n'
+                    f'  Cap. conditions time: {round(self.capture_conditions_synthesis_time, 2)}\n'
                     f'  Time per depth: {self.per_depth_times}')
-        if len(self.regexes) > 0:
-            regex, captures = self.regexes[0]
-            conditions, conditions_captures = self.capture_conditions
+        if len(self.solutions) > 0:
+            regex, capturing_groups, capture_conditions = self.solutions[0]
+            conditions, conditions_captures = capture_conditions
             solution_str = self._decider.interpreter.eval(regex, captures=conditions_captures)
             if len(conditions) > 0:
                 solution_str += ', ' + conditions_to_str(conditions)
             logger.info(f'  Solution: {solution_str}\n'
-                        f'  Nodes: {self._node_counter.eval(*self.regexes[0])}\n')
-            if len(captures) > 0:
-                logger.info(f'  Captures: {self._decider.interpreter.eval(regex, captures=captures)}\n'
-                            f'  Cap. groups: {len(captures)}')
+                        f'  Nodes: {self._node_counter.eval(self.solutions[0][0])}\n')
+            if len(capturing_groups) > 0:
+                logger.info(f'  Cap. groups: '
+                            f'{self._decider.interpreter.eval(regex, captures=capturing_groups)}\n'
+                            f'  Num. cap. groups: {len(capturing_groups)}')
             else:
                 logger.info("  No capturing groups.")
         else:
             logger.info(f'  No solution.')
 
-        if self.ground_truth is not None:
-            logger.info(f'  Ground truth: {self.ground_truth}')
+        if self.ground_truth_regex is not None:
+            logger.info(f'  Ground truth: {self.ground_truth_regex}, {", ".join(self.ground_truth_conditions)}')
 
     def distinguish(self):
         """ Generate a distinguishing input between programs (if there is one),
         and interact with the user to disambiguate. """
-        start_distinguish = time.time()
+        distinguish_start = time.time()
         dist_input, keep_if_valid, keep_if_invalid, unknown = \
-            self._distinguisher.distinguish(self.regexes)
+            self._distinguisher.distinguish(self.solutions)
         if dist_input is not None:
-            interaction_start_time = time.time()
+            # interaction_start_time = time.time()
             self.num_interactions += 1
             logger.info(
                 f'Distinguishing input "{dist_input}" in '
-                f'{round(time.time() - start_distinguish, 2)} seconds')
+                f'{round(time.time() - distinguish_start, 2)} seconds')
+
             for regex in unknown:
                 r0 = self._decider.interpreter.eval(regex)
                 if re.fullmatch(r0, dist_input):
                     keep_if_valid.append(regex)
                 else:
                     keep_if_invalid.append(regex)
+
             if not self.auto_interaction:
                 self.interact(dist_input, keep_if_valid, keep_if_invalid)
             else:
                 self.auto_distinguish(dist_input, keep_if_valid, keep_if_invalid)
-            self.start_time += time.time() - interaction_start_time
+            # self.start_time += time.time() - interaction_start_time
 
         else:  # programs are indistinguishable
             logger.info("Regexes are indistinguishable")
             self.indistinguishable += 1
-            smallest_regex = min(self.regexes, key=lambda r: len(self._printer.eval(r)))
-            self.regexes = [smallest_regex]
+            smallest_regex = min(self.solutions, key=lambda r: len(self._printer.eval(r)))
+            self.solutions = [smallest_regex]
+        self.distinguish_time += time.time() - distinguish_start
 
     def enumerate(self):
         """ Request new program from the enumerator. """
@@ -169,95 +184,108 @@ class MultipleSynthesizer(ABC):
         """ Interact with user to ascertain whether the distinguishing input is valid """
         valid_answer = False
         # Do not count time spent waiting for user input: add waiting time to start_time.
-        while not valid_answer:
+        while not valid_answer and not self.die:
             x = input(f'Is "{dist_input}" valid?\n')
             if x.lower().rstrip() in yes_values:
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')
                 valid_answer = True
                 self._decider.add_example([dist_input], True)
-                self.regexes = keep_if_valid
+                self.solutions = keep_if_valid
                 # self.indistinguishable = 0
             elif x.lower().rstrip() in no_values:
                 logger.info(f'"{dist_input}" is {colored("invalid", "red")}.')
                 valid_answer = True
                 self._decider.add_example([dist_input], False)
-                self.regexes = keep_if_invalid
+                self.solutions = keep_if_invalid
                 # self.indistinguishable = 0
             else:
                 logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
 
-    def auto_distinguish(self, dist_input, keep_if_valid, keep_if_invalid):
+    def auto_distinguish(self, dist_input: str, keep_if_valid: List, keep_if_invalid: List):
         """ Simulate interaction """
-        match = re.fullmatch(self.ground_truth, dist_input)
+        match = re.fullmatch(self.ground_truth_regex, dist_input)
         if match is not None:
             logger.info(f'Auto: "{dist_input}" is {colored("valid", "green")}.')
             self._decider.add_example([dist_input], True)
-            self.regexes = keep_if_valid
+            self.solutions = keep_if_valid
         else:
             logger.info(f'Auto: "{dist_input}" is {colored("invalid", "red")}.')
             self._decider.add_example([dist_input], False)
-            self.regexes = keep_if_invalid
+            self.solutions = keep_if_invalid
 
     def try_for_depth(self):
         while True:
-            new_predicates = None
-
-            regex_synthesis_start = time.time()
-            regex = self.enumerate()
+            regex = self.try_regex()
 
             if regex is None or self.die:  # enumerator is exhausted or user interrupted synthesizer
                 break
 
-            res = self._decider.analyze(regex)
-            self.regex_synthesis_time += time.time() - regex_synthesis_start
-
-            if res.is_ok():  # program satisfies I/O examples
-                logger.debug(
-                    f'Regex accepted. {self._node_counter.eval(regex, [0])} nodes. '
-                    f'{self.num_enumerated} attempts '
-                    f'and {round(time.time() - self.start_time, 2)} seconds:')
-                logger.debug(self._printer.eval(regex))
-
-                captures_synthesis_start = time.time()
-                # synthesize captures that reflect the desired captured strings.
-                captures = self._capturer.synthesize_capturing_groups(regex)
-                self.capture_synthesis_time += time.time() - captures_synthesis_start
-
-                if captures is None:
-                    logger.info("Failed to find capture groups for the given captures.")
-                    continue
-
-                # Can I synthesize conditions that remove condition_invalid
-                self.capture_conditions = self._capturer.synthesize_capture_conditions(regex)
-
-                if self.capture_conditions[0] is None:
-                    logger.info("Failed to find capture conditions that invalidate "
-                                "condition_invalid.")
-                    continue
-
-                self.regexes.append((regex, captures))
-
-                if len(self.regexes) >= 2:  # if there are more than 2 solutions, disambiguate.
-                    distinguish_start = time.time()
-                    self.distinguish()
-                    self.distinguish_time += time.time() - distinguish_start
-
-                assert len(self.regexes) == 1  # only one regex remains
-
-                if self.indistinguishable >= self.max_indistinguishable:
-                    break
-
-            elif self.pruning:
-                new_predicates = res.why()
-                if new_predicates is not None:
-                    for pred in new_predicates:
-                        pred_str = self._printer.eval(pred.args[0])
-                        if len(pred.args) > 1:
-                            pred_str = str(pred.args[1]) + " " + pred_str
-                        logger.debug(f'New predicate: {pred.name} {pred_str}')
-                self._enumerator.update(new_predicates)
+            if regex == -1:
                 continue
-            self._enumerator.update(None)
 
-        if len(self.regexes) > 0 or self.die:
-            return
+            capturing_groups = self.try_capturing_groups(regex)
+
+            if capturing_groups is None:
+                logger.info("Failed to find capture groups for the given captures.")
+                continue
+
+            capture_conditions = self.try_capture_conditions(regex)
+
+            if capture_conditions[0] is None:
+                logger.info("Failed to find capture conditions that invalidate condition_invalid.")
+                continue
+
+            self.solutions.append((regex, capturing_groups, capture_conditions))
+
+            if len(self.solutions) >= 2:  # if there are more than 2 solutions, disambiguate.
+                self.distinguish()
+                assert len(self.solutions) == 1  # only one regex remains
+
+            if self.indistinguishable >= self.max_indistinguishable:
+                break
+
+    def try_capture_conditions(self, regex):
+        cap_conditions_synthesis_start = time.time()
+        capture_conditions = self._capturer.synthesize_capture_conditions(regex)
+        self.capture_conditions_synthesis_time += time.time() - cap_conditions_synthesis_start
+        return capture_conditions
+
+    def try_capturing_groups(self, regex):
+        cap_groups_synthesis_start = time.time()
+        # synthesize captures that reflect the desired captured strings.
+        captures = self._capturer.synthesize_capturing_groups(regex)
+        self.capturing_groups_synthesis_time += time.time() - cap_groups_synthesis_start
+        return captures
+
+    def try_regex(self):
+        regex_synthesis_start = time.time()
+
+        regex = self.enumerate()
+        if regex is None:
+            return None
+
+        analysis_result = self._decider.analyze(regex)
+
+        if analysis_result.is_ok():  # program satisfies I/O examples
+            logger.info(
+                f'Regex accepted. {self._node_counter.eval(regex, [0])} nodes. '
+                f'{self.num_enumerated} attempts '
+                f'and {round(time.time() - self.start_time, 2)} seconds:')
+            logger.info(self._printer.eval(regex))
+            self.regex_synthesis_time += time.time() - regex_synthesis_start
+            self._enumerator.update()
+            return regex
+
+        elif self.pruning:
+            new_predicates = analysis_result.why()
+            if new_predicates is not None:
+                for pred in new_predicates:
+                    pred_str = self._printer.eval(pred.args[0])
+                    if len(pred.args) > 1:
+                        pred_str = str(pred.args[1]) + " " + pred_str
+                    logger.debug(f'New predicate: {pred.name} {pred_str}')
+        else:
+            new_predicates = None
+        self._enumerator.update(new_predicates)
+        self.regex_synthesis_time += time.time() - regex_synthesis_start
+        return -1

@@ -22,5 +22,5 @@ class LinesSynthesizer(MultipleSynthesizer):
 
             self.try_for_depth()
 
-            if len(self.regexes) > 0:
-                return self.regexes[0]
+            if len(self.solutions) > 0:
+                return self.solutions[0]

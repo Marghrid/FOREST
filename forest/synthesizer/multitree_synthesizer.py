@@ -58,9 +58,9 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                 depth_start = time.time()
                 self.try_for_depth()
                 self.per_depth_times[depth] = time.time() - depth_start
-                if len(self.regexes) > 0:
+                if len(self.solutions) > 0:
                     self.terminate()
-                    return self.regexes[0] + self.capture_conditions
+                    return self.solutions[0]
                 elif self.die:
                     self.terminate()
                     return
@@ -78,9 +78,9 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                 self.try_for_depth()
                 self.per_depth_times[(dep, leng)] = time.time() - depth_start
 
-                if len(self.regexes) > 0:
+                if len(self.solutions) > 0:
                     self.terminate()
-                    return self.regexes[0] + self.capture_conditions
+                    return self.solutions[0]
                 elif self.die:
                     self.terminate()
                     return
