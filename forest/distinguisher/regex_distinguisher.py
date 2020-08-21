@@ -1,4 +1,5 @@
 import random
+import re
 import time
 from itertools import combinations
 
@@ -6,6 +7,7 @@ import z3
 
 from forest.logger import get_logger
 from forest.visitor import ToZ3, RegexInterpreter
+from forest.utils import check_conditions
 
 logger = get_logger('forest')
 
@@ -58,10 +60,37 @@ class RegexDistinguisher:
         solver.add(ro_1 != ro_2)
 
         if solver.check() == z3.sat:
+            if len(r1[2][0]) == 0 and len(r2[2][0]) == 0:
+                dist_input = solver.model()[dist].as_string()
+                if solver.model()[ro_1]:
+                    return dist_input, [r1], [r2], []
+                else:
+                    return dist_input, [r2], [r1], []
+
+            #Find dist_input that respects conditions
+            r1_str = self._printer.eval(r1[0], captures=r1[2][1])
+            r1_conditions = list(map(lambda c: " ".join(map(str, c)), r1[2][0]))
+            r2_str = self._printer.eval(r2[0], captures=r2[2][1])
+            r2_conditions = list(map(lambda c: " ".join(map(str, c)), r2[2][0]))
+
+            while True:
+                dist_input = solver.model()[dist].as_string()
+
+                match = re.fullmatch(r1_str, dist_input)
+                if match is not None and check_conditions(r1_conditions, match):
+                    break
+
+                match = re.fullmatch(r2_str, dist_input)
+                if match is not None and check_conditions(r2_conditions, match):
+                    break
+
+                solver.add(dist != z3.StringVal(dist_input))
+                assert solver.check() == z3.sat, "WRONG!"
+
             if solver.model()[ro_1]:
-                return str(solver.model()[dist]).strip('"'), [r1], [r2], []
+                return dist_input, [r1], [r2], []
             else:
-                return str(solver.model()[dist]).strip('"'), [r2], [r1], []
+                return dist_input, [r2], [r1], []
         else:
             return None, None, None, None
 
