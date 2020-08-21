@@ -34,6 +34,7 @@ class CaptureConditionsEnumerator:
             self.solver.add_soft(z3.Not(u))
 
     def next(self) -> Optional[List[tuple]]:
+        # This was an attempt to simulate binary search, but it failed:
         # for c in range(self.num_captures):
         #     avg_max = (self.max_cap_valid[c] + self.max_cap_cond_invalid[c])//2
         #     print(f"avg max ${c}", avg_max)
@@ -143,17 +144,18 @@ class CaptureConditionsEnumerator:
             else make_z3_and(list(map(z3.Not, self.as_invalid.values())))
 
     def add_valid(self, new_valid: str):
+        """ Add a new valid example to Capturer. """
         self.as_valid[new_valid] = z3.Bool(self._get_a_var_name(new_valid, valid=True))
         for cap_idx in range(self.num_captures):
             self.ss_valid[(cap_idx, new_valid)] = z3.Bool(self._get_s_var_name(cap_idx, new_valid, True))
         self.solver.add(self._make_a_constraints([new_valid], valid=True))
 
-        cap = list(map(int, self.compiled_re.fullmatch(new_valid).groups()))
-        for i in range(len(cap)):
-            if cap[i] > self.max_cap_valid[i]:
-                self.max_cap_valid[i] = cap[i]
-            if cap[i] < self.min_cap_valid[i]:
-                self.min_cap_valid[i] = cap[i]
+        new_captures = list(map(int, self.compiled_re.fullmatch(new_valid).groups()))
+        for i in range(len(new_captures)):
+            if new_captures[i] > self.max_cap_valid[i]:
+                self.max_cap_valid[i] = new_captures[i]
+            if new_captures[i] < self.min_cap_valid[i]:
+                self.min_cap_valid[i] = new_captures[i]
 
     def add_conditional_invalid(self, new_cond_invalid: str):
         self.as_invalid[new_cond_invalid] = z3.Bool(self._get_a_var_name(new_cond_invalid, valid=False))

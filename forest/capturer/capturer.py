@@ -7,8 +7,8 @@ from forest.distinguisher import ConditionDistinguisher
 from forest.dsl import Node
 from forest.enumerator.capture_conditions import CaptureConditionsEnumerator
 from forest.logger import get_logger
-from forest.utils import all_sublists_n, is_float, is_int, yes_values, \
-    no_values, condition_operators
+from forest.utils import all_sublists_n, is_int, yes_values, \
+    no_values, check_conditions
 from forest.visitor import RegexInterpreter
 
 logger = get_logger('forest')
@@ -63,7 +63,11 @@ class Capturer:
         if not all(map(lambda ex: compiled_re.fullmatch(ex[0]), self.valid)):
             raise ValueError("Regex doesn't match all valid examples")
         if not all(map(lambda s: compiled_re.fullmatch(s[0]), self.condition_invalid)):
-            raise ValueError("Regex doesn't match all condition invalid examples")
+            logger.info("Regex doesn't match all condition invalid examples. Removing.")
+            self.condition_invalid = list(filter(lambda s: compiled_re.fullmatch(s[0]), self.condition_invalid))
+            logger.info("No condition invalid examples left. No capture conditions needed.")
+            if len(self.condition_invalid) == 0:
+                return [], []
 
         for n in range(1, len(nodes)):
             for sub in all_sublists_n(nodes, n):
@@ -72,7 +76,7 @@ class Capturer:
                 if not all(map(lambda ex: compiled_re.fullmatch(ex[0]) is not None,
                                self.valid)):
                     continue
-                if not all(map(lambda ex: all(map(lambda g: is_int(g) or is_float(g),
+                if not all(map(lambda ex: all(map(lambda g: is_int(g), # or is_float(g),
                                         compiled_re.fullmatch(ex[0]).groups())), self.valid)):
                     continue
                 condition = self._synthesize_conditions_for_captures(regex, sub)
@@ -126,7 +130,7 @@ class Capturer:
     def _auto_distinguish(self, dist_input: str, keep_if_valid: List, keep_if_invalid: List):
         """ Simulate interaction """
         match = re.fullmatch(self.ground_truth_regex, dist_input)
-        if match is not None and self._check_conditions(match):
+        if match is not None and check_conditions(self.ground_truth_conditions, match):
             logger.info(f'Auto: "{dist_input}" is {colored("valid", "green")}.')
             self.valid.append([dist_input])
             self._cc_enumerator.add_valid(dist_input)
@@ -137,16 +141,3 @@ class Capturer:
         self._cc_enumerator.add_conditional_invalid(dist_input)
         return [keep_if_invalid]
 
-    def _check_conditions(self, match):
-        max_group_index = max(map(lambda c: int(c.split(" ")[0].replace("$", "", 1)), self.ground_truth_conditions))
-        if len(match.groups()) < max_group_index+1:
-            return False
-        for condition in self.ground_truth_conditions:
-            condition = condition.split(" ")
-            group_idx = int(condition[0].replace("$", "", 1))
-            operator = condition_operators[condition[1]]
-            value = int(condition[2])
-            string_value = int(match.groups()[group_idx])
-            if not operator(string_value, value):
-                return False
-        return True

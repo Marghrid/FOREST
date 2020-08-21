@@ -102,3 +102,21 @@ def z3_abs(x):
 
 def conditions_to_str(conditions):
     return ', '.join(map(lambda c: f"${c[0]} {c[1]} {c[2]}", conditions))
+
+
+def check_conditions(conditions, match):
+    max_group_index = max(map(lambda c: int(c.split(" ")[0].replace("$", "", 1)), conditions))
+    if len(match.groups()) < max_group_index + 1:
+        return False
+    for condition in conditions:
+        condition = condition.split(" ")
+        group_idx = int(condition[0].replace("$", "", 1))
+        op = condition_operators[condition[1]]
+        value = int(condition[2])
+        try:
+            string_value = int(match.groups()[group_idx])
+        except ValueError: # The text in the regex is not a valid integer
+            return True
+        if not op(string_value, value):
+            return False
+    return True
