@@ -6,14 +6,16 @@ from typing import List
 from termcolor import colored
 
 from forest.spec import TyrellSpec
-from ..capturer import Capturer
-from ..decider import RegexDecider, Example
-from ..distinguisher import RegexDistinguisher
-from ..logger import get_logger
-from ..utils import nice_time, is_regex, yes_values, no_values, conditions_to_str
-from ..visitor import RegexInterpreter, NodeCounter
+from forest.statistics import Statistics
+from forest.capturer import Capturer
+from forest.decider import RegexDecider, Example
+from forest.distinguisher import RegexDistinguisher
+from forest.logger import get_logger
+from forest.utils import nice_time, is_regex, yes_values, no_values, conditions_to_str
+from forest.visitor import RegexInterpreter, NodeCounter
 
 logger = get_logger('forest')
+stats = Statistics.get_statistics()
 
 
 class MultipleSynthesizer(ABC):
@@ -23,7 +25,6 @@ class MultipleSynthesizer(ABC):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  dsl: TyrellSpec, ground_truth: str, pruning=True,
                  auto_interaction=False):
-
 
         self.valid = valid_examples
         self.invalid = invalid_examples
@@ -36,9 +37,11 @@ class MultipleSynthesizer(ABC):
             self.ground_truth_regex = None
         else:
             ground_truth = ground_truth.split(',')
-            ground_truth_conditions = list(filter(lambda s: s.lstrip().startswith("$"), ground_truth))
+            ground_truth_conditions = list(
+                filter(lambda s: s.lstrip().startswith("$"), ground_truth))
             self.ground_truth_conditions = list(map(lambda s: s.lstrip(), ground_truth_conditions))
-            self.ground_truth_regex = "".join(filter(lambda s: not s.lstrip().startswith("$"), ground_truth))
+            self.ground_truth_regex = "".join(
+                filter(lambda s: not s.lstrip().startswith("$"), ground_truth))
         self.auto_interaction = auto_interaction
 
         if not pruning:
@@ -51,7 +54,7 @@ class MultipleSynthesizer(ABC):
         self._printer = RegexInterpreter()  # Works like to_string
         self._distinguisher = RegexDistinguisher()
         self._decider = RegexDecider(interpreter=RegexInterpreter(),
-                                     valid_examples=self.valid+self.condition_invalid,
+                                     valid_examples=self.valid + self.condition_invalid,
                                      invalid_examples=self.invalid)
 
         # Capturer works like a synthesizer of capturing groups
@@ -70,15 +73,8 @@ class MultipleSynthesizer(ABC):
         self.indistinguishable = 0
         # Number of indistinguishable programs after which the synthesizer returns.
         self.max_indistinguishable = 3
-        self.num_enumerated = 0
-        self.num_interactions = 0
         self.start_time = None
-        self.regex_synthesis_time = 0
-        self.capturing_groups_synthesis_time = 0
-        self.capture_conditions_synthesis_time = 0
-        self.distinguish_time = 0
         self.last_print_time = time.time()
-        self.per_depth_times = {}
 
         # Used in signal handling:
         self.die = False
@@ -97,24 +93,18 @@ class MultipleSynthesizer(ABC):
         raise NotImplementedError
 
     def terminate(self):
+        stats.total_synthesis_time = round(time.time() - self.start_time, 2)
         logger.info(f'Synthesizer done.\n'
                     f'  Enumerator: {self._enumerator}'
-                    f'{" (no pruning)" if not self.pruning else ""}\n'
-                    f'  Enumerated: {self.num_enumerated}\n'
-                    f'  Interactions: {self.num_interactions}\n'
-                    f'  Elapsed time: {round(time.time() - self.start_time, 2)}\n'
-                    f'  Regex time: {round(self.regex_synthesis_time, 2)}\n'
-                    f'  Distinguish time: {round(self.distinguish_time, 2)}\n'
-                    f'  Cap. groups time: {round(self.capturing_groups_synthesis_time, 2)}\n'
-                    f'  Cap. conditions time: {round(self.capture_conditions_synthesis_time, 2)}\n'
-                    f'  Time per depth: {self.per_depth_times}')
+                    f'{" (no pruning)" if not self.pruning else ""}')
+        logger.info(stats)
         if len(self.solutions) > 0:
             regex, capturing_groups, capture_conditions = self.solutions[0]
             conditions, conditions_captures = capture_conditions
             solution_str = self._decider.interpreter.eval(regex, captures=conditions_captures)
             if len(conditions) > 0:
                 solution_str += ', ' + conditions_to_str(conditions)
-            logger.info(f'  Solution: {solution_str}\n'
+            logger.info(f'Solution: {solution_str}\n'
                         f'  Nodes: {self._node_counter.eval(self.solutions[0][0])}\n')
             if len(capturing_groups) > 0:
                 logger.info(f'  Cap. groups: '
@@ -126,7 +116,8 @@ class MultipleSynthesizer(ABC):
             logger.info(f'  No solution.')
 
         if self.ground_truth_regex is not None:
-            logger.info(f'  Ground truth: {self.ground_truth_regex}, {", ".join(self.ground_truth_conditions)}')
+            logger.info(
+                f'  Ground truth: {self.ground_truth_regex}, {", ".join(self.ground_truth_conditions)}')
 
     def distinguish(self):
         """ Generate a distinguishing input between programs (if there is one),
@@ -136,7 +127,7 @@ class MultipleSynthesizer(ABC):
             self._distinguisher.distinguish(self.solutions)
         if dist_input is not None:
             # interaction_start_time = time.time()
-            self.num_interactions += 1
+            stats.regex_interactions += 1
             logger.info(
                 f'Distinguishing input "{dist_input}" in '
                 f'{round(time.time() - distinguish_start, 2)} seconds')
@@ -159,11 +150,12 @@ class MultipleSynthesizer(ABC):
             self.indistinguishable += 1
             smallest_regex = min(self.solutions, key=lambda r: len(self._printer.eval(r)))
             self.solutions = [smallest_regex]
-        self.distinguish_time += time.time() - distinguish_start
+        stats.regex_distinguishing_time += time.time() - distinguish_start
+        stats.regex_synthesis_time += time.time() - distinguish_start
 
     def enumerate(self):
         """ Request new program from the enumerator. """
-        self.num_enumerated += 1
+        stats.enumerated_regexes += 1
         program = self._enumerator.next()
         if program is None:  # enumerator is exhausted
             return
@@ -172,9 +164,9 @@ class MultipleSynthesizer(ABC):
         else:
             logger.debug(f'Enumerator generated: {program}')
 
-        if self.num_enumerated > 0 and time.time() - self.last_print_time > 30:
+        if stats.enumerated_regexes > 0 and time.time() - self.last_print_time > 30:
             logger.info(
-                f'Enumerated {self.num_enumerated} regexes in '
+                f'Enumerated {stats.enumerated_regexes} regexes in '
                 f'{nice_time(time.time() - self.start_time)}.')
             self.last_print_time = time.time()
 
@@ -247,14 +239,14 @@ class MultipleSynthesizer(ABC):
     def try_capture_conditions(self, regex):
         cap_conditions_synthesis_start = time.time()
         capture_conditions = self._capturer.synthesize_capture_conditions(regex)
-        self.capture_conditions_synthesis_time += time.time() - cap_conditions_synthesis_start
+        stats.cap_conditions_synthesis_time += time.time() - cap_conditions_synthesis_start
         return capture_conditions
 
     def try_capturing_groups(self, regex):
         cap_groups_synthesis_start = time.time()
         # synthesize captures that reflect the desired captured strings.
         captures = self._capturer.synthesize_capturing_groups(regex)
-        self.capturing_groups_synthesis_time += time.time() - cap_groups_synthesis_start
+        stats.cap_groups_synthesis_time += time.time() - cap_groups_synthesis_start
         return captures
 
     def try_regex(self):
@@ -269,11 +261,13 @@ class MultipleSynthesizer(ABC):
         if analysis_result.is_ok():  # program satisfies I/O examples
             logger.info(
                 f'Regex accepted. {self._node_counter.eval(regex, [0])} nodes. '
-                f'{self.num_enumerated} attempts '
+                f'{stats.enumerated_regexes} attempts '
                 f'and {round(time.time() - self.start_time, 2)} seconds:')
             logger.info(self._printer.eval(regex))
-            self.regex_synthesis_time += time.time() - regex_synthesis_start
             self._enumerator.update()
+            stats.regex_synthesis_time += time.time() - regex_synthesis_start
+            if len(self.solutions) == 0:
+                stats.first_regex_time = time.time() - self.start_time
             return regex
 
         elif self.pruning:
@@ -287,5 +281,5 @@ class MultipleSynthesizer(ABC):
         else:
             new_predicates = None
         self._enumerator.update(new_predicates)
-        self.regex_synthesis_time += time.time() - regex_synthesis_start
+        stats.regex_synthesis_time += time.time() - regex_synthesis_start
         return -1

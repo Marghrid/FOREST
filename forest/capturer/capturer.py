@@ -1,4 +1,5 @@
 import re
+import time
 from typing import List, Optional
 
 from termcolor import colored
@@ -7,11 +8,12 @@ from forest.distinguisher import ConditionDistinguisher
 from forest.dsl import Node
 from forest.enumerator.capture_conditions import CaptureConditionsEnumerator
 from forest.logger import get_logger
-from forest.utils import all_sublists_n, is_int, yes_values, \
-    no_values, check_conditions
+from forest.utils import all_sublists_n, is_int, yes_values, no_values, check_conditions
 from forest.visitor import RegexInterpreter
+from forest.statistics import Statistics
 
 logger = get_logger('forest')
+stats = Statistics.get_statistics()
 
 
 def elementwise_eq(arg1, arg2):
@@ -42,6 +44,7 @@ class Capturer:
         nodes = regex.get_leaves()
         # try placing a capture group in each node
         for sub in all_sublists_n(nodes, len(self.captures[0])):
+            stats.enumerated_cap_groups += 1
             regex_str = self.interpreter.eval(regex, captures=sub)
             compiled_re = re.compile(regex_str)
             if not all(
@@ -64,13 +67,15 @@ class Capturer:
             raise ValueError("Regex doesn't match all valid examples")
         if not all(map(lambda s: compiled_re.fullmatch(s[0]), self.condition_invalid)):
             logger.info("Regex doesn't match all condition invalid examples. Removing.")
-            self.condition_invalid = list(filter(lambda s: compiled_re.fullmatch(s[0]), self.condition_invalid))
-            logger.info("No condition invalid examples left. No capture conditions needed.")
+            self.condition_invalid = list(filter(lambda s: compiled_re.fullmatch(s[0]),
+                                                 self.condition_invalid))
             if len(self.condition_invalid) == 0:
+                logger.info("No condition invalid examples left. No capture conditions needed.")
                 return [], []
 
         for n in range(1, len(nodes)):
             for sub in all_sublists_n(nodes, n):
+                stats.enumerated_cap_conditions += 1
                 regex_str = self.interpreter.eval(regex, captures=sub)
                 compiled_re = re.compile(regex_str)
                 if not all(map(lambda ex: compiled_re.fullmatch(ex[0]) is not None,
@@ -97,8 +102,11 @@ class Capturer:
                 self._cc_enumerator.update()
                 conditions.append(new_condition)
                 if len(conditions) > 1:
+                    start_distinguish_time = time.time()
                     dist_input, keep_if_valid, keep_if_invalid = \
                         condition_distinguisher.distinguish(conditions[0], conditions[1])
+                    stats.cap_conditions_distinguishing_time += time.time() - start_distinguish_time
+                    stats.cap_conditions_interactions += 1
                     if not self.auto_interact:
                         conditions = self._interact(dist_input, keep_if_valid, keep_if_invalid)
                     else:

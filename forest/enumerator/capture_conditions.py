@@ -164,12 +164,12 @@ class CaptureConditionsEnumerator:
                 self._get_s_var_name(cap_idx, new_cond_invalid, False))
         self.solver.add(self._make_a_constraints([new_cond_invalid], valid=False))
 
-        cap = list(map(int, self.compiled_re.fullmatch(new_cond_invalid).groups()))
-        for i in range(len(cap)):
-            if cap[i] > self.max_cap_cond_invalid[i]:
-                self.max_cap_cond_invalid[i] = cap[i]
-            if cap[i] < self.min_cap_cond_invalid[i]:
-                self.min_cap_cond_invalid[i] = cap[i]
+        new_captures = list(map(int, self.compiled_re.fullmatch(new_cond_invalid).groups()))
+        for i in range(len(new_captures)):
+            if new_captures[i] > self.max_cap_cond_invalid[i]:
+                self.max_cap_cond_invalid[i] = new_captures[i]
+            if new_captures[i] < self.min_cap_cond_invalid[i]:
+                self.min_cap_cond_invalid[i] = new_captures[i]
 
     def _init_max_min(self, valid, condition_invalid):
         captured_valid = transpose(map(lambda ex: map(int, self.compiled_re.fullmatch(ex).groups()), valid))

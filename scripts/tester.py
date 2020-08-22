@@ -45,26 +45,39 @@ class Task:
     def __init__(self, command, instance, timeout):
         self.command = command
         self.instance = instance
+        self.process = None
+
+        self.enumerator = "En"
         self.timeout = timeout
         self.timed_out = False
-        self.process = None
         self.start_time = 0
-        self.time = -1
-        self.first_time = -1
-        self.enumerator = 'Enumerator'
-        self.enumerated = -1
-        self.interactions = -1
         self.nodes = -1
-        self.solution = 'Solution'
-        self.ground_truth = 'Ground truth'
-        self.total_time_sat = -1
-        self.avg_time_sat = -1
-        self.num_sat = -1
-        self.total_time_unsat = -1
-        self.avg_time_unsat = -1
-        self.num_unsat = -1
-        self.num_unk_sat = -1
-        self.num_unk_unsat = -1
+        self.solution = 'Sol'
+        self.cap_groups = 'CG'
+        self.num_cap_groups = -1
+        self.ground_truth = 'GT'
+
+        # timers:
+        self.total_synthesis_time = -1
+        self.per_depth_times = {}
+
+        self.regex_synthesis_time = -1
+        self.cap_groups_synthesis_time = -1
+        self.cap_conditions_synthesis_time = -1
+
+        self.first_regex_time= -1
+
+        self.regex_distinguishing_time = -1
+        self.cap_conditions_distinguishing_time = -1
+
+        # enumerated
+        self.enumerated_regexes = -1
+        self.enumerated_cap_groups = -1
+        self.enumerated_cap_conditions = -1
+
+        # interactions
+        self.regex_interactions = -1
+        self.cap_conditions_interactions = -1
 
         enc_idx = self.command.index('-e')
         self.encoding = self.command[enc_idx + 1]
@@ -118,74 +131,140 @@ class Task:
             print(colored(f"RETURN CODE {self.instance}: "
                           f"{self.process.returncode}", "red"))
 
-        end = False
-        first = False
+        final_print = False
+        regex_synthesis = False
+        cap_groups_synthesis = False
+        cap_conditions_synthesis = False
+        solution_print = False
         for l in pe + po:
             if show_output:
                 print(" ", l)
-            if not end:
-                if "total time sat calls (s)" in l:
-                    self.total_time_sat = float(
-                        l.replace("total time sat calls (s): ", ""))
-                elif "num sat calls (s)" in l:
-                    self.num_sat = int(l.replace("num sat calls (s): ", ""))
-                elif "avg time sat calls (s)" in l:
-                    self.avg_time_sat = float(
-                        l.replace("avg time sat calls (s): ", ""))
-                elif "total time unsat calls" in l:
-                    self.total_time_unsat = float(
-                        l.replace("total time unsat calls (s): ", ""))
-                elif "num unsat calls" in l:
-                    self.num_unsat = int(l.replace("num unsat calls (s): ", ""))
-                elif "avg time unsat calls" in l:
-                    self.avg_time_unsat = float(
-                        l.replace("avg time unsat calls (s): ", ""))
-                elif "num unk-sat calls" in l:
-                    self.num_unk_sat = int(l.replace("num unk-sat calls (s): ", ""))
-                elif "num unk-unsat calls" in l:
-                    self.num_unk_unsat = int(l.replace("num unk-unsat calls (s): ", ""))
-                if "Synthesizer done" in l:
-                    end = True
-                if "Program accepted" in l and not first:
-                    m = re.search(r"Program accepted.*and (\d+\.\d+) seconds", l)
-                    if m is not None:
-                        self.first_time = float(m.groups()[0])
-                    else:
-                        print("Something went wrong")
-                    first = True
+            if "Synthesizer done" in l:
+                final_print = True
+                continue
+            elif "Regex synthesis" in l:
+                final_print = False
+                regex_synthesis = True
+                continue
+            elif "Capturing groups synthesis" in l:
+                regex_synthesis = False
+                cap_groups_synthesis = True
+                continue
+            elif "Capturing conditions synthesis" in l:
+                cap_groups_synthesis = False
+                cap_conditions_synthesis = True
+                continue
+            elif "Solution" in l:
+                cap_conditions_synthesis = False
+                solution_print = True
+                # do not continue. This line still has information.
 
-            else:
-                if "Elapsed time" in l:
-                    regex = r"Elapsed time: (\d+\.\d+)"
-                    m = re.search(regex, l)
-                    if m is not None:
-                        self.time = float(m[1])
+            if final_print:
                 if "Enumerator" in l:
-                    regex = r"Enumerator: (.+)"
+                    regex = "Enumerator: (.+)"
                     m = re.search(regex, l)
                     if m is not None:
                         self.enumerator = m[1]
-                if "Enumerated" in l:
+                elif "Elapsed time" in l:
+                    regex = r"Elapsed time: (\d+\.\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.total_synthesis_time = float(m[1])
+                elif "Time per depth" in l:
+                    regex = "Time per depth: (.+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.per_depth_times = m[1]
+
+            elif regex_synthesis:
+                if "Regex time" in l:
+                    regex = r"Regex time: (\d+\.\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.regex_time = float(m[1])
+                elif "First regex time" in l:
+                    regex = r"First regex time: (\d+\.\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.first_regex_time = float(m[1])
+                elif "Enumerated" in l:
                     regex = r"Enumerated: (\d+)"
                     m = re.search(regex, l)
                     if m is not None:
-                        self.enumerated = int(m[1])
-                if "Interactions" in l:
+                        self.enumerated_regexes = int(m[1])
+                elif "Interactions" in l:
                     regex = r"Interactions: (\d+)"
                     m = re.search(regex, l)
                     if m is not None:
-                        self.interactions = int(m[1])
-                if "Nodes" in l:
+                        self.regex_interactions = int(m[1])
+                elif "Distinguish time" in l:
+                    regex = r"Distinguish time: (\d+\.\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.regex_distinguishing_time = float(m[1])
+
+            elif cap_groups_synthesis:
+                if "Cap. groups time" in l:
+                    regex = r"Cap. groups time: (\d+\.\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.cap_groups_synthesis_time = float(m[1])
+                elif "Enumerated" in l:
+                    regex = r"Enumerated: (\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.enumerated_cap_groups = int(m[1])
+
+            elif cap_conditions_synthesis:
+                if "Cap. conditions time" in l:
+                    regex = r"Cap. conditions time: (\d+\.\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.cap_conditions_synthesis_time = float(m[1])
+                elif "Enumerated" in l:
+                    regex = r"Enumerated: (\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.enumerated_cap_conditions = int(m[1])
+                elif "Interactions" in l:
+                    regex = r"Interactions: (\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.cap_conditions_interactions = int(m[1])
+                elif "Distinguish time" in l:
+                    regex = r"Distinguish time: (\d+\.\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.cap_conditions_distinguishing_time = float(m[1])
+
+            elif solution_print:
+                if "Solution" in l:
+                    regex = r"Solution: (.+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.solution = m[1]
+                elif "Nodes" in l:
                     regex = r"Nodes: (\d+)"
                     m = re.search(regex, l)
                     if m is not None:
                         self.nodes = int(m[1])
-                if "[info]   Solution: " in l:
-                    self.solution = l.replace("[info]   Solution: ", "", 1)
-                if "No solution" in l:
-                    self.solution = "No solution"
-                if "Ground truth:" in l:
-                    self.ground_truth = l.replace("[info]   Ground truth: ", "", 1)
+                elif "No capturing groups" in l:
+                    self.cap_groups = None
+                elif "Cap. groups" in l:
+                    regex = r"Cap\. groups: (.+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.cap_groups = m[1]
+                elif "Num. cap. groups" in l:
+                    regex = r"Num\. cap\. groups: (\d+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.num_cap_groups = m[1]
+                elif "Ground truth" in l:
+                    regex = r"Ground truth: (.+)"
+                    m = re.search(regex, l)
+                    if m is not None:
+                        self.ground_truth = m[1]
 
 
 class Tester:
@@ -236,7 +315,7 @@ class Tester:
         print(colored(f"Found {len(self.instances)} instances.", "magenta"))
 
         if 0 < solve_only < len(self.instances):
-            random.seed("regex")
+            random.seed("regex" + str(solve_only))
             self.instances = random.sample(self.instances, solve_only)
             print(colored(f"Selected {len(self.instances)} instances.", "magenta"))
 
@@ -304,34 +383,38 @@ class Tester:
 
     def print_results(self):
         """ Print execution information for each instance (sorted by name) """
-        maxl = max(map(lambda i: len(i.name), self.instances)) + 2
-        max_enumerators_length = max(map(lambda t: len(t.enumerator), self.tasks)) + 2
-        max_enumerated_length = max(map(lambda t: len(str(t.enumerated)), self.tasks)) + 2
+        # maxl = max(map(lambda i: len(i.name), self.instances)) + 2
+        # max_enumerators_length = max(map(lambda t: len(t.enumerator), self.tasks)) + 2
+        # max_enumerated_length = max(map(lambda t: len(str(t.enumerated)), self.tasks)) + 2
         now = datetime.datetime.now()
         print(
             f"\n =====  RESULTS on {socket.gethostname()}, "
             f"{now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
         print(
-            "instance, time, first-time, avg-sat-time, avg-unsat-time, num-sat, "
-            "num-unsat, num-unk-sat, num-unk-unsat, interactions, enumerator, enumerated, "
-            "timed-out, nodes, solution, ground-truth")
+            "instance, total time, regex time, first regex time, enumerated regexes, "
+            "regex interactions, regex distinguish time, cap groups time, enumerated cap groups, "
+            "cap conditions time, enumerated cap conditions, cap cond interactions, "
+            "cap cond distinguish time, solution, cap groups")
+
         for task in self.tasks:
-            print(f"{task.instance},".ljust(maxl),
-                  f"{round(task.time, 2)},".ljust(10),
-                  f"{round(task.first_time, 2)},".ljust(10),
-                  f"{round(task.avg_time_sat, 2)},".ljust(10),
-                  f"{round(task.avg_time_unsat, 2)},".ljust(10),
-                  f"{task.num_sat},".ljust(5),
-                  f"{task.num_unsat},".ljust(5),
-                  f"{task.num_unk_sat},".ljust(5),
-                  f"{task.num_unk_unsat},".ljust(5),
-                  f"{task.interactions},".ljust(3),
-                  f"{task.enumerator},".ljust(max_enumerators_length),
-                  f"{task.enumerated},".ljust(max_enumerated_length),
-                  f"{int(task.timed_out)},",
-                  f"{task.nodes},".ljust(3),
-                  f'"{task.solution}",',
-                  f'"{task.ground_truth}"')
+            print(
+                f'{task.instance}, '
+                f'{task.total_synthesis_time}, '
+                f'{task.regex_synthesis_time}, '
+                f'{task.first_regex_time}, '
+                f'{task.enumerated_regexes}, '
+                f'{task.regex_interactions}, '
+                f'{task.regex_distinguishing_time}, '
+                f'{task.cap_groups_synthesis_time}, '
+                f'{task.enumerated_cap_groups}, '
+                f'{task.cap_conditions_synthesis_time}, '
+                f'{task.enumerated_cap_conditions}, '
+                f'{task.cap_conditions_interactions}, '
+                f'{task.cap_conditions_distinguishing_time}, '
+                f'{task.cap_conditions_distinguishing_time}, '
+                f'{task.cap_conditions_distinguishing_time}, '
+                f'{task.solution}, {task.cap_groups}'
+            )
 
     def print_time_comparison(self):
         maxl = max(map(lambda i: len(i.name), self.instances)) + 2

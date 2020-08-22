@@ -5,3 +5,4 @@ from . import generic_visitor
 from . import logger
 from . import synthesizer
 from . import visitor
+from . import statistics

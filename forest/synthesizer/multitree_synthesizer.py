@@ -3,17 +3,17 @@ import re
 import time
 from copy import deepcopy
 
-from forest.dsl.common_substrings import find_all_cs
 from forest.dsl.dsl_builder import DSLBuilder
+from forest.statistics import Statistics
 from .multiple_synthesizer import MultipleSynthesizer
-from ..decider import RegexDecider
-from ..enumerator import StaticMultiTreeEnumerator, DynamicMultiTreeEnumerator
-from ..logger import get_logger
-from ..utils import transpose
-from ..visitor import RegexInterpreter
+from forest.decider import RegexDecider
+from forest.enumerator import StaticMultiTreeEnumerator, DynamicMultiTreeEnumerator
+from forest.logger import get_logger
+from forest.utils import transpose, find_all_cs
+from forest.visitor import RegexInterpreter
 
 logger = get_logger('forest')
-
+stats = Statistics.get_statistics()
 
 class MultiTreeSynthesizer(MultipleSynthesizer):
 
@@ -57,7 +57,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                 self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
                 depth_start = time.time()
                 self.try_for_depth()
-                self.per_depth_times[depth] = time.time() - depth_start
+                stats.per_depth_times[depth] = time.time() - depth_start
                 if len(self.solutions) > 0:
                     self.terminate()
                     return self.solutions[0]
@@ -76,7 +76,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                                                               length=leng)
                 depth_start = time.time()
                 self.try_for_depth()
-                self.per_depth_times[(dep, leng)] = time.time() - depth_start
+                stats.per_depth_times[(dep, leng)] = time.time() - depth_start
 
                 if len(self.solutions) > 0:
                     self.terminate()

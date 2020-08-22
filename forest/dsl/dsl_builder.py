@@ -1,9 +1,8 @@
 import re
 
 import forest.spec as spec
-from forest.dsl.common_substrings import find_all_cs
 from forest.logger import get_logger
-from forest.utils import transpose
+from forest.utils import transpose, find_all_cs
 
 logger = get_logger('forest')
 

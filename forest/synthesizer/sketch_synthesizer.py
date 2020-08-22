@@ -7,12 +7,11 @@ import z3
 
 from forest.decider import RegexDecider
 from forest.dsl import Node
-from forest.dsl.common_substrings import find_all_cs
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.enumerator import DynamicMultiTreeEnumerator, StaticMultiTreeEnumerator
 from forest.logger import get_logger
 from forest.synthesizer import MultipleSynthesizer
-from forest.utils import transpose
+from forest.utils import transpose, find_all_cs
 from forest.visitor import RegexInterpreter, ToZ3
 
 logger = get_logger('forest')
