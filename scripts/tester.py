@@ -181,7 +181,7 @@ class Task:
                     regex = r"Regex time: (\d+\.\d+)"
                     m = re.search(regex, l)
                     if m is not None:
-                        self.regex_time = float(m[1])
+                        self.regex_synthesis_time = float(m[1])
                 elif "First regex time" in l:
                     regex = r"First regex time: (\d+\.\d+)"
                     m = re.search(regex, l)
@@ -410,8 +410,6 @@ class Tester:
                 f'{task.cap_conditions_synthesis_time}, '
                 f'{task.enumerated_cap_conditions}, '
                 f'{task.cap_conditions_interactions}, '
-                f'{task.cap_conditions_distinguishing_time}, '
-                f'{task.cap_conditions_distinguishing_time}, '
                 f'{task.cap_conditions_distinguishing_time}, '
                 f'{task.solution}, {task.cap_groups}'
             )

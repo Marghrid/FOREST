@@ -5,17 +5,17 @@ class Statistics:
     def __init__(self):
         if Statistics.__instance__ is None:
             # timers:
-            self.total_synthesis_time = 0
+            self.total_synthesis_time = 0.
             self.per_depth_times = {}
 
-            self.regex_synthesis_time = 0
-            self.cap_groups_synthesis_time = 0
-            self.cap_conditions_synthesis_time = 0
+            self.regex_synthesis_time = 0.
+            self.cap_groups_synthesis_time = 0.
+            self.cap_conditions_synthesis_time = 0.
 
-            self.first_regex_time = 0
+            self.first_regex_time = 0.
 
-            self.regex_distinguishing_time = 0
-            self.cap_conditions_distinguishing_time = 0
+            self.regex_distinguishing_time = 0.
+            self.cap_conditions_distinguishing_time = 0.
 
             # enumerated
             self.enumerated_regexes = 0
@@ -54,5 +54,5 @@ class Statistics:
             f'  Cap. conditions time: {round(self.cap_conditions_synthesis_time, 2)}\n' \
             f'  Enumerated: {self.enumerated_cap_conditions}\n' \
             f'  Interactions: {self.cap_conditions_interactions}\n' \
-            f'  Distinguishing time: {round(self.cap_conditions_distinguishing_time, 2)}'
+            f'  Distinguish time: {round(self.cap_conditions_distinguishing_time, 2)}'
 
