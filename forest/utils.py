@@ -37,6 +37,8 @@ def is_regex(tentative_regex: str):
 
 def is_int(arg):
     """ Returns True iff arg is a valid integer """
+    if arg is None:
+        return False
     if isinstance(arg, int):
         return True
     try:

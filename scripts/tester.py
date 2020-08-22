@@ -391,7 +391,7 @@ class Tester:
             f"\n =====  RESULTS on {socket.gethostname()}, "
             f"{now.strftime('%Y-%m-%d %H:%M:%S')} ===== ")
         print(
-            "instance, total time, regex time, first regex time, enumerated regexes, "
+            "instance, timed out, total time, regex time, first regex time, enumerated regexes, "
             "regex interactions, regex distinguish time, cap groups time, enumerated cap groups, "
             "cap conditions time, enumerated cap conditions, cap cond interactions, "
             "cap cond distinguish time, solution, cap groups")
@@ -399,6 +399,7 @@ class Tester:
         for task in self.tasks:
             print(
                 f'{task.instance}, '
+                f'{int(task.timed_out)}, '
                 f'{task.total_synthesis_time}, '
                 f'{task.regex_synthesis_time}, '
                 f'{task.first_regex_time}, '
