@@ -206,6 +206,7 @@ class MultipleSynthesizer(ABC):
             self.solutions = keep_if_invalid
 
     def try_for_depth(self):
+        stats.first_regex_time = -1
         while True:
             regex = self.try_regex()
 
@@ -266,7 +267,7 @@ class MultipleSynthesizer(ABC):
             logger.info(self._printer.eval(regex))
             self._enumerator.update()
             stats.regex_synthesis_time += time.time() - regex_synthesis_start
-            if len(self.solutions) == 0:
+            if stats.first_regex_time == -1:
                 stats.first_regex_time = time.time() - self.start_time
             return regex
 
