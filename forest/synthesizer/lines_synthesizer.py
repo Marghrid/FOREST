@@ -9,9 +9,9 @@ logger = get_logger('forest')
 
 class LinesSynthesizer(MultipleSynthesizer):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid, dsl,
-                 ground_truth, pruning=True, auto_interaction=False):
+                 ground_truth, pruning=True, auto_interaction=False, log_path: str = ''):
         super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
-                         dsl, ground_truth, pruning, auto_interaction)
+                         dsl, ground_truth, pruning, auto_interaction, log_path)
         self.max_depth = 6
 
     def synthesize(self):

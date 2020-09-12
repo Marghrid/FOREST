@@ -270,7 +270,7 @@ class Task:
 class Tester:
     def __init__(self, instance_dirs, method='multitree', no_pruning=False,
                  sketching='none', num_processes=1, timeout=120, show_output=False,
-                 resnax=False, max_valid=-1, max_invalid=-1, solve_only=-1):
+                 resnax=False, max_valid=-1, max_invalid=-1, solve_only=-1, logs_dir=''):
         self.show_output = show_output
         self.timeout = timeout + 2
         self.tasks = []
@@ -278,6 +278,7 @@ class Tester:
         self.num_processes = num_processes
         self.poll_time = min(30, self.timeout // 15)
         self.no_pruning = no_pruning
+        self.logs_dir = logs_dir
         if method == 'compare-times':
             methods = all_methods
         else:
@@ -295,6 +296,9 @@ class Tester:
         if sketching != 'none':
             command_base.append('--sketch')
             command_base.append(sketching)
+
+        if len(logs_dir) > 0:
+            command_base.extend(['-l', logs_dir])
 
         command_base.append("-e")
 
@@ -394,7 +398,7 @@ class Tester:
             "instance, timed out, total time, regex time, first regex time, enumerated regexes, "
             "regex interactions, regex distinguish time, cap groups time, enumerated cap groups, "
             "cap conditions time, enumerated cap conditions, cap cond interactions, "
-            "cap cond distinguish time, solution, cap groups")
+            "cap cond distinguish time, solution, cap groups, ground truth")
 
         for task in self.tasks:
             print(
@@ -412,7 +416,8 @@ class Tester:
                 f'{task.enumerated_cap_conditions}, '
                 f'{task.cap_conditions_interactions}, '
                 f'{task.cap_conditions_distinguishing_time}, '
-                f'{task.solution}, {task.cap_groups}'
+                f'"{task.solution}", "{task.cap_groups}", '
+                f'"{task.ground_truth}"'
             )
 
     def print_time_comparison(self):

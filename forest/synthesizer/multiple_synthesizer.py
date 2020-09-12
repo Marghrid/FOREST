@@ -1,3 +1,4 @@
+import os
 import re
 import time
 from abc import ABC, abstractmethod
@@ -24,7 +25,7 @@ class MultipleSynthesizer(ABC):
 
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  dsl: TyrellSpec, ground_truth: str, pruning=True,
-                 auto_interaction=False):
+                 auto_interaction=False, log_path: str = ''):
 
         self.valid = valid_examples
         self.invalid = invalid_examples
@@ -43,6 +44,7 @@ class MultipleSynthesizer(ABC):
             self.ground_truth_regex = "".join(
                 filter(lambda s: not s.lstrip().startswith("$"), ground_truth))
         self.auto_interaction = auto_interaction
+        self.log_path = log_path
 
         if not pruning:
             logger.warning('Synthesizing without pruning the search space.')
@@ -94,30 +96,40 @@ class MultipleSynthesizer(ABC):
 
     def terminate(self):
         stats.total_synthesis_time = round(time.time() - self.start_time, 2)
-        logger.info(f'Synthesizer done.\n'
-                    f'  Enumerator: {self._enumerator}'
-                    f'{" (no pruning)" if not self.pruning else ""}')
-        logger.info(stats)
+        logger.info('Synthesizer done.\n')
+
+        info_str = f'Enumerator: {self._enumerator}'\
+                   f'{" (no pruning)" if not self.pruning else ""}\n'
+        info_str += f'Terminated: {self.die}\n'
+        info_str += str(stats) + "\n\n"
+
         if len(self.solutions) > 0:
             regex, capturing_groups, capture_conditions = self.solutions[0]
             conditions, conditions_captures = capture_conditions
             solution_str = self._decider.interpreter.eval(regex, captures=conditions_captures)
             if len(conditions) > 0:
                 solution_str += ', ' + conditions_to_str(conditions)
-            logger.info(f'Solution: {solution_str}\n'
-                        f'  Nodes: {self._node_counter.eval(self.solutions[0][0])}\n')
+            info_str += f'Solution: {solution_str}\n' \
+                        f'  Nodes: {self._node_counter.eval(self.solutions[0][0])}\n'
             if len(capturing_groups) > 0:
-                logger.info(f'  Cap. groups: '
-                            f'{self._decider.interpreter.eval(regex, captures=capturing_groups)}\n'
-                            f'  Num. cap. groups: {len(capturing_groups)}')
+                info_str += f'  Cap. groups: '\
+                            f'{self._decider.interpreter.eval(regex, captures=capturing_groups)}\n'\
+                            f'  Num. cap. groups: {len(capturing_groups)}'
             else:
-                logger.info("  No capturing groups.")
+                info_str += "  No capturing groups."
         else:
-            logger.info(f'  No solution.')
+            info_str += f'  No solution.'
+
+        info_str += '\n'
 
         if self.ground_truth_regex is not None:
-            logger.info(
-                f'  Ground truth: {self.ground_truth_regex}, {", ".join(self.ground_truth_conditions)}')
+            info_str += \
+                f'  Ground truth: {self.ground_truth_regex}, {", ".join(self.ground_truth_conditions)}'
+        logger.info(info_str)
+
+        if len(self.log_path) > 0:
+            f = open(self.log_path, "w")
+            f.write(info_str)
 
     def distinguish(self):
         """ Generate a distinguishing input between programs (if there is one),

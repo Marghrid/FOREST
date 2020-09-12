@@ -39,8 +39,7 @@ class StaticMultiTreeEnumerator(RegexEnumerator):
         self._create_union_constraints()
         self.resolve_predicates(self.main_dsl.predicates())
 
-        logger.info(
-            f"New enumerator: depth {self.depth}, length {self.length}, variables {len(self.variables)}")
+        logger.info(str(self) + f", variables {len(self.variables)}")
 
     def _create_variables(self, solver):
         """ Create one n-variable per node. """

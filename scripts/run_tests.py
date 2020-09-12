@@ -27,13 +27,15 @@ def main():
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('directories', type=str, metavar="dir", nargs='+',
                         help='Directories with instances')
+    parser.add_argument('-l', '--log', metavar='DIR', type=str,
+                        help="Logs directory", default='')
     parser.add_argument('-p', '--processes', metavar="P", type=int,
                         help='Number of processes.', default=1)
     parser.add_argument('-t', '--timeout', metavar="T", type=int,
                         help='Timeout in seconds.', default=120)
     parser.add_argument('-o', '--out', action='store_true',
                         help='Show output.', default=False)
-    parser.add_argument('-l', '--solve-only', type=int, default=-1,
+    parser.add_argument('--solve-only', type=int, default=-1,
                         help='Limit the number of solved instances. -1: unlimited.')
 
     synth_group = parser.add_argument_group(title="Synthesizer options")
@@ -60,7 +62,7 @@ def main():
 
     tester = Tester(args.directories, args.encoding, args.no_pruning, args.sketch,
                     args.processes, args.timeout, args.out, args.resnax, args.max_valid,
-                    args.max_invalid, args.solve_only)
+                    args.max_invalid, args.solve_only, args.log)
     tester.test()
     if args.encoding == 'compare-times':
         tester.print_time_comparison()

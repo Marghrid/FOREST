@@ -18,10 +18,10 @@ stats = Statistics.get_statistics()
 class MultiTreeSynthesizer(MultipleSynthesizer):
 
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
-                 main_dsl, ground_truth, pruning=True, auto_interaction=False,
+                 main_dsl, ground_truth, pruning=True, auto_interaction=False, log_path: str = '',
                  force_dynamic=False):
         super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
-                         main_dsl, ground_truth, pruning, auto_interaction)
+                         main_dsl, ground_truth, pruning, auto_interaction, log_path)
         self.main_dsl = main_dsl
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
                               '{', '}', '[', ']', '"'}
@@ -51,8 +51,6 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             builder = DSLBuilder(type_validations, self.valid, self.invalid)
             dsls = builder.build()
 
-            logger.info("Using Static Multi-tree enumerator.")
-
             for depth in range(3, 10):
                 self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
                 depth_start = time.time()
@@ -66,7 +64,6 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
                     return
 
         else:
-            logger.info("Using Dynamic Multi-tree enumerator.")
             self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                          valid_examples=self.valid, invalid_examples=self.invalid)
             sizes = list(itertools.product(range(3, 10), range(1, 10)))

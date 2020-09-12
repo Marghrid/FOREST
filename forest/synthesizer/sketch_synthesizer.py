@@ -22,9 +22,9 @@ sketching = ('smt', 'brute-force', 'hybrid')
 class SketchSynthesizer(MultipleSynthesizer):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  main_dsl, ground_truth, sketching_mode, pruning=False,
-                 auto_interaction=False, force_dynamic=False):
+                 auto_interaction=False, force_dynamic=False, log_path: str = ''):
         super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
-                         main_dsl, ground_truth, pruning, auto_interaction)
+                         main_dsl, ground_truth, pruning, auto_interaction, log_path)
 
         self.valid = valid_examples
         self.invalid = invalid_examples
@@ -75,7 +75,6 @@ class SketchSynthesizer(MultipleSynthesizer):
             builder = DSLBuilder(type_validations, valid, invalid, sketches=True)
             dsls = builder.build()
 
-            logger.info("Using Static Multi-tree enumerator.")
             self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                          examples=self.examples,
                                          split_valid=valid)
@@ -98,7 +97,6 @@ class SketchSynthesizer(MultipleSynthesizer):
                     return
 
         else:
-            logger.info("Using Dynamic Multi-tree enumerator.")
             self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                          examples=self.examples)
             sizes = list(itertools.product(range(3, 10), range(1, 10)))

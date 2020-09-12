@@ -86,7 +86,7 @@ class RegexDistinguisher:
 
                 solver.add(dist != z3.StringVal(dist_input))
                 if not solver.check() == z3.sat:
-                    logger.error("Unexpected UNSAT")
+                    return None, None, None, None
 
             if solver.model()[ro_1]:
                 return dist_input, [r1], [r2], []
