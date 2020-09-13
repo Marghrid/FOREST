@@ -3,7 +3,7 @@
 import argparse
 from signal import signal, SIGINT
 
-from tester import Tester
+from task_runner import TaskRunner
 
 tester = None
 
@@ -60,10 +60,10 @@ def main():
 
     global tester
 
-    tester = Tester(args.directories, args.encoding, args.no_pruning, args.sketch,
-                    args.processes, args.timeout, args.out, args.resnax, args.max_valid,
-                    args.max_invalid, args.solve_only, args.log)
-    tester.test()
+    tester = TaskRunner(args.directories, args.encoding, args.no_pruning, args.sketch,
+                        args.processes, args.timeout, args.out, args.resnax, args.max_valid,
+                        args.max_invalid, args.solve_only, args.log)
+    tester.run()
     if args.encoding == 'compare-times':
         tester.print_time_comparison()
     else:

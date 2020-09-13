@@ -1,5 +1,7 @@
+import datetime
 import os
 import re
+import socket
 import time
 from abc import ABC, abstractmethod
 from typing import List
@@ -96,9 +98,11 @@ class MultipleSynthesizer(ABC):
 
     def terminate(self):
         stats.total_synthesis_time = round(time.time() - self.start_time, 2)
-        logger.info('Synthesizer done.\n')
+        logger.info(f'Synthesizer done.')
 
-        info_str = f'Enumerator: {self._enumerator}'\
+        now = datetime.datetime.now()
+        info_str = f'On {socket.gethostname()} on {now.strftime("%Y-%m-%d %H:%M:%S")}.\n'
+        info_str += f'Enumerator: {self._enumerator}'\
                    f'{" (no pruning)" if not self.pruning else ""}\n'
         info_str += f'Terminated: {self.die}\n'
         info_str += str(stats) + "\n\n"
