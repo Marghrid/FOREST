@@ -6,7 +6,7 @@ from operator import add
 from statistics import median, mean
 
 from forest.parse_examples import parse_resnax, parse_file
-from synth_regex import show
+from forest import show
 
 
 @dataclass

@@ -19,8 +19,7 @@ class SingleSynthesizer(ABC):
                         [Example(x, False) for x in invalid_examples]
         self.dsl = dsl
         self._printer = RegexInterpreter()
-        self._decider = RegexDecider(interpreter=RegexInterpreter(),
-                                     examples=self.examples)
+        self._decider = RegexDecider(RegexInterpreter(), valid_examples, invalid_examples)
         self._node_counter = NodeCounter()
         self.indistinguishable = 0
 

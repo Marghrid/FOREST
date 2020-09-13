@@ -1,5 +1,4 @@
 import datetime
-import os
 import re
 import socket
 import time
@@ -8,12 +7,13 @@ from typing import List
 
 from termcolor import colored
 
-from forest.spec import TyrellSpec
-from forest.statistics import Statistics
+from configuration import Configuration
 from forest.capturer import Capturer
-from forest.decider import RegexDecider, Example
+from forest.decider import RegexDecider
 from forest.distinguisher import RegexDistinguisher
 from forest.logger import get_logger
+from forest.spec import TyrellSpec
+from forest.statistics import Statistics
 from forest.utils import nice_time, is_regex, yes_values, no_values, conditions_to_str
 from forest.visitor import RegexInterpreter, NodeCounter
 
@@ -26,15 +26,14 @@ class MultipleSynthesizer(ABC):
     examples. """
 
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
-                 dsl: TyrellSpec, ground_truth: str, pruning=True,
-                 auto_interaction=False, log_path: str = ''):
+                 dsl: TyrellSpec, ground_truth: str, configuration: Configuration):
 
         self.valid = valid_examples
         self.invalid = invalid_examples
         self.captured = captured
         self.condition_invalid = condition_invalid
         self.dsl = dsl
-        self.pruning = pruning
+        self.configuration = configuration
         if ground_truth is None:
             self.ground_truth_conditions = None
             self.ground_truth_regex = None
@@ -45,13 +44,11 @@ class MultipleSynthesizer(ABC):
             self.ground_truth_conditions = list(map(lambda s: s.lstrip(), ground_truth_conditions))
             self.ground_truth_regex = "".join(
                 filter(lambda s: not s.lstrip().startswith("$"), ground_truth))
-        self.auto_interaction = auto_interaction
-        self.log_path = log_path
 
-        if not pruning:
+        if not configuration.pruning:
             logger.warning('Synthesizing without pruning the search space.')
         # If auto-interaction is enabled, the ground truth must be a valid regex.
-        if self.auto_interaction:
+        if self.configuration.self_interact:
             assert len(self.ground_truth_regex) > 0 and is_regex(self.ground_truth_regex)
 
         # Initialize components
@@ -64,7 +61,7 @@ class MultipleSynthesizer(ABC):
         # Capturer works like a synthesizer of capturing groups
         self._capturer = Capturer(self.valid, self.captured, self.condition_invalid,
                                   self.ground_truth_regex, self.ground_truth_conditions,
-                                  self.auto_interaction)
+                                  self.configuration.self_interact)
         self._node_counter = NodeCounter()
 
         # Subclass decides which enumerator to use
@@ -102,8 +99,8 @@ class MultipleSynthesizer(ABC):
 
         now = datetime.datetime.now()
         info_str = f'On {socket.gethostname()} on {now.strftime("%Y-%m-%d %H:%M:%S")}.\n'
-        info_str += f'Enumerator: {self._enumerator}'\
-                   f'{" (no pruning)" if not self.pruning else ""}\n'
+        info_str += f'Enumerator: {self._enumerator}' \
+                    f'{" (no pruning)" if not self.configuration.pruning else ""}\n'
         info_str += f'Terminated: {self.die}\n'
         info_str += str(stats) + "\n\n"
 
@@ -127,12 +124,12 @@ class MultipleSynthesizer(ABC):
         info_str += '\n'
 
         if self.ground_truth_regex is not None:
-            info_str += \
-                f'  Ground truth: {self.ground_truth_regex}, {", ".join(self.ground_truth_conditions)}'
+            info_str += f'  Ground truth: {self.ground_truth_regex},' \
+                        f' {", ".join(self.ground_truth_conditions)}'
         logger.info(info_str)
 
-        if len(self.log_path) > 0:
-            f = open(self.log_path, "w")
+        if len(self.configuration.log_path) > 0:
+            f = open(self.configuration.log_path, "w")
             f.write(info_str)
 
     def distinguish(self):
@@ -155,7 +152,7 @@ class MultipleSynthesizer(ABC):
                 else:
                     keep_if_invalid.append(regex)
 
-            if not self.auto_interaction:
+            if not self.configuration.self_interact:
                 self.interact(dist_input, keep_if_valid, keep_if_invalid)
             else:
                 self.auto_distinguish(dist_input, keep_if_valid, keep_if_invalid)
@@ -287,7 +284,7 @@ class MultipleSynthesizer(ABC):
                 stats.first_regex_time = time.time() - self.start_time
             return regex
 
-        elif self.pruning:
+        elif self.configuration.pruning:
             new_predicates = analysis_result.why()
             if new_predicates is not None:
                 for pred in new_predicates:

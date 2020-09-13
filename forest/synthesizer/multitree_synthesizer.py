@@ -3,14 +3,15 @@ import re
 import time
 from copy import deepcopy
 
-from forest.dsl.dsl_builder import DSLBuilder
-from forest.statistics import Statistics
-from .multiple_synthesizer import MultipleSynthesizer
+from configuration import Configuration
 from forest.decider import RegexDecider
+from forest.dsl.dsl_builder import DSLBuilder
 from forest.enumerator import StaticMultiTreeEnumerator, DynamicMultiTreeEnumerator
 from forest.logger import get_logger
+from forest.statistics import Statistics
 from forest.utils import transpose, find_all_cs
 from forest.visitor import RegexInterpreter
+from .multiple_synthesizer import MultipleSynthesizer
 
 logger = get_logger('forest')
 stats = Statistics.get_statistics()
@@ -18,15 +19,12 @@ stats = Statistics.get_statistics()
 class MultiTreeSynthesizer(MultipleSynthesizer):
 
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
-                 main_dsl, ground_truth, pruning=True, auto_interaction=False, log_path: str = '',
-                 force_dynamic=False):
+                 main_dsl, ground_truth, configuration: Configuration):
         super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
-                         main_dsl, ground_truth, pruning, auto_interaction, log_path)
+                         main_dsl, ground_truth, configuration=configuration)
         self.main_dsl = main_dsl
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
                               '{', '}', '[', ']', '"'}
-
-        self.force_dynamic = force_dynamic
 
     def synthesize(self):
         self.start_time = time.time()
@@ -36,7 +34,7 @@ class MultiTreeSynthesizer(MultipleSynthesizer):
             valid = None
             invalid = None
 
-        if valid is not None and len(valid[0]) > 1 and not self.force_dynamic:
+        if valid is not None and len(valid[0]) > 1 and not self.configuration.force_dynamic:
             self._decider = RegexDecider(interpreter=RegexInterpreter(),
                                          valid_examples=self.valid, invalid_examples=self.invalid,
                                          split_valid=valid)

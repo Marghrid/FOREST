@@ -5,6 +5,7 @@ from copy import deepcopy
 
 import z3
 
+from configuration import Configuration
 from forest.decider import RegexDecider
 from forest.dsl import Node
 from forest.dsl.dsl_builder import DSLBuilder
@@ -21,25 +22,23 @@ sketching = ('smt', 'brute-force', 'hybrid')
 
 class SketchSynthesizer(MultipleSynthesizer):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
-                 main_dsl, ground_truth, sketching_mode, pruning=False,
-                 auto_interaction=False, force_dynamic=False, log_path: str = ''):
+                 main_dsl, ground_truth, configuration: Configuration):
         super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
-                         main_dsl, ground_truth, pruning, auto_interaction, log_path)
+                         main_dsl, ground_truth, configuration=configuration)
 
         self.valid = valid_examples
         self.invalid = invalid_examples
-        self.sketching_mode = sketching_mode
-        if sketching_mode not in sketching:
-            logger.warning(f'Unknown sketching mode: {sketching_mode}. '
+        self.configuration = configuration
+        if configuration.sketching not in sketching:
+            logger.warning(f'Unknown sketching mode: {configuration.sketching}. '
                            f'Using \'brute-force\' instead.')
-            self.sketching_mode = 'brute-force'
+            self.configuration.sketching = 'brute-force'
         self.to_z3 = ToZ3()
 
         self.main_dsl = main_dsl
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
                               '{', '}', '[', ']', '"'}
 
-        self.force_dynamic = force_dynamic
 
         self.count_level_sketches = 0
         self.count_total_sketches = 0
@@ -64,7 +63,7 @@ class SketchSynthesizer(MultipleSynthesizer):
             valid = None
             invalid = None
 
-        if valid is not None and len(valid[0]) > 1 and not self.force_dynamic:
+        if valid is not None and len(valid[0]) > 1 and not self.configuration.force_dynamic:
             # self.valid = valid
             # self.invalid = invalid
 
@@ -75,9 +74,7 @@ class SketchSynthesizer(MultipleSynthesizer):
             builder = DSLBuilder(type_validations, valid, invalid, sketches=True)
             dsls = builder.build()
 
-            self._decider = RegexDecider(interpreter=RegexInterpreter(),
-                                         examples=self.examples,
-                                         split_valid=valid)
+            self._decider = RegexDecider(RegexInterpreter(), valid, invalid, split_valid=valid)
             for depth in range(2, 10):
                 self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
 
@@ -97,8 +94,7 @@ class SketchSynthesizer(MultipleSynthesizer):
                     return
 
         else:
-            self._decider = RegexDecider(interpreter=RegexInterpreter(),
-                                         examples=self.examples)
+            self._decider = RegexDecider(RegexInterpreter(), valid, invalid)
             sizes = list(itertools.product(range(3, 10), range(1, 10)))
             sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
             for dep, length in sizes:
@@ -130,20 +126,20 @@ class SketchSynthesizer(MultipleSynthesizer):
             self._enumerator.update(None)
             self.count_level_sketches += 1
 
-            if self.sketching_mode == 'brute-force':
+            if self.configuration.sketching == 'brute-force':
                 start0 = time.time()
                 filled = self.fill_brute_force(sketch)
                 solve_time += time.time() - start0
-            elif self.sketching_mode == 'smt':
+            elif self.configuration.sketching == 'smt':
                 start1 = time.time()
                 filled = self.fill_smt(sketch)
                 solve_time += time.time() - start1
-            elif self.sketching_mode == 'hybrid':
+            elif self.configuration.sketching == 'hybrid':
                 start2 = time.time()
                 filled = self.fill_hybrid(sketch)
                 solve_time += time.time() - start2
             else:
-                logger.error("Unknown sketching method:", self.sketching_mode)
+                logger.error("Unknown sketching method:", self.configuration.sketching)
                 return
 
             self.solutions.extend(filled)
@@ -154,7 +150,8 @@ class SketchSynthesizer(MultipleSynthesizer):
                             f'{len(filled)} concrete programs.')
                 for program in filled:
                     logger.info(
-                        f'Program accepted. {self._printer.eval(program)}. {self._node_counter.eval(program, [0])} nodes.')
+                        f'Program accepted. {self._printer.eval(program)}. '
+                        f'{self._node_counter.eval(program, [0])} nodes.')
                     # f'{self.num_enumerated} attempts '
                     # f'and {round(time.time() - self.start_time, 2)} seconds:')
 

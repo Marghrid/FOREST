@@ -119,7 +119,7 @@ class TaskRunner:
         else:
             methods = [method]
 
-        command_base = ["python3", "-O", "synth_regex.py", '-s']
+        command_base = ["python3", "-O", "forest.py", '-s']
         if max_valid > 0:
             command_base += ["-v", str(max_valid)]
         if max_invalid > 0:

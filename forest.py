@@ -7,6 +7,7 @@ from typing import List, Tuple
 
 from termcolor import colored
 
+from configuration import Configuration
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.logger import get_logger
 from forest.parse_examples import parse_file, parse_resnax
@@ -31,28 +32,13 @@ def sig_handler(received_signal, frame):
 def main():
     signal(SIGINT, sig_handler)
     signal(SIGTERM, sig_handler)
-    examples_file, encoding, logs_dir, self_interact, resnax, no_pruning, max_valid, max_invalid, \
-    sketching_mode = read_cmd_args()
+    examples_file, resnax, max_valid, max_invalid, config = read_cmd_args()
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
         condition_invalid = []
     else:
         valid, invalid, condition_invalid, ground_truth = parse_file(examples_file)
-
-    if len(logs_dir) > 0:
-        if not os.path.exists(logs_dir):
-            os.makedirs(logs_dir)
-    examples_filename = list(filter(None, examples_file.split('/')))[-1]
-
-    if len(logs_dir) > 0:
-        # Clean up existing log file
-        log_path = logs_dir + "/" + examples_filename
-        if os.path.exists(log_path):
-            os.remove(log_path)
-        open(log_path, "w")
-    else:
-        log_path = ''
 
     random.seed("regex")
     if 0 < max_valid < len(valid):
@@ -61,23 +47,35 @@ def main():
         invalid = random.sample(invalid, max_invalid)
 
     show(valid, invalid, condition_invalid, ground_truth)
-    if sketching_mode != 'none':
-        sketch_synthesize(valid, invalid, condition_invalid, sketching_mode, ground_truth,
-                          self_interact, log_path)
-    elif encoding == 'multitree':
-        multitree_synthesize(valid, invalid, condition_invalid, ground_truth,
-                             self_interact, log_path, no_pruning)
-    elif encoding == "dynamic":
-        dynamic_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, log_path,
-                           no_pruning)
-    elif encoding == 'ktree':
-        ktree_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, log_path,
-                         no_pruning)
-    elif encoding == 'lines':
-        lines_synthesize(valid, invalid, condition_invalid, ground_truth, self_interact, log_path,
-                         no_pruning)
+
+    global synthesizer
+    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
+    if config.sketching != 'none':
+        dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid, sketch=True)
+        if "string" not in type_validation[0] and "regex" not in type_validation[0]:
+            raise Exception("MultiTree Synthesizer is only for strings.")
+        synthesizer = SketchSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                        ground_truth, configuration=config)
+    elif config.encoding == 'multitree':
+        if "string" not in type_validation[0] and "regex" not in type_validation[0]:
+            raise Exception("MultiTree Synthesizer is only for strings.")
+        synthesizer = MultiTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                           ground_truth, configuration=config)
+    elif config.encoding == "dynamic":
+        config.force_dynamic = True
+        synthesizer = MultiTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                           ground_truth, configuration=config)
+    elif config.encoding == 'ktree':
+        synthesizer = KTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                       ground_truth, configuration=config)
+    elif config.encoding == 'lines':
+        synthesizer = LinesSynthesizer(valid, invalid, captures, condition_invalid, dsl,
+                                       ground_truth, configuration=config)
+
     else:
         raise ValueError
+
+    return synthesize(type_validation)
 
 
 def show(valid, invalid, condition_invalid, ground_truth: str):
@@ -124,69 +122,6 @@ def show(valid, invalid, condition_invalid, ground_truth: str):
         print("No condition invalid examples.")
     print("Ground truth:")
     print(colored(ground_truth, "green"))
-
-
-def multitree_synthesize(valid: List[List], invalid: List[List],
-                         condition_invalid: List[List], ground_truth: str = None,
-                         self_interact: bool = False, log_path: str = '', no_pruning: bool = False):
-    global synthesizer
-    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
-    if "string" not in type_validation[0] and "regex" not in type_validation[0]:
-        raise Exception("MultiTree Synthesizer is only for strings.")
-    synthesizer = MultiTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
-                                       ground_truth, pruning=not no_pruning,
-                                       auto_interaction=self_interact, log_path=log_path)
-    return synthesize(type_validation)
-
-
-def sketch_synthesize(valid: List[List], invalid: List[List],
-                      condition_invalid: List[List], sketching_mode: str,
-                      ground_truth: str = None, self_interact: bool = False, log_path: str = '',
-                      no_pruning: bool = False):
-    global synthesizer
-    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid,
-                                                                    sketch=True)
-    if "string" not in type_validation[0] and "regex" not in type_validation[0]:
-        raise Exception("MultiTree Synthesizer is only for strings.")
-    synthesizer = SketchSynthesizer(valid, invalid, captures, condition_invalid, dsl,
-                                    ground_truth, sketching_mode,
-                                    auto_interaction=self_interact, log_path=log_path)
-    return synthesize(type_validation)
-
-
-def dynamic_synthesize(valid: List[List], invalid: List[List],
-                       condition_invalid: List[List], ground_truth: str = None,
-                       self_interact: bool = False, log_path: str = '', no_pruning: bool = False):
-    global synthesizer
-    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
-    synthesizer = MultiTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
-                                       ground_truth, pruning=not no_pruning,
-                                       auto_interaction=self_interact, log_path=log_path, force_dynamic=True)
-    return synthesize(type_validation)
-
-
-def ktree_synthesize(valid: List[List], invalid: List[List],
-                     condition_invalid: List[List],
-                     ground_truth: str = None, self_interact: bool = False, log_path: str = '',
-                     no_pruning: bool = False):
-    global synthesizer
-    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
-    synthesizer = KTreeSynthesizer(valid, invalid, captures, condition_invalid, dsl,
-                                   ground_truth,
-                                   pruning=not no_pruning, auto_interaction=self_interact, log_path=log_path)
-    return synthesize(type_validation)
-
-
-def lines_synthesize(valid: List[List], invalid: List[List],
-                     condition_invalid: List[List],
-                     ground_truth: str = None, self_interact: bool = False, log_path: str = '',
-                     no_pruning: bool = False):
-    global synthesizer
-    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
-    synthesizer = LinesSynthesizer(valid, invalid, captures, condition_invalid, dsl,
-                                   ground_truth,
-                                   pruning=not no_pruning, auto_interaction=self_interact, log_path=log_path)
-    return synthesize(type_validation)
 
 
 def prepare_things(valid, invalid, sketch=False) \
@@ -257,9 +192,29 @@ def read_cmd_args():
         logger.setLevel("INFO")
     if args.encoding not in encodings:
         raise ValueError('Unknown encoding ' + args.encoding)
+    if args.sketch not in sketching:
+        raise ValueError('Unknown sketching mode ' + args.encoding)
 
-    return args.file, args.encoding, args.log, args.self_interact, args.resnax, args.no_pruning, \
-           args.max_valid, args.max_invalid, args.sketch
+    if len(args.log) > 0:
+        if not os.path.exists(args.log):
+            os.makedirs(args.log)
+
+    examples_filename = list(filter(None, args.file.split('/')))[-1]
+
+    if len(args.log) > 0:
+        # Clean up existing log file
+        log_path = args.log + "/" + examples_filename
+        if os.path.exists(log_path):
+            os.remove(log_path)
+        open(log_path, "w")
+    else:
+        log_path = ''
+
+    config = Configuration(encoding=args.encoding, self_interact=args.self_interact,
+                           log_path=log_path,
+                           pruning=not args.no_pruning, sketching=args.sketch)
+
+    return args.file, args.resnax, args.max_valid, args.max_invalid, config
 
 
 if __name__ == '__main__':
