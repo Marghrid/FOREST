@@ -42,6 +42,7 @@ class Instance:
         self.regel_time = -1
         self.regel_timeout = True
 
+
 def print_table(instances: List, regel: bool):
     """ Print execution information for each instance (sorted by name) """
     # maxl = max(map(lambda i: len(i.name), self.instances)) + 2
@@ -74,7 +75,7 @@ def print_table(instances: List, regel: bool):
             f'{instance.cap_conditions_interactions}, '
             f'{instance.cap_conditions_distinguishing_time}, '
             f'"{instance.solution}", "{instance.cap_groups}", '
-            f'"{instance.ground_truth}"', end = ''
+            f'"{instance.ground_truth}"', end=''
         )
         if regel:
             print(f', {instance.regel_time}, {int(instance.regel_timeout)}')
@@ -86,7 +87,8 @@ def main():
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('log_dir', metavar='DIR', type=str, help="Logs directory", default='')
-    parser.add_argument('-r','--regel-log-dir', metavar='DIR', type=str, help="Regel logs directory", default='')
+    parser.add_argument('-r', '--regel-log-dir', metavar='DIR', type=str,
+                        help="Regel logs directory", default='')
 
     args = parser.parse_args()
 
@@ -111,7 +113,7 @@ def main():
                     m = re.search(regex, line)
                     if m is not None:
                         instance.enumerator = m[1]
-                if "Terminated" in line:
+                elif "Terminated" in line:
                     regex = "Terminated: (.+)"
                     m = re.search(regex, line)
                     if m is not None:
@@ -126,8 +128,7 @@ def main():
                     m = re.search(regex, line)
                     if m is not None:
                         instance.per_depth_times = m[1]
-
-                if "Regex synthesis" in line:
+                elif "Regex synthesis" in line:
                     regex_synthesis = True
                     continue
                 elif "Capturing groups synthesis" in line:
@@ -141,7 +142,11 @@ def main():
                 elif "Solution" in line:
                     cap_conditions_synthesis = False
                     solution_print = True
-                    # do not continue. This line still has information.
+                    regex = r"Solution: (.+)"
+                    m = re.search(regex, line)
+                    if m is not None:
+                        instance.solution = m[1]
+                    continue
 
                 elif regex_synthesis:
                     if "Regex time" in line:
@@ -205,12 +210,7 @@ def main():
                             instance.cap_conditions_distinguishing_time = float(m[1])
 
                 elif solution_print:
-                    if "Solution" in line:
-                        regex = r"Solution: (.+)"
-                        m = re.search(regex, line)
-                        if m is not None:
-                            instance.solution = m[1]
-                    elif "Nodes" in line:
+                    if "Nodes" in line:
                         regex = r"Nodes: (\d+)"
                         m = re.search(regex, line)
                         if m is not None:
@@ -232,6 +232,7 @@ def main():
                         m = re.search(regex, line)
                         if m is not None:
                             instance.ground_truth = m[1]
+                            print(instance.ground_truth)
 
     if len(regel_log_dir) > 0:
         for instance in instances:

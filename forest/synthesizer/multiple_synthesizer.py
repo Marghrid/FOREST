@@ -124,7 +124,7 @@ class MultipleSynthesizer(ABC):
         info_str += '\n'
 
         if self.ground_truth_regex is not None:
-            info_str += f'  Ground truth: {self.ground_truth_regex},' \
+            info_str += f'  Ground truth: {self.ground_truth_regex}' \
                         f' {", ".join(self.ground_truth_conditions)}'
         logger.info(info_str)
 
