@@ -1,44 +1,48 @@
 import itertools
-import re
 import time
 from copy import deepcopy
 
 import z3
 
-from configuration import Configuration
+from forest.configuration import Configuration
 from forest.decider import RegexDecider
 from forest.dsl import Node
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.enumerator import DynamicMultiTreeEnumerator, StaticMultiTreeEnumerator
 from forest.logger import get_logger
-from forest.synthesizer import MultipleSynthesizer
-from forest.utils import transpose, find_all_cs
+from forest.utils import transpose
 from forest.visitor import RegexInterpreter, ToZ3
+from forest.statistics import Statistics
+from forest.synthesizer import MultiTreeSynthesizer
 
 logger = get_logger('forest')
+stats = Statistics.get_statistics()
 m_counter = 0
 sketching = ('smt', 'brute-force', 'hybrid')
 
 
-class SketchSynthesizer(MultipleSynthesizer):
+def _get_new_m():
+    global m_counter
+    m_counter = m_counter + 1
+    return f'm_{m_counter - 1}'
+
+
+class SketchSynthesizer(MultiTreeSynthesizer):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  main_dsl, ground_truth, configuration: Configuration):
         super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
                          main_dsl, ground_truth, configuration=configuration)
 
-        self.valid = valid_examples
-        self.invalid = invalid_examples
-        self.configuration = configuration
         if configuration.sketching not in sketching:
             logger.warning(f'Unknown sketching mode: {configuration.sketching}. '
                            f'Using \'brute-force\' instead.')
             self.configuration.sketching = 'brute-force'
+
         self.to_z3 = ToZ3()
 
         self.main_dsl = main_dsl
         self.special_chars = {'.', '^', '$', '*', '+', '?', '\\', '|', '(', ')',
                               '{', '}', '[', ']', '"'}
-
 
         self.count_level_sketches = 0
         self.count_total_sketches = 0
@@ -55,8 +59,6 @@ class SketchSynthesizer(MultipleSynthesizer):
 
     def synthesize(self):
         self.start_time = time.time()
-
-        self.start_time = time.time()
         try:
             valid, invalid = self.split_examples()
         except:
@@ -66,31 +68,38 @@ class SketchSynthesizer(MultipleSynthesizer):
         if valid is not None and len(valid[0]) > 1 and not self.configuration.force_dynamic:
             # self.valid = valid
             # self.invalid = invalid
+            self._decider = RegexDecider(RegexInterpreter(), valid, invalid, split_valid=valid)
 
             assert all(map(lambda l: len(l) == len(valid[0]), valid))
             assert all(map(lambda l: len(l) == len(invalid[0]), invalid))
 
-            type_validations = ['is_regex'] * len(valid[0])
+            type_validations = ['regex'] * len(valid[0])
             builder = DSLBuilder(type_validations, valid, invalid, sketches=True)
             dsls = builder.build()
 
-            self._decider = RegexDecider(RegexInterpreter(), valid, invalid, split_valid=valid)
             for depth in range(2, 10):
                 self._enumerator = StaticMultiTreeEnumerator(self.main_dsl, dsls, depth)
 
+                depth_start = time.time()
                 self.try_for_depth()
+                stats.per_depth_times[depth] = time.time() - depth_start
 
                 print("level sketches", self.count_level_sketches)
                 self.count_total_sketches += self.count_level_sketches
                 self.count_level_sketches = 0
                 print("good sketches", self.count_good_sketches)
                 print("\ntotal sketches", self.count_total_sketches)
+
                 if self.count_good_sketches > 0:
+                    self.terminate()
                     return self.solutions[0]
                 self.count_good_sketches = 0
+
                 if len(self.solutions) > 0:
+                    self.terminate()
                     return self.solutions[0]
                 elif self.die:
+                    self.terminate()
                     return
 
         else:
@@ -99,91 +108,70 @@ class SketchSynthesizer(MultipleSynthesizer):
             sizes.sort(key=lambda t: (2 ** t[0] - 1) * t[1])
             for dep, length in sizes:
                 logger.info(f'Sketching programs of depth {dep} and length {length}...')
-                self._enumerator = DynamicMultiTreeEnumerator(self.main_dsl, depth=dep,
-                                                              length=length)
+                self._enumerator = DynamicMultiTreeEnumerator(self.main_dsl, depth=dep, length=length)
 
+                depth_start = time.time()
                 self.try_for_depth()
+                stats.per_depth_times[(dep, length)] = time.time() - depth_start
 
                 print("level sketches", self.count_level_sketches)
                 self.count_total_sketches += self.count_level_sketches
                 self.count_level_sketches = 0
                 print("good sketches", self.count_good_sketches)
                 print("\ntotal sketches", self.count_total_sketches)
+
                 if self.count_good_sketches > 0:
+                    self.terminate()
                     return self.solutions[0]
                 self.count_good_sketches = 0
+
                 if len(self.solutions) > 0:
+                    self.terminate()
                     return self.solutions[0]
                 elif self.die:
+                    self.terminate()
                     return
 
-    def try_for_depth(self):
+    def try_regex(self):
+        regex_synthesis_start = time.time()
+
         sketch = self.enumerate()
-        solve_time = 0
-        while sketch is not None and not self.die:
-            logger.debug(f'Sketch: {self._printer.eval(sketch, [0])}.')
+        if sketch is None:
+            return None
 
-            self._enumerator.update(None)
-            self.count_level_sketches += 1
+        logger.info(f'Sketch: {self._printer.eval(sketch, [0])}')
 
-            if self.configuration.sketching == 'brute-force':
-                start0 = time.time()
-                filled = self.fill_brute_force(sketch)
-                solve_time += time.time() - start0
-            elif self.configuration.sketching == 'smt':
-                start1 = time.time()
-                filled = self.fill_smt(sketch)
-                solve_time += time.time() - start1
-            elif self.configuration.sketching == 'hybrid':
-                start2 = time.time()
-                filled = self.fill_hybrid(sketch)
-                solve_time += time.time() - start2
-            else:
-                logger.error("Unknown sketching method:", self.configuration.sketching)
-                return
+        if self.configuration.sketching == 'brute-force':
+            filled = self.fill_brute_force(sketch)
+        elif self.configuration.sketching == 'smt':
+            filled = self.fill_smt(sketch)
+        elif self.configuration.sketching == 'hybrid':
+            filled = self.fill_hybrid(sketch)
+        else:
+            logger.error("Unknown sketching method:", self.configuration.sketching)
+            return
 
-            self.solutions.extend(filled)
+        self._enumerator.update()
+        stats.regex_synthesis_time += time.time() - regex_synthesis_start
+        self.count_level_sketches += 1
 
-            if len(filled) > 0:
-                self.count_good_sketches += 1
-                logger.info(f'Sketch accepted. {self._printer.eval(sketch)}. '
-                            f'{len(filled)} concrete programs.')
-                for program in filled:
-                    logger.info(
-                        f'Program accepted. {self._printer.eval(program)}. '
-                        f'{self._node_counter.eval(program, [0])} nodes.')
-                    # f'{self.num_enumerated} attempts '
-                    # f'and {round(time.time() - self.start_time, 2)} seconds:')
+        if len(filled) > 0:
+            self.count_good_sketches += 1
+            logger.info(f'Sketch accepted. {self._printer.eval(sketch)}. '
+                        f'{len(filled)} concrete programs.')
+            for program in filled:
+                logger.info(
+                    f'Program accepted. {self._printer.eval(program)}. '
+                    f'{self._node_counter.eval(program, [0])} nodes.')
+                # f'{self.num_enumerated} attempts '
+                # f'and {round(time.time() - self.start_time, 2)} seconds:')
 
-            while len(self.solutions) > 1:
-                self.distinguish()
+            if stats.first_regex_time == -1:
+                stats.first_regex_time = time.time() - self.start_time
 
-            sketch = self.enumerate()
+            return filled[0]
 
-        # ----- SMT -------
-        print("time (s):", round(solve_time, 2))
-        print("total time sat calls (s):", round(self.time_sat_calls, 2))
-        print("total time sat encoding (s):", round(self.time_sat_encoding, 2))
-        print("num sat calls (s):", self.count_sat_calls)
-        if self.count_sat_calls > 0:
-            print("avg time sat calls (s):",
-                  round(self.time_sat_calls / self.count_sat_calls, 2))
-            print("avg time sat encoding (s):",
-                  round(self.time_sat_encoding / self.count_sat_calls, 2))
-        print("total time unsat calls (s):", round(self.time_unsat_calls, 2))
-        print("total time unsat encoding (s):", round(self.time_unsat_encoding, 2))
-        print("num unsat calls (s):", self.count_unsat_calls)
-        if self.count_unsat_calls > 0:
-            print("avg time unsat calls (s):",
-                  round(self.time_unsat_calls / self.count_unsat_calls, 2))
-            print("avg time unsat encoding (s):",
-                  round(self.time_unsat_encoding / self.count_unsat_calls, 2))
-
-        print("num unk-sat calls (s):", self.count_smt_unknown_sat)
-        print("num unk-unsat calls (s):", self.count_smt_unknown_unsat)
-
-        if len(self.solutions) > 0 or self.die:
-            self.terminate()
+        return -1
 
     def fill_brute_force(self, sketch):
         """ Fills a sketch and returns all resulting concrete valid programs """
@@ -227,11 +215,6 @@ class SketchSynthesizer(MultipleSynthesizer):
 
         return correct
 
-    def _get_new_m(self):
-        global m_counter
-        m_counter = m_counter + 1
-        return f'm_{m_counter - 1}'
-
     def fill_hybrid(self, sketch):
         global m_counter
         m_counter = 0
@@ -273,7 +256,7 @@ class SketchSynthesizer(MultipleSynthesizer):
 
             # print("filled", self._printer.eval(program))
             z3re = self.to_z3.eval(concrete)
-            m = z3.Bool(self._get_new_m())
+            m = z3.Bool(_get_new_m())
             m_vars[m] = concrete
 
             big_and = []
@@ -355,7 +338,7 @@ class SketchSynthesizer(MultipleSynthesizer):
                 hole.data = values[i]
 
             z3re = self.to_z3.eval(concrete)
-            m = z3.Bool(self._get_new_m())
+            m = z3.Bool(_get_new_m())
             m_vars[m] = concrete
 
             big_and = []
@@ -395,89 +378,3 @@ class SketchSynthesizer(MultipleSynthesizer):
         for child in node.children:
             holes.extend(self.traverse_and_save_holes(child))
         return holes
-
-    def split_examples(self):
-        max_l = max(map(lambda x: len(x[0]), self.valid))
-        new_l = len(self.valid[0])
-        l = 0
-        valid = deepcopy(self.valid)
-        invalid = deepcopy(self.invalid)
-        while new_l != l and l < max_l:
-            l = new_l
-            transposed_valid = transpose(valid)
-
-            for field_idx, field in enumerate(transposed_valid):
-                common_substrings = find_all_cs(field)
-                if len(common_substrings) == 1:
-                    rec = re.compile(self.build_regex(common_substrings[0]))
-                    if all(map(lambda f: rec.fullmatch(f) is not None, field)):
-                        continue
-                    if all(map(lambda f: len(f) == len(common_substrings[0]), field)):
-                        continue
-                for cs in common_substrings:
-                    rec = re.compile(self.build_regex(cs))
-                    matches = list(map(lambda ex: rec.findall(ex), field))
-                    if all(map(lambda m: len(m) == len(matches[0]), matches)):
-                        valid, invalid = self.split_examples_on(valid, invalid, cs,
-                                                                field_idx)
-
-            new_l = len(valid[0])
-
-        valid, invalid = self.remove_empties(valid, invalid)
-
-        if not all(map(lambda l: len(l) == len(valid[0]), valid)):
-            return None, None
-        if len(invalid) > 0 and \
-                not all(map(lambda l: len(l) == len(valid[0]), invalid)):
-            return None, None
-
-        return valid, invalid
-
-    def split_examples_on(self, valid, invalid, substring: str, field_idx: int):
-        rec = re.compile(self.build_regex(substring))
-        for ex_idx, example in enumerate(valid):
-            field = example[field_idx]
-            split = rec.split(field, 1)
-            example = example[:field_idx] + split + example[field_idx + 1:]
-            valid[ex_idx] = example
-            pass
-
-        remaining_invalid = []
-        for ex_idx, example in enumerate(invalid):
-            field = example[field_idx]
-            split = rec.split(field, 1)
-            example = example[:field_idx] + split + example[field_idx + 1:]
-            if len(example) == len(valid[0]):
-                remaining_invalid.append(example)
-        invalid = remaining_invalid
-
-        return valid, invalid
-
-    def build_regex(self, cs):
-        if isinstance(cs, str):
-            if cs in self.special_chars:
-                return f'(\\{cs}+)'
-            elif len(cs) == 1:
-                return fr'({cs}+)'
-            else:
-                ret = ''
-                ret = '((?:'
-                for char in cs:
-                    if char in self.special_chars:
-                        ret += "\\"
-                    ret += char
-                ret += ")+)"
-                return ret  # fr'((?:{cs})+)'
-        elif isinstance(cs, list):
-            pass
-
-    def remove_empties(self, valid, invalid):
-        for field_idx, field in enumerate(valid[0]):
-            if len(field) == 0 and all(
-                    map(lambda ex: len(ex[field_idx]) == 0, valid)):
-                # ensure this field is the empty string on all examples
-                invalid = list(
-                    filter(lambda ex: len(ex[field_idx]) == 0, invalid))
-                for ex in valid + invalid:
-                    ex.pop(field_idx)
-        return valid, invalid

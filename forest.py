@@ -7,7 +7,7 @@ from typing import List, Tuple
 
 from termcolor import colored
 
-from configuration import Configuration
+from forest.configuration import Configuration
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.logger import get_logger
 from forest.parse_examples import parse_file, parse_resnax

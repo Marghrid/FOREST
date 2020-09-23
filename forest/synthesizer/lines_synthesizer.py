@@ -1,9 +1,9 @@
 import time
 
-from configuration import Configuration
+from forest.configuration import Configuration
 from .multiple_synthesizer import MultipleSynthesizer
-from ..enumerator import LinesEnumerator
-from ..logger import get_logger
+from forest.enumerator import LinesEnumerator
+from forest.logger import get_logger
 
 logger = get_logger('forest')
 

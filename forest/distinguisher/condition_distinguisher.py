@@ -32,11 +32,11 @@ class ConditionDistinguisher:
         solver = z3.Solver()
         model1_copy, model2_copy = keep_distinct(model1, model2)
         cs = []
-        sat_m1 = z3.Bool("sat_m1")
-        sat_m2 = z3.Bool("sat_m2")
         for cap_idx in range(len(self._capture_groups)):
             cs.append(z3.Int(f"c{cap_idx}"))
 
+        sat_m1 = z3.Bool("sat_m1")
+        sat_m2 = z3.Bool("sat_m2")
         solver.add(self._get_sat_m_constraint(cs, model1_copy, sat_m1))
         solver.add(self._get_sat_m_constraint(cs, model2_copy, sat_m2))
 
@@ -65,9 +65,8 @@ class ConditionDistinguisher:
     def _get_sat_m_constraint(self, cs, model, sat_m):
         big_and = []
         for cond_ctr in model:
-            c_i = cs[cond_ctr[0]]
-            cond = cond_ctr[1]
-            bound_val = cond_ctr[2]
+            c_idx, cond, bound_val = cond_ctr
+            c_i = cs[c_idx]
             big_and.append(self._get_reverse_cond(cond, bound_val, c_i))
         return sat_m == z3.And(big_and)
 

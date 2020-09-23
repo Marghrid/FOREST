@@ -7,7 +7,7 @@ from typing import List
 
 from termcolor import colored
 
-from configuration import Configuration
+from forest.configuration import Configuration
 from forest.capturer import Capturer
 from forest.decider import RegexDecider
 from forest.distinguisher import RegexDistinguisher
