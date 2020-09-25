@@ -64,10 +64,6 @@ def main():
                         args.processes, args.timeout, args.out, args.resnax, args.max_valid,
                         args.max_invalid, args.solve_only, args.log)
     tester.run()
-    if args.encoding == 'compare-times':
-        tester.print_time_comparison()
-    else:
-        tester.print_results()
 
 
 if __name__ == '__main__':

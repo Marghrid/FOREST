@@ -10,10 +10,10 @@ from forest.dsl import Node
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.enumerator import DynamicMultiTreeEnumerator, StaticMultiTreeEnumerator
 from forest.logger import get_logger
-from forest.utils import transpose
-from forest.visitor import RegexInterpreter, ToZ3
 from forest.statistics import Statistics
 from forest.synthesizer import MultiTreeSynthesizer
+from forest.utils import transpose
+from forest.visitor import RegexInterpreter, ToZ3
 
 logger = get_logger('forest')
 stats = Statistics.get_statistics()
@@ -133,6 +133,8 @@ class SketchSynthesizer(MultiTreeSynthesizer):
                     return
 
     def try_regex(self):
+        """ Tries to synthesize a regex that matches the valid and invalid examples using the
+        current sketch. """
         regex_synthesis_start = time.time()
 
         sketch = self.enumerate()
