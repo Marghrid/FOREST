@@ -211,8 +211,8 @@ def read_cmd_args():
         log_path = ''
 
     config = Configuration(encoding=args.encoding, self_interact=args.self_interact,
-                           log_path=log_path,
-                           pruning=not args.no_pruning, sketching=args.sketch)
+                           log_path=log_path, pruning=not args.no_pruning, sketching=args.sketch)
+    config.print_first_regex = True
 
     return args.file, args.resnax, args.max_valid, args.max_invalid, config
 

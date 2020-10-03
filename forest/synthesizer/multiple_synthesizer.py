@@ -42,7 +42,7 @@ class MultipleSynthesizer(ABC):
             ground_truth_conditions = list(
                 filter(lambda s: s.lstrip().startswith("$"), ground_truth))
             self.ground_truth_conditions = list(map(lambda s: s.lstrip(), ground_truth_conditions))
-            self.ground_truth_regex = "".join(
+            self.ground_truth_regex = ",".join(
                 filter(lambda s: not s.lstrip().startswith("$"), ground_truth))
 
         if not configuration.pruning:
@@ -69,6 +69,7 @@ class MultipleSynthesizer(ABC):
 
         # To store synthesized regexes and captures:
         self.solutions = []
+        self.first_regex = None
 
         # counters and timers:
         self.indistinguishable = 0
@@ -105,6 +106,9 @@ class MultipleSynthesizer(ABC):
         info_str += str(stats) + "\n\n"
 
         if len(self.solutions) > 0:
+            if self.configuration.print_first_regex:
+                first_regex_str = self._decider.interpreter.eval(self.first_regex)
+                info_str += f'First regex: {first_regex_str}\n'
             regex, capturing_groups, capture_conditions = self.solutions[0]
             conditions, conditions_captures = capture_conditions
             solution_str = self._decider.interpreter.eval(regex, captures=conditions_captures)
@@ -226,7 +230,7 @@ class MultipleSynthesizer(ABC):
             if regex is None or self.die:  # enumerator is exhausted or user interrupted synthesizer
                 break
 
-            if regex == -1:
+            if regex == -1: # enumerated a regex that is not correct
                 continue
 
             capturing_groups = self.try_capturing_groups(regex)
@@ -282,6 +286,7 @@ class MultipleSynthesizer(ABC):
             stats.regex_synthesis_time += time.time() - regex_synthesis_start
             if stats.first_regex_time == -1:
                 stats.first_regex_time = time.time() - self.start_time
+                self.first_regex = regex
             return regex
 
         elif self.configuration.pruning:
