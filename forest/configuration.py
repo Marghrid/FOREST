@@ -22,3 +22,6 @@ class Configuration:
 
     # Forces dynamic multitree when the encoding is multitree.
     force_dynamic = False
+
+    # Prints the first correct regex found
+    print_first_regex = False
