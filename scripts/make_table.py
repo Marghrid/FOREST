@@ -32,7 +32,7 @@ def print_table(instances: List, regel: bool):
     global print_columns
 
     if regel:
-        print_columns.extend(["regel time", "regel_timeout"])
+        print_columns.extend(["regel_time", "regel_timeout"])
 
     print(", ".join(print_columns))
 
