@@ -3,14 +3,14 @@ import glob
 import re
 from typing import List
 
-print_columns = ["name", "timed_out", "total_synthesis_time", "regex_synthesis_time",
+print_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex_synthesis_time",
                  "first_regex_time", "enumerated_regexes", "regex_interactions",
                  "regex_distinguishing_time", "cap_groups_synthesis_time", "enumerated_cap_groups",
                  "cap_conditions_synthesis_time", "enumerated_cap_conditions",
                  "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
                  "cap_groups", "ground_truth"]
 
-all_columns = ["name", "timed_out", "total_synthesis_time", "regex_synthesis_time",
+all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex_synthesis_time",
                "first_regex_time", "enumerated_regexes", "regex_interactions",
                "regex_distinguishing_time", "cap_groups_synthesis_time", "enumerated_cap_groups",
                "cap_conditions_synthesis_time", "enumerated_cap_conditions",
