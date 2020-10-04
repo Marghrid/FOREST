@@ -39,7 +39,10 @@ def print_table(instances: List, regel: bool):
     for instance in instances:
         row = []
         for col_name in print_columns:
-            row.append(str(instance.values[col_name]))
+            if col_name in ["solution", "cap_groups", "ground_truth"]:
+                row.append(f'"{instance.values[col_name]}"')
+            else:
+                row.append(str(instance.values[col_name]))
         print(', '.join(row))
 
 
