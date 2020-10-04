@@ -15,7 +15,7 @@ all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex
                "regex_distinguishing_time", "cap_groups_synthesis_time", "enumerated_cap_groups",
                "cap_conditions_synthesis_time", "enumerated_cap_conditions",
                "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
-               "cap_groups", "ground_truth"]
+               "cap_groups", "ground_truth", "regel_time", "regel_timeout"]
 
 
 class Instance:
@@ -219,8 +219,8 @@ def main():
                                 regex = r"Total time: (\d+\.\d+)"
                                 m = re.search(regex, line)
                                 if m is not None:
-                                    instance.regel_time = float(m[1])
-                                    instance.regel_timeout = False
+                                    instance.values['regel_time'] = float(m[1])
+                                    instance.values['regel_timeout'] = False
                 except:
                     print("could not open", regel_log_dir + "/" + instance.values['name'] + "-1")
 
