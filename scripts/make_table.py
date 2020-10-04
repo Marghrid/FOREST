@@ -8,14 +8,14 @@ print_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "reg
                  "regex_distinguishing_time", "cap_groups_synthesis_time", "enumerated_cap_groups",
                  "cap_conditions_synthesis_time", "enumerated_cap_conditions",
                  "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
-                 "cap_groups", "ground_truth"]
+                 "first_regex", "cap_groups", "ground_truth"]
 
 all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex_synthesis_time",
                "first_regex_time", "enumerated_regexes", "regex_interactions",
                "regex_distinguishing_time", "cap_groups_synthesis_time", "enumerated_cap_groups",
                "cap_conditions_synthesis_time", "enumerated_cap_conditions",
                "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
-               "cap_groups", "ground_truth", "regel_time", "regel_timeout"]
+               "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout"]
 
 
 class Instance:
@@ -102,6 +102,11 @@ def main():
                     cap_groups_synthesis = False
                     cap_conditions_synthesis = True
                     continue
+                elif "First regex" in line:
+                    regex = r"First regex: (.+)"
+                    m = re.search(regex, line)
+                    if m is not None:
+                        instance.values['first_regex'] = m[1]
                 elif "Solution" in line:
                     cap_conditions_synthesis = False
                     solution_print = True
@@ -113,7 +118,6 @@ def main():
                 elif "No solution" in line:
                     cap_conditions_synthesis = False
                     solution_print = True
-                    regex = r"Solution: (.+)"
                     instance.values['solution'] = 'No solution'
                     instance.values['cap_groups'] = None
                     continue
