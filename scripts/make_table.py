@@ -213,7 +213,7 @@ def main():
                                 instance.values['regel_timeout'] = False
             except IOError:
                 try:
-                    with open(regel_log_dir + "/" + instance.name + "-b") as f:
+                    with open(regel_log_dir + "/" + instance.values['name'] + "-b") as f:
                         for line in f:
                             if "Total time" in line:
                                 regex = r"Total time: (\d+\.\d+)"
@@ -222,7 +222,7 @@ def main():
                                     instance.regel_time = float(m[1])
                                     instance.regel_timeout = False
                 except:
-                    print("could not open", regel_log_dir + "/" + instance.name + "-1")
+                    print("could not open", regel_log_dir + "/" + instance.values['name'] + "-1")
 
     instances = sorted(instances, key=lambda i: i.values['name'])
     print_table(instances, len(regel_log_dir) > 0)
