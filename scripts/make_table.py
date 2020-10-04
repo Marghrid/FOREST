@@ -10,12 +10,15 @@ print_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "reg
                  "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
                  "first_regex", "cap_groups", "ground_truth"]
 
+regel_columns = ["regel_time", "regel_timeout", "regel_sketch", "regel_solution"]
+
 all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex_synthesis_time",
                "first_regex_time", "enumerated_regexes", "regex_interactions",
                "regex_distinguishing_time", "cap_groups_synthesis_time", "enumerated_cap_groups",
                "cap_conditions_synthesis_time", "enumerated_cap_conditions",
                "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
-               "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout"]
+               "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout",
+               "regel_sketch", "regel_solution"]
 
 
 class Instance:
@@ -29,17 +32,17 @@ class Instance:
 
 def print_table(instances: List, regel: bool):
     """ Print execution information for each instance (sorted by name) """
-    global print_columns
+    global print_columns, regel_columns
 
     if regel:
-        print_columns.extend(["regel_time", "regel_timeout"])
+        print_columns.extend(regel_columns)
 
     print(", ".join(print_columns))
 
     for instance in instances:
         row = []
         for col_name in print_columns:
-            if col_name in ["solution", "cap_groups", "ground_truth"]:
+            if col_name in ["solution", "cap_groups", "ground_truth", "regel_sketch", "regel_solution"]:
                 row.append(f'"{instance.values[col_name]}"')
             else:
                 row.append(str(instance.values[col_name]))
@@ -212,7 +215,17 @@ def main():
             try:
                 with open(regel_log_dir + "/" + instance.values['name'] + "-1") as f:
                     for line in f:
-                        if "Total time" in line:
+                        if "Sketch" in line:
+                            regex = r"Sketch: (.+)"
+                            m = re.search(regex, line)
+                            if m is not None:
+                                instance.values["regel_sketch"] = m[1]
+                        elif "Learned program" in line:
+                            regex = r"Learned program: (.+): (?:\d+\.\d+)"
+                            m = re.search(regex, line)
+                            if m is not None:
+                                instance.values["regel_solution"] = m[1]
+                        elif "Total time" in line:
                             regex = r"Total time: (\d+\.\d+)"
                             m = re.search(regex, line)
                             if m is not None:
