@@ -42,8 +42,14 @@ def main():
     synth_group.add_argument('-e', '--encoding', metavar='|'.join(encodings), type=str,
                              default='multitree', help='SMT encoding.')
     synth_group.add_argument('--resnax', action='store_true',
-                             help='read resnax i/o examples format.')
+                             help='Read resnax i/o examples format.')
     synth_group.add_argument('--no-pruning', '--nopruning', action='store_true',
+                             help='Disable pruning.')
+    synth_group.add_argument('--no-captures', '--nocaptures', action='store_true',
+                             help='Disable synthesis of capturing groups.')
+    synth_group.add_argument('--no-conditions', '--noconditions', action='store_true',
+                             help='Disable synthesis of capture conditions.')
+    synth_group.add_argument('--regex-only', '--regexonly', action='store_true',
                              help='read resnax i/o examples format.')
     synth_group.add_argument('-v', '--max-valid', type=int, default=-1,
                              help='Limit the number of valid examples. -1: unlimited.')
@@ -60,9 +66,9 @@ def main():
 
     global tester
 
-    tester = TaskRunner(args.directories, args.encoding, args.no_pruning, args.sketch,
-                        args.processes, args.timeout, args.out, args.resnax, args.max_valid,
-                        args.max_invalid, args.solve_only, args.log)
+    tester = TaskRunner(args.directories, args.encoding, args.no_pruning, args.no_captures,
+                        args.no_conditions, args.sketch, args.processes, args.timeout, args.out,
+                        args.resnax, args.max_valid, args.max_invalid, args.solve_only, args.log)
     tester.run()
 
 

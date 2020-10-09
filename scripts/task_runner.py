@@ -103,9 +103,10 @@ class Task:
 
 
 class TaskRunner:
-    def __init__(self, instance_dirs, method='multitree', no_pruning=False,
-                 sketching='none', num_processes=1, timeout=120, show_output=False,
-                 resnax=False, max_valid=-1, max_invalid=-1, solve_only=-1, logs_dir=''):
+    def __init__(self, instance_dirs, method='multitree', no_pruning=False, no_captures=False,
+                 no_conditions=False, sketching='none', num_processes=1, timeout=120,
+                 show_output=False, resnax=False, max_valid=-1, max_invalid=-1, solve_only=-1,
+                 logs_dir=''):
         self.show_output = show_output
         self.timeout = timeout + 2
         self.tasks = []
@@ -113,6 +114,8 @@ class TaskRunner:
         self.num_processes = num_processes
         self.poll_time = min(30, self.timeout // 15)
         self.no_pruning = no_pruning
+        self.no_captures = no_captures
+        self.no_conditions = no_conditions
         self.logs_dir = logs_dir
         if method == 'compare-times':
             methods = all_methods
@@ -126,6 +129,10 @@ class TaskRunner:
             command_base += ["-i", str(max_invalid)]
         if no_pruning:
             command_base.append('--no-pruning')
+        if no_captures:
+            command_base.append('--no-captures')
+        if no_conditions:
+            command_base.append('--no-conditions')
         if resnax:
             command_base.append('--resnax')
         if sketching != 'none':

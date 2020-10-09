@@ -233,17 +233,23 @@ class MultipleSynthesizer(ABC):
             if regex == -1: # enumerated a regex that is not correct
                 continue
 
-            capturing_groups = self.try_capturing_groups(regex)
+            if self.configuration.synth_captures:
+                capturing_groups = self.try_capturing_groups(regex)
 
-            if capturing_groups is None:
-                logger.info("Failed to find capture groups for the given captures.")
-                continue
+                if capturing_groups is None:
+                    logger.info("Failed to find capture groups for the given captures.")
+                    continue
+            else:
+                capturing_groups = []
 
-            capture_conditions = self.try_capture_conditions(regex)
+            if self.configuration.synth_conditions:
+                capture_conditions = self.try_capture_conditions(regex)
 
-            if capture_conditions[0] is None:
-                logger.info("Failed to find capture conditions that invalidate condition_invalid.")
-                continue
+                if capture_conditions[0] is None:
+                    logger.info("Failed to find capture conditions that invalidate condition_invalid.")
+                    continue
+            else:
+                capture_conditions = []
 
             self.solutions.append((regex, capturing_groups, capture_conditions))
 

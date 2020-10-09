@@ -17,11 +17,17 @@ class Configuration:
     # Activate/deactivate pruning
     pruning: bool = True
 
+    # Activate/deactivate synthesis of capturing groups
+    synth_captures: bool = True
+
+    # Activate/deactivate synthesis of capture conditions
+    synth_conditions: bool = True
+
     # Sketching mode.
     sketching: str = 'none'
 
     # Forces dynamic multitree when the encoding is multitree.
-    force_dynamic = False
+    force_dynamic: bool = False
 
     # Prints the first correct regex found
-    print_first_regex = False
+    print_first_regex: bool = False

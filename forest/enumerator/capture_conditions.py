@@ -131,6 +131,10 @@ class CaptureConditionsEnumerator:
 
     def _make_a_constraints(self, examples: List, valid: bool):
         for ex in examples:
+            if self.compiled_re.fullmatch(ex) is None:
+                print("ex:", ex)
+                print(self.compiled_re.pattern)
+
             captured = self.compiled_re.fullmatch(ex).groups()
             ss_of_this_x = []
             for cap_idx in range(len(captured)):
