@@ -42,7 +42,7 @@ def print_table(instances: List, regel: bool):
     for instance in instances:
         row = []
         for col_name in print_columns:
-            if col_name in ["solution", "cap_groups", "ground_truth", "regel_sketch", "regel_solution"]:
+            if col_name in ["solution", "cap_groups", "ground_truth", "regel_sketch", "regel_solution", "first_regex"]:
                 row.append(f'"{instance.values[col_name]}"')
             else:
                 row.append(str(instance.values[col_name]))
@@ -235,7 +235,12 @@ def main():
                 try:
                     with open(regel_log_dir + "/" + instance.values['name'] + "-b") as f:
                         for line in f:
-                            if "Total time" in line:
+                            if "Learned program" in line:
+                                regex = r"Learned program: (.+): (?:\d+\.\d+)"
+                                m = re.search(regex, line)
+                                if m is not None:
+                                    instance.values["regel_solution"] = m[1]
+                            elif "Total time" in line:
                                 regex = r"Total time: (\d+\.\d+)"
                                 m = re.search(regex, line)
                                 if m is not None:
