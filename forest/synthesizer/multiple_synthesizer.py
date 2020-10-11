@@ -13,7 +13,7 @@ from forest.decider import RegexDecider
 from forest.distinguisher import RegexDistinguisher
 from forest.logger import get_logger
 from forest.spec import TyrellSpec
-from forest.statistics import Statistics
+from forest.stats import Statistics
 from forest.utils import nice_time, is_regex, yes_values, no_values, conditions_to_str
 from forest.visitor import RegexInterpreter, NodeCounter
 

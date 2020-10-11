@@ -10,7 +10,7 @@ from forest.dsl import Node
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.enumerator import DynamicMultiTreeEnumerator, StaticMultiTreeEnumerator
 from forest.logger import get_logger
-from forest.statistics import Statistics
+from forest.stats import Statistics
 from forest.synthesizer import MultiTreeSynthesizer
 from forest.utils import transpose
 from forest.visitor import RegexInterpreter, ToZ3

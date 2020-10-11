@@ -10,7 +10,7 @@ from forest.enumerator.capture_conditions import CaptureConditionsEnumerator
 from forest.logger import get_logger
 from forest.utils import all_sublists_n, is_int, yes_values, no_values, check_conditions
 from forest.visitor import RegexInterpreter
-from forest.statistics import Statistics
+from forest.stats import Statistics
 
 logger = get_logger('forest')
 stats = Statistics.get_statistics()
