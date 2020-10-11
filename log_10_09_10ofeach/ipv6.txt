@@ -1,0 +1,26 @@
+On serpens on 2020-10-09 23:17:55.
+Enumerator: StaticMT(n=15; d=4)
+Terminated: True
+Elapsed time: 3620.12
+Time per depth: {3: 0.9097929000854492, 4: 3616.9855563640594}
+
+Regex synthesis:
+  Regex time: 3617.75
+  First regex time: 289.56
+  Enumerated: 4733
+  Interactions: 1
+  Distinguish time: 3.41
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: [0-9A-Z]{4}:(?:[0-9A-F]{0,4}|[A-F][A-F]):[0-9A-Z]*(?:[A-Z]|[0-9A-Z]):(?:[0-9A-F]|[A-Z])[0-9A-F]{3}:(?:DC|[0-9A-F]*):(?:[0-9A-F]*|[A-Z]{3}):[0-9A-F]{3,4}:(?:[A-F]|[0-9A-F])[0-9A-F]{0,3}
+Solution: [0-9A-Z]{4}:(?:[0-9A-F]{0,4}|[A-F][A-F]):[0-9A-Z]*(?:[A-Z]|[0-9A-Z]):(?:[0-9A-F]|[A-Z])[0-9A-F]{3}:(?:DC|[0-9A-F]*):(?:[0-9A-F]*|[A-Z]{3}):[0-9A-F]{3,4}:(?:[A-F]|[0-9A-F])[0-9A-F]{2,3}
+  Nodes: 53
+  No capturing groups.
+  Ground truth: [A-F0-9]{4}(:[A-F0-9]{4}){7} 

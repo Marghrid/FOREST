@@ -1,0 +1,26 @@
+On serpens on 2020-10-09 23:16:57.
+Enumerator: DynamicMT(n=1; d=3)
+Terminated: False
+Elapsed time: 12.02
+Time per depth: {(3, 1): 11.57046127319336}
+
+Regex synthesis:
+  Regex time: 11.57
+  First regex time: 4.41
+  Enumerated: 408
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: [0-9A-Z]{18}
+Solution: [0-9A-Z]{18}
+  Nodes: 4
+  No capturing groups.
+  Ground truth: [A-Z0-9]{18} 

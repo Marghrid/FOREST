@@ -1,0 +1,26 @@
+On serpens on 2020-10-09 21:17:01.
+Enumerator: StaticMT(n=13; d=3)
+Terminated: False
+Elapsed time: 131.26
+Time per depth: {3: 130.82178163528442}
+
+Regex synthesis:
+  Regex time: 78.8
+  First regex time: 9.45
+  Enumerated: 388
+  Interactions: 16
+  Distinguish time: 66.27
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 52.01
+  Enumerated: 31969
+  Interactions: 7
+  Distinguish time: 0.11
+
+First regex: [0-9]{3,4}/0[0-9]/1[0-9] 1?09?:[0-9]+:[0-9][0-9]
+Solution: [0-9]{4}/0([0-9])/1[0-9] 1?09?:[0-9]{2}:([0-9]{2}), $0 >= 1, $1 <= 59
+  Nodes: 22
+  No capturing groups.
+  Ground truth: [0-9]{4}/([0-9]{2})/([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2}) $0 >= 1, $0 <= 12, $1 >= 1, $1 <= 31, $2 <= 12, $3 <= 59, $4 <= 59

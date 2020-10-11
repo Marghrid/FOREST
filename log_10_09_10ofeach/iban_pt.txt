@@ -1,0 +1,26 @@
+On serpens on 2020-10-09 23:23:08.
+Enumerator: StaticMT(n=2; d=4)
+Terminated: True
+Elapsed time: 3632.22
+Time per depth: {3: 6.957426309585571, 4: 3622.769765853882}
+
+Regex synthesis:
+  Regex time: 3629.59
+  First regex time: 203.16
+  Enumerated: 6165
+  Interactions: 5
+  Distinguish time: 0.57
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: PT50 00(?: |[0-9]){8,24}
+Solution: PT50 00(?: |[0-9]){1,24}
+  Nodes: 7
+  No capturing groups.
+  Ground truth: (PT50 00)([0-9]| )+ 
