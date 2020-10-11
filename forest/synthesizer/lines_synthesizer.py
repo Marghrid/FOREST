@@ -24,4 +24,8 @@ class LinesSynthesizer(MultipleSynthesizer):
             self.try_for_depth()
 
             if len(self.solutions) > 0:
+                self.terminate()
                 return self.solutions[0]
+            elif self.die:
+                self.terminate()
+                return
