@@ -88,8 +88,8 @@ class KTreeEnumerator(RegexEnumerator):
             union_id = self.dsl.get_function_production("union").id
             node_is_union = node_var == z3.IntVal(union_id)
 
-            subtree0, subtree1 = self._get_subtree(node.children[0]), \
-                                 self._get_subtree(node.children[1])
+            subtree0, subtree1 = node.children[0].get_subtree(), \
+                                 node.children[1].get_subtree()
 
             bigOr = []
             for i in range(len(subtree0)):
@@ -244,8 +244,8 @@ class KTreeEnumerator(RegexEnumerator):
 
         for x in commutative_op_nodes:
             node_id = x.id
-            subtree0, subtree1 = self.get_subtree(self.nodes[node_id - 1].children[0]), \
-                                 self.get_subtree(self.nodes[node_id - 1].children[1])
+            subtree0, subtree1 = self.nodes[node_id - 1].children[0].get_subtree(), \
+                                 self.nodes[node_id - 1].children[1].get_subtree()
             # block model with subtrees swapped:
 
             block2 = []
