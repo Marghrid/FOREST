@@ -1,7 +1,7 @@
 import time
 
 from forest.configuration import Configuration
-from stats import Statistics
+from forest.stats import Statistics
 from .multiple_synthesizer import MultipleSynthesizer
 from forest.enumerator import LinesEnumerator
 from forest.logger import get_logger
