@@ -1,11 +1,13 @@
 import time
 
 from forest.configuration import Configuration
+from stats import Statistics
 from .multiple_synthesizer import MultipleSynthesizer
 from forest.enumerator import KTreeEnumerator
 from forest.logger import get_logger
 
 logger = get_logger('forest')
+stats = Statistics.get_statistics()
 
 
 class KTreeSynthesizer(MultipleSynthesizer):
@@ -21,7 +23,9 @@ class KTreeSynthesizer(MultipleSynthesizer):
         for dep in range(3, self.max_depth + 1):
             self._enumerator = KTreeEnumerator(self.dsl, dep)
 
+            depth_start = time.time()
             self.try_for_depth()
+            stats.per_depth_times[dep] = time.time() - depth_start
 
             if len(self.solutions) > 0:
                 self.terminate()

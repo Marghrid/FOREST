@@ -1,11 +1,13 @@
 import time
 
 from forest.configuration import Configuration
+from stats import Statistics
 from .multiple_synthesizer import MultipleSynthesizer
 from forest.enumerator import LinesEnumerator
 from forest.logger import get_logger
 
 logger = get_logger('forest')
+stats = Statistics.get_statistics()
 
 
 class LinesSynthesizer(MultipleSynthesizer):
@@ -21,7 +23,9 @@ class LinesSynthesizer(MultipleSynthesizer):
         for lines in range(2, self.max_depth + 1):
             self._enumerator = LinesEnumerator(self.dsl, lines)
 
+            depth_start = time.time()
             self.try_for_depth()
+            stats.per_depth_times[lines] = time.time() - depth_start
 
             if len(self.solutions) > 0:
                 self.terminate()

@@ -21,7 +21,7 @@ all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex
                "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout",
                "regel_sketch", "regel_solution"]
 
-exclude_instances = [] #["datetime2.txt", "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
+exclude_instances = ["datetime2.txt", "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
 
 
 class Instance:
@@ -54,11 +54,24 @@ def print_table(instances: List, regel: bool):
 
 def print_rank(instances):
     """ Print execution time for each instance (sorted by time) """
-    filtered = filter(lambda i: i.values["total_synthesis_time"] != 'undefined', instances)
-    ranked = sorted(filtered, key=lambda i: i.values["total_synthesis_time"])
-    print("name, time, ranking")
+    ranked = sorted(instances,
+                    key=lambda i: 4000 if i.values["total_synthesis_time"] == 'undefined' else
+                    i.values["total_synthesis_time"])
+    print("instance, time, ranking")
     for idx, instance in enumerate(ranked):
-        print(f'{instance.values["name"]}, {instance.values["total_synthesis_time"]}, {idx+1}')
+        time = 4000 if instance.values["total_synthesis_time"] == "undefined" else \
+            instance.values["total_synthesis_time"]
+        print(f'{instance.values["name"]}, {time}, {idx + 1}')
+
+
+def print_regel_rank(instances):
+    ranked = sorted(instances,
+                    key=lambda i: 4000 if i.values["regel_time"] == 'undefined' else
+                    i.values["regel_time"])
+    print("instance, time, ranking")
+    for idx, instance in enumerate(ranked):
+        time = 4000 if instance.values["regel_time"] == "undefined" else instance.values["regel_time"]+60
+        print(f'{instance.values["name"]}, {time}, {idx + 1}')
 
 
 def main():
@@ -67,8 +80,8 @@ def main():
     parser.add_argument('log_dir', metavar='DIR', type=str, help="Logs directory", default='')
     parser.add_argument('-r', '--regel-log-dir', metavar='DIR', type=str,
                         help="Regel logs directory", default='')
-    parser.add_argument('--rank', action="store_true",
-                        help="Make time ranking")
+    parser.add_argument('--rank', action="store_true", help="Make time ranking")
+    parser.add_argument('--rank-regel', action="store_true", help="Make REGEL time ranking")
 
     args = parser.parse_args()
 
@@ -91,6 +104,9 @@ def main():
 
     if args.rank:
         print_rank(instances)
+    elif args.rank_regel:
+        assert len(regel_log_dir) > 0, "please indicate REGEL logs directory"
+        print_regel_rank(instances)
     else:
         print_table(instances, len(regel_log_dir) > 0)
 
@@ -177,7 +193,7 @@ def read_log(log_file):
                 cap_groups_synthesis = False
                 cap_conditions_synthesis = True
                 continue
-            elif "First regex" in line:
+            elif "First regex:" in line:
                 regex = r"First regex: (.+)"
                 m = re.search(regex, line)
                 if m is not None:
