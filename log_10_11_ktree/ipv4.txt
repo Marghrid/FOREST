@@ -1,0 +1,23 @@
+On spica on 2020-10-11 19:30:55.
+Enumerator: KTree(d=5)
+Terminated: True
+Elapsed time: 3635.97
+Time per depth: {3: 1.1654298305511475, 4: 31.858007192611694, 5: 3598.730593442917}
+
+Regex synthesis:
+  Regex time: 3631.63
+  First regex time: -1
+  Enumerated: 7644
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: ([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}) $0 <= 255, $1 <= 255, $2 <= 255, $3 <= 255

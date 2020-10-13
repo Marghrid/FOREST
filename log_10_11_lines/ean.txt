@@ -1,0 +1,26 @@
+On spica on 2020-10-11 23:48:59.
+Enumerator: Lines(loc=2)
+Terminated: False
+Elapsed time: 0.53
+Time per depth: {2: 0.42377185821533203}
+
+Regex synthesis:
+  Regex time: 0.42
+  First regex time: 0.23
+  Enumerated: 108
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: [0-9]{13}
+Solution: [0-9]{13}
+  Nodes: 3
+  No capturing groups.
+  Ground truth: [0-9]{13} 

@@ -1,0 +1,23 @@
+On spica on 2020-10-11 20:37:26.
+Enumerator: KTree(d=4)
+Terminated: True
+Elapsed time: 3607.43
+Time per depth: {3: 6.676121950149536, 4: 3599.1354479789734}
+
+Regex synthesis:
+  Regex time: 3605.57
+  First regex time: -1
+  Enumerated: 10219
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: [a-z0-9][a-z0-9-.]*\.[a-z]+ 
