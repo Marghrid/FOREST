@@ -28,6 +28,7 @@ class MultipleSynthesizer(ABC):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  dsl: TyrellSpec, ground_truth: str, configuration: Configuration):
 
+        self.max_before_distinguishing = 4
         self.valid = valid_examples
         self.invalid = invalid_examples
         self.captured = captured
@@ -61,7 +62,7 @@ class MultipleSynthesizer(ABC):
         # Capturer works like a synthesizer of capturing groups
         self._capturer = Capturer(self.valid, self.captured, self.condition_invalid,
                                   self.ground_truth_regex, self.ground_truth_conditions,
-                                  self.configuration.self_interact)
+                                  self.configuration)
         self._node_counter = NodeCounter()
 
         # Subclass decides which enumerator to use
@@ -77,9 +78,6 @@ class MultipleSynthesizer(ABC):
         self.max_indistinguishable = 3
         self.start_time = None
         self.last_print_time = time.time()
-
-        # Used in signal handling:
-        self.die = False
 
     @property
     def enumerator(self):
@@ -102,7 +100,7 @@ class MultipleSynthesizer(ABC):
         info_str = f'On {socket.gethostname()} on {now.strftime("%Y-%m-%d %H:%M:%S")}.\n'
         info_str += f'Enumerator: {self._enumerator}' \
                     f'{" (no pruning)" if not self.configuration.pruning else ""}\n'
-        info_str += f'Terminated: {self.die}\n'
+        info_str += f'Terminated: {self.configuration.die}\n'
         info_str += str(stats) + "\n\n"
 
         if len(self.solutions) > 0:
@@ -193,7 +191,7 @@ class MultipleSynthesizer(ABC):
         """ Interact with user to ascertain whether the distinguishing input is valid """
         valid_answer = False
         # Do not count time spent waiting for user input: add waiting time to start_time.
-        while not valid_answer and not self.die:
+        while not valid_answer and not self.configuration.die:
             x = input(f'Is "{dist_input}" valid?\n')
             if x.lower().rstrip() in yes_values:
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')
@@ -227,7 +225,7 @@ class MultipleSynthesizer(ABC):
         while True:
             regex = self.try_regex()
 
-            if regex is None or self.die:  # enumerator is exhausted or user interrupted synthesizer
+            if regex is None or self.configuration.die:  # enumerator is exhausted or user interrupted synthesizer
                 break
 
             if regex == -1: # enumerated a regex that is not correct
@@ -253,8 +251,10 @@ class MultipleSynthesizer(ABC):
 
             self.solutions.append((regex, capturing_groups, capture_conditions))
 
-            if len(self.solutions) >= 2:  # if there are more than 2 solutions, disambiguate.
-                self.distinguish()
+            if len(self.solutions) >= self.max_before_distinguishing:
+                # if there are more than max_before_disambiguating solutions, disambiguate.
+                while len(self.solutions) > 1:
+                    self.distinguish()
                 assert len(self.solutions) == 1  # only one regex remains
 
             if self.indistinguishable >= self.max_indistinguishable:

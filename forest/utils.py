@@ -1,6 +1,5 @@
 import operator
 import re
-from itertools import combinations
 from typing import List
 
 import z3
@@ -62,6 +61,7 @@ def is_float(arg):
 def transpose(lst):
     """ Transposes a matrix. """
     return list(map(list, zip(*lst)))
+
 
 def find_lcs(strings):
     """ Find longest common substring of all strings in list """

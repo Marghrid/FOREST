@@ -28,13 +28,13 @@ class Capturer:
 
     def __init__(self, valid: List[List[str]], captures: List[List[Optional[str]]],
                  condition_invalid: List[List[str]], ground_truth_regex: str,
-                 ground_truth_conditions: List[str], auto_interact: bool):
+                 ground_truth_conditions: List[str], configuration):
         self.valid = valid
         self.captures = captures
         self.condition_invalid = condition_invalid
         self.ground_truth_regex = ground_truth_regex
         self.ground_truth_conditions = ground_truth_conditions
-        self.auto_interact = auto_interact
+        self.configuration = configuration
         self.interpreter = RegexInterpreter()
 
     def synthesize_capturing_groups(self, regex: Node):
@@ -107,7 +107,7 @@ class Capturer:
                         condition_distinguisher.distinguish(conditions[0], conditions[1])
                     stats.cap_conditions_distinguishing_time += time.time() - start_distinguish_time
                     stats.cap_conditions_interactions += 1
-                    if not self.auto_interact:
+                    if not self.configuration.self_interact:
                         conditions = self._interact(dist_input, keep_if_valid, keep_if_invalid)
                     else:
                         conditions = self._auto_distinguish(dist_input, keep_if_valid, keep_if_invalid)
@@ -120,7 +120,7 @@ class Capturer:
 
     def _interact(self, dist_input, keep_if_valid, keep_if_invalid):
         """ Interact with user to ascertain whether the distinguishing input is valid """
-        while True:
+        while not self.configuration.die:
             x = input(f'Is "{dist_input}" valid?\n')
             if x.lower().rstrip() in yes_values:
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')

@@ -98,7 +98,7 @@ class SketchSynthesizer(MultiTreeSynthesizer):
                 if len(self.solutions) > 0:
                     self.terminate()
                     return self.solutions[0]
-                elif self.die:
+                elif self.configuration.die:
                     self.terminate()
                     return
 
@@ -128,7 +128,7 @@ class SketchSynthesizer(MultiTreeSynthesizer):
                 if len(self.solutions) > 0:
                     self.terminate()
                     return self.solutions[0]
-                elif self.die:
+                elif self.configuration.die:
                     self.terminate()
                     return
 

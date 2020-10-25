@@ -31,3 +31,6 @@ class Configuration:
 
     # Prints the first correct regex found
     print_first_regex: bool = False
+
+    # Used in signal handling:
+    die: bool = False
