@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from operator import add
 from statistics import median, mean
 
+import numpy
 from termcolor import colored
 
 from forest.parse_examples import parse_resnax, parse_file
 
-
+exclude_instances = ["datetime2", "color", "date", "date7", "id1", "date3"]
 
 @dataclass
 class InstanceStats:
@@ -96,6 +97,8 @@ def main():
         new_stat = InstanceStats(inst_name, instance, len(valid), len(invalid), len(cond_invalid))
         instance_stats.append(new_stat)
 
+    instance_stats = list(filter(lambda s: s.name not in exclude_instances, instance_stats))
+
     all_num_valid = list(map(lambda s: s.num_valid, instance_stats))
     all_num_invalid = list(map(lambda s: s.num_invalid, instance_stats))
     all_num_cond_invalid = list(map(lambda s: s.num_cond_invalid, instance_stats))
@@ -103,16 +106,19 @@ def main():
     all_num_cond_invalid = list(filter(lambda x: x>0, all_num_cond_invalid))
 
     print("Total instances:", len(instance_stats))
+    for i in list(filter(lambda s: s.num_cond_invalid > 0, instance_stats)):
+        print(i.name)
 
-    print("mean num valid:", round(mean(all_num_valid), 1))
-    print("mean num invalid:", round(mean(all_num_invalid),1 ))
-    print("mean num cond invalid:", round(mean(all_num_cond_invalid), 1))
-    print("median num valid:", round(median(all_num_valid), 1))
-    print("median num invalid:", round(median(all_num_invalid), 1))
-    print("median num cond invalid:", round(median(all_num_cond_invalid), 1))
-
-    print("mean total:", round(mean(all_num_exs), 1))
-    print("median total:", round(median(all_num_exs), 1))
+    print("valid:\t", "\tmean", round(mean(all_num_valid), 1), ";\tmedian",
+          round(median(all_num_valid), 1), ";\trange", min(all_num_valid), "to", max(all_num_valid))
+    print("invalid:", "\tmean", round(mean(all_num_invalid),1 ), ";\tmedian",
+          round(median(all_num_invalid), 1), ";\trange", min(all_num_invalid), "to",
+          max(all_num_invalid))
+    print("cond inv:", "\tmean", round(mean(all_num_cond_invalid), 1), ";\tmedian",
+          round(median(all_num_cond_invalid), 1), ";\trange", min(all_num_cond_invalid), "to",
+          max(all_num_cond_invalid))
+    print("all:\t", "\tmean", round(mean(all_num_exs), 1), ";\tmedian",
+          round(median(all_num_exs), 1), ";\trange", min(all_num_exs), "to", max(all_num_exs))
 
 
 if __name__ == '__main__':

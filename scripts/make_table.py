@@ -4,12 +4,15 @@ import re
 from typing import List
 
 print_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex_synthesis_time",
-                 "first_regex_time", "enumerated_regexes", "regex_interactions",
+                 "first_regex_time", #"enumerated_regexes",
+                 "regex_interactions",
                  "regex_distinguishing_time",
                  # "cap_groups_synthesis_time", "enumerated_cap_groups",
                  "cap_conditions_synthesis_time", "enumerated_cap_conditions",
                  "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
-                 "first_regex", "cap_groups", "ground_truth"]
+                 # "first_regex",
+                 #"cap_groups",
+                 "ground_truth"]
 
 regel_columns = ["regel_time", "regel_timeout", "regel_sketch", "regel_solution"]
 
@@ -18,11 +21,13 @@ all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex
                "regex_distinguishing_time", "cap_groups_synthesis_time", "enumerated_cap_groups",
                "cap_conditions_synthesis_time", "enumerated_cap_conditions",
                "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
-               "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout",
+               "nodes", "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout",
                "regel_sketch", "regel_solution"]
 
 exclude_instances = ["datetime2.txt", "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
 
+logs = {"nopruning": "log_10_09_nopruning", "dynamic": "log_10_09_dyn", "multitree": "log_10_09",
+        "ktree": "log_10_11_ktree", "lines": "log_10_11_lines"}
 
 class Instance:
     def __init__(self, name):
@@ -43,7 +48,7 @@ def print_table(instances: List, regel: bool):
     print(", ".join(print_columns))
 
     for idx, instance in enumerate(instances):
-        row = [str(idx)]
+        row = []
         for col_name in print_columns:
             if col_name in ["solution", "cap_groups", "ground_truth", "regel_sketch", "regel_solution", "first_regex"]:
                 row.append(f'"{instance.values[col_name]}"')
@@ -55,12 +60,12 @@ def print_table(instances: List, regel: bool):
 def print_rank(instances):
     """ Print execution time for each instance (sorted by time) """
     ranked = sorted(instances,
-                    key=lambda i: 4000 if i.values["total_synthesis_time"] == 'undefined' else
-                    i.values["total_synthesis_time"])
+                    key=lambda i: 4000 if i.values["regel_time"] == 'undefined' else
+                    i.values["regel_time"])
     print("instance, time, ranking")
     for idx, instance in enumerate(ranked):
-        time = 4000 if instance.values["total_synthesis_time"] == "undefined" else \
-            instance.values["total_synthesis_time"]
+        time = 4000 if instance.values["regel_time"] == "undefined" else \
+            instance.values["regel_time"]
         print(f'{instance.values["name"]}, {time}, {idx + 1}')
 
 
@@ -74,6 +79,36 @@ def print_regel_rank(instances):
         print(f'{instance.values["name"]}, {time}, {idx + 1}')
 
 
+def print_compare_times():
+    global logs
+    instances = {}
+    for log in logs:
+        log_files = glob.glob(logs[log] + "/*.txt")
+        instances[log] = []
+
+        for log_file in log_files:
+            instance = read_log(log_file)
+            if instance is not None:
+                instances[log].append(instance)
+
+        instances[log] = sorted(instances[log], key=lambda i: i.values['name'])
+
+    columns = list(logs.keys())
+    print(", ".join(["instance"] + columns))
+    # get number of instances from any list in the dictionary
+    num_instances = len(next(iter(instances.values())))
+    for idx in range(num_instances):
+        row = []
+        instance_name = next(iter(instances.values()))[idx].values["name"]
+        row.append(instance_name)
+        for c in columns:
+            time = instances[c][idx].values["total_synthesis_time"]
+            if time == "undefined":
+                time = 4000
+            row.append(time)
+        print(", ".join(map(str, row)))
+
+
 def main():
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -82,6 +117,8 @@ def main():
                         help="Regel logs directory", default='')
     parser.add_argument('--rank', action="store_true", help="Make time ranking")
     parser.add_argument('--rank-regel', action="store_true", help="Make REGEL time ranking")
+    parser.add_argument('--compare-times', action="store_true",
+                        help="Make table comparing the synthesis time for different methods.")
 
     args = parser.parse_args()
 
@@ -107,6 +144,8 @@ def main():
     elif args.rank_regel:
         assert len(regel_log_dir) > 0, "please indicate REGEL logs directory"
         print_regel_rank(instances)
+    elif args.compare_times:
+        print_compare_times()
     else:
         print_table(instances, len(regel_log_dir) > 0)
 
@@ -132,7 +171,7 @@ def read_regel_log(instance, regel_log_dir):
                         instance.values['regel_time'] = float(m[1])
                         instance.values['regel_timeout'] = False
     except IOError:
-        try:
+        #try:
             with open(regel_log_dir + "/" + instance.values['name'] + "-b") as f:
                 for line in f:
                     if "Learned program" in line:
@@ -146,8 +185,8 @@ def read_regel_log(instance, regel_log_dir):
                         if m is not None:
                             instance.values['regel_time'] = float(m[1])
                             instance.values['regel_timeout'] = False
-        except:
-            print("could not open", regel_log_dir + "/" + instance.values['name'] + "-1")
+        #except IOError:
+            #print("could not open", regel_log_dir + "/" + instance.values['name'] + "-1")
 
 
 def read_log(log_file):
