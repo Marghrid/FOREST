@@ -26,7 +26,7 @@ def sig_handler(received_signal, frame):
     print('\nSIGINT or SIGTERM detected. Exiting gracefully.')
     if synthesizer is not None:
         print('Printing the last valid program found.')
-        synthesizer.die = True
+        synthesizer.configuration.die = True
 
 
 def main():

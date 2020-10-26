@@ -18,7 +18,7 @@ class RegexDistinguisher:
     def __init__(self):
         self._toz3 = ToZ3()
         self._printer = RegexInterpreter()
-        self.force_multi_distinguish = False
+        self.force_multi_distinguish = True
         self.force_distinguish2 = False
 
     def distinguish(self, programs):
@@ -111,8 +111,8 @@ class RegexDistinguisher:
         solver = z3.Optimize()
 
         z3_regexes = []
-        for z3_regex in selected_regexes:
-            z3_regex = self._toz3.eval(z3_regex)
+        for regex in selected_regexes:
+            z3_regex = self._toz3.eval(regex)
             z3_regexes.append(z3_regex)
 
         dist = z3.String("distinguishing")
@@ -129,8 +129,6 @@ class RegexDistinguisher:
         z3_bs = []
         for ro_i, ro_j in combinations(ro_z3, 2):
             solver.add_soft(z3.Xor(ro_i, ro_j))
-
-        # PbLe([(Bool('b%i' % i), 1) for i in range(200)], 10)
 
         if solver.check() == z3.sat:
             # print(solver.model())
