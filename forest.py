@@ -46,9 +46,9 @@ def main():
     show(valid, invalid, condition_invalid, ground_truth)
 
     global synthesizer
-    dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid)
+    dsl, valid, invalid, captures, type_validation = preprocess(valid, invalid)
     if config.sketching != 'none':
-        dsl, valid, invalid, captures, type_validation = prepare_things(valid, invalid, sketch=True)
+        dsl, valid, invalid, captures, type_validation = preprocess(valid, invalid, sketch=True)
         if "string" not in type_validation[0] and "regex" not in type_validation[0]:
             raise Exception("MultiTree Synthesizer is only for strings.")
         synthesizer = SketchSynthesizer(valid, invalid, captures, condition_invalid, dsl,
@@ -74,7 +74,7 @@ def main():
 
     return synthesize(type_validation)
 
-def prepare_things(valid, invalid, sketch=False) \
+def preprocess(valid, invalid, sketch=False) \
         -> Tuple[TyrellSpec, List[List], List[List], List[List], List[str]]:
     """  returns dsl, valid_examples, invalid_examples, captures, and type_validation """
     type_validation = ["regex"]
