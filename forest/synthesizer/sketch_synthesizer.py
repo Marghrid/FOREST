@@ -175,16 +175,13 @@ class SketchSynthesizer(MultiTreeSynthesizer):
 
         return -1
 
-    def fill_brute_force(self, sketch):
-        """ Fills a sketch and returns all resulting concrete valid programs """
+    def get_domains(self, sketch):
         builder = DSLBuilder([0] * len(self.valid[0]), self.valid, self.invalid)
         regexlits = builder.get_regexlits(transpose(self.valid)[0])
         rangelits = builder.get_rangelits(transpose(self.valid)[0])
-
         # The first traverse is just to save the domain. Ideally 'fill' does not modify
         # the sketch.
         holes = self.traverse_and_save_holes(sketch)
-
         domains = []
         for hole in holes:
             if hole.type.name == "RegexLit":
@@ -193,11 +190,18 @@ class SketchSynthesizer(MultiTreeSynthesizer):
                 domains.append(rangelits)
             else:
                 print("Error:", hole.type.name)
+        return domains
+
+    def fill_brute_force(self, sketch):
+        """ Fills a sketch and returns all resulting concrete valid programs """
+        domains = self.get_domains(sketch)
 
         start = time.time()
         correct = []
 
         for values in itertools.product(*domains):
+            if self.configuration.die:
+                break
             concrete = deepcopy(sketch)
             holes = self.traverse_and_save_holes(concrete)
             assert len(values) == len(holes)
@@ -218,11 +222,8 @@ class SketchSynthesizer(MultiTreeSynthesizer):
         return correct
 
     def fill_hybrid(self, sketch):
-        global m_counter
-        m_counter = 0
-        builder = DSLBuilder([0] * len(self.valid[0]), self.valid, self.invalid)
-        regexlits = builder.get_regexlits(transpose(self.valid)[0])
-        rangelits = builder.get_rangelits(transpose(self.valid)[0])
+        domains = self.get_domains(sketch)
+
         z3_solver = z3.Solver()
         try:
             z3_solver.set('smt.seq.use_derivatives', True)
@@ -232,31 +233,18 @@ class SketchSynthesizer(MultiTreeSynthesizer):
                 logger.warning("'use_derivatives' option not available.")
                 self.warned = True
 
-        holes = self.traverse_and_save_holes(sketch)
-        # print("holes", holes)
-
-        print("Generating domains...")
-        domains = []
-        for hole in holes:
-            if hole.type.name == "RegexLit":
-                domains.append(regexlits)
-            elif hole.type.name == "RangeLit":
-                domains.append(rangelits)
-            else:
-                print("Error:", hole.type.name)
-
         start = time.time()
 
-        print("Creating constraints...", len(list(itertools.product(*domains))))
         m_vars = {}
         for values in itertools.product(*domains):
+            if self.configuration.die:
+                break
             concrete = deepcopy(sketch)
             holes = self.traverse_and_save_holes(concrete)
             assert len(values) == len(holes)
             for i, hole in enumerate(holes):
                 hole.data = values[i]
 
-            # print("filled", self._printer.eval(program))
             z3re = self.to_z3.eval(concrete)
             m = z3.Bool(_get_new_m())
             m_vars[m] = concrete
@@ -272,6 +260,7 @@ class SketchSynthesizer(MultiTreeSynthesizer):
             z3_solver.add(m == z3.And(big_and))
 
         z3_solver.add(z3.Or(*m_vars.keys()))
+
         z3_solver.set("timeout", 100)
         print("checking...")
         res = z3_solver.check()
@@ -306,9 +295,9 @@ class SketchSynthesizer(MultiTreeSynthesizer):
     def fill_smt(self, sketch):
         global m_counter
         m_counter = 0
-        builder = DSLBuilder([0] * len(self.valid[0]), self.valid, self.invalid)
-        regexlits = builder.get_regexlits(transpose(self.valid)[0])
-        rangelits = builder.get_rangelits(transpose(self.valid)[0])
+
+        domains = self.get_domains(sketch)
+
         z3_solver = z3.Solver()
         try:
             z3_solver.set('smt.seq.use_derivatives', True)
@@ -318,21 +307,12 @@ class SketchSynthesizer(MultiTreeSynthesizer):
                 logger.warning("'use_derivatives' option not available.")
                 self.warned = True
 
-        holes = self.traverse_and_save_holes(sketch)
-
-        domains = []
-        for hole in holes:
-            if hole.type.name == "RegexLit":
-                domains.append(regexlits)
-            elif hole.type.name == "RangeLit":
-                domains.append(rangelits)
-            else:
-                print("Error:", hole.type.name)
-
         start = time.time()
 
         m_vars = {}
         for values in itertools.product(*domains):
+            if self.configuration.die:
+                break
             concrete = deepcopy(sketch)
             holes = self.traverse_and_save_holes(concrete)
             assert len(values) == len(holes)
