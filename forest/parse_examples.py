@@ -56,8 +56,9 @@ def show(valid, invalid, condition_invalid, ground_truth: str):
     print("Ground truth:")
     print(colored(ground_truth, "green"))
 
-def preprocess(valid, invalid, sketch=False) \
-        -> Tuple[TyrellSpec, List[List], List[List], List[List], List[str]]:
+
+def preprocess(valid, invalid, cond_invalid, sketch=False) \
+        -> Tuple[TyrellSpec, List[List], List[List], List[List], List[List], List[str]]:
     """  returns dsl, valid_examples, invalid_examples, captures, and type_validation """
     type_validation = ["regex"]
     if len(valid) == 0:
@@ -66,6 +67,8 @@ def preprocess(valid, invalid, sketch=False) \
         valid = list(map(lambda v: [v], valid))
     if isinstance(invalid[0], str):
         invalid = list(map(lambda v: [v], invalid))
+    if cond_invalid and len(cond_invalid) > 0 and isinstance(cond_invalid[0], str):
+        cond_invalid = list(map(lambda v: [v], cond_invalid))
     # logger.info("Assuming types: " + str(type_validation))
     captures = list(map(lambda x: x[1:], valid))
     valid = list(map(lambda x: [x[0]], valid))
@@ -74,7 +77,7 @@ def preprocess(valid, invalid, sketch=False) \
     # TODO: build() returns a list of DSLs for each different type of element. Now I'm
     #  just using the first element
 
-    return dsl, valid, invalid, captures, type_validation
+    return dsl, valid, invalid, cond_invalid, captures, type_validation
 
 
 def parse_file(filename):

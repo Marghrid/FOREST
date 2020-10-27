@@ -43,9 +43,11 @@ def main():
     show(valid, invalid, condition_invalid, ground_truth)
 
     global synthesizer
-    dsl, valid, invalid, captures, type_validation = preprocess(valid, invalid)
+    dsl, valid, invalid, condition_invalid, captures, type_validation = \
+        preprocess(valid, invalid, condition_invalid)
     if config.sketching != 'none':
-        dsl, valid, invalid, captures, type_validation = preprocess(valid, invalid, sketch=True)
+        dsl, valid, invalid, condition_invalid, captures, type_validation = \
+            preprocess(valid, invalid, condition_invalid, sketch=True)
         if "string" not in type_validation[0] and "regex" not in type_validation[0]:
             raise Exception("MultiTree Synthesizer is only for strings.")
         synthesizer = SketchSynthesizer(valid, invalid, captures, condition_invalid, dsl,
