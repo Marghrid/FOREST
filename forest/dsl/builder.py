@@ -2,7 +2,7 @@ from typing import Union
 
 from forest.spec import TyrellSpec
 from .node import *
-from ..generic_visitor import GenericVisitor
+from forest.generic_visitor import GenericVisitor
 
 
 class ProductionVisitor(GenericVisitor):

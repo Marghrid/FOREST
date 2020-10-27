@@ -3,12 +3,9 @@ import argparse
 import os
 import random
 from signal import signal, SIGINT, SIGTERM
-from typing import List, Tuple
 from forest.configuration import Configuration
-from forest.dsl.dsl_builder import DSLBuilder
 from forest.logger import get_logger
-from forest.parse_examples import parse_file, parse_resnax, show
-from forest.spec import TyrellSpec
+from forest.parse_examples import parse_file, parse_resnax, show, preprocess
 from forest.synthesizer import MultiTreeSynthesizer, KTreeSynthesizer, LinesSynthesizer, \
     SketchSynthesizer
 from forest.utils import conditions_to_str
@@ -73,27 +70,6 @@ def main():
         raise ValueError
 
     return synthesize(type_validation)
-
-def preprocess(valid, invalid, sketch=False) \
-        -> Tuple[TyrellSpec, List[List], List[List], List[List], List[str]]:
-    """  returns dsl, valid_examples, invalid_examples, captures, and type_validation """
-    type_validation = ["regex"]
-    if len(valid) == 0:
-        raise ValueError("No valid examples!")
-    if isinstance(valid[0], str):
-        valid = list(map(lambda v: [v], valid))
-    if isinstance(invalid[0], str):
-        invalid = list(map(lambda v: [v], invalid))
-    # logger.info("Assuming types: " + str(type_validation))
-    captures = list(map(lambda x: x[1:], valid))
-    valid = list(map(lambda x: [x[0]], valid))
-    builder = DSLBuilder(type_validation, valid, invalid, sketch)
-    dsl = builder.build()[0]
-    # TODO: build() returns a list of DSLs for each different type of element. Now I'm
-    #  just using the first element
-
-    return dsl, valid, invalid, captures, type_validation
-
 
 def synthesize(type_validation):
     global synthesizer
