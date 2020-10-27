@@ -28,7 +28,7 @@ class MultipleSynthesizer(ABC):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  dsl: TyrellSpec, ground_truth: str, configuration: Configuration):
 
-        self.max_before_distinguishing = 4
+        self.max_before_distinguishing = 2
         self.valid = valid_examples
         self.invalid = invalid_examples
         self.captured = captured

@@ -18,7 +18,7 @@ class RegexDistinguisher:
     def __init__(self):
         self._toz3 = ToZ3()
         self._printer = RegexInterpreter()
-        self.force_multi_distinguish = True
+        self.force_multi_distinguish = False
         self.force_distinguish2 = False
 
     def distinguish(self, programs):
