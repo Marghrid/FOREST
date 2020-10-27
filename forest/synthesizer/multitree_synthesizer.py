@@ -19,7 +19,7 @@ stats = Statistics.get_statistics()
 
 class MultiTreeSynthesizer(MultipleSynthesizer):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
-                 main_dsl, ground_truth, configuration: Configuration):
+                 main_dsl, ground_truth, configuration: Configuration = Configuration()):
         super().__init__(valid_examples, invalid_examples, captured, condition_invalid,
                          main_dsl, ground_truth, configuration=configuration)
         self.main_dsl = main_dsl
