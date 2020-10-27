@@ -1,9 +1,57 @@
 import re
 
+from termcolor import colored
+
 from forest.logger import get_logger
 from forest.utils import is_regex
 
 logger = get_logger('forest')
+
+
+def show(valid, invalid, condition_invalid, ground_truth: str):
+    print(len(valid), "valid examples:")
+    max_len = max(map(lambda x: sum(map(len, x)) + 2 * len(x), valid))
+    max_len = max(max_len, 6)
+    line_len = 0
+    for ex in valid:
+        s = ', '.join(ex).center(max_len)
+        line_len += len(s)
+        print(colored(s, "blue"), end='  ')
+        if line_len > 70:
+            line_len = 0
+            print()
+    print()
+
+    print(len(invalid), "invalid examples:")
+    max_len = max(map(lambda x: len(x[0]), invalid))
+    max_len = max(max_len, 6)
+    line_len = 0
+    for ex in invalid:
+        s = f'{ex[0]}'.center(max_len)
+        line_len += len(s)
+        print(colored(s, "red"), end='  ')
+        if line_len > 70:
+            line_len = 0
+            print()
+    print()
+
+    if len(condition_invalid) > 0:
+        print(len(condition_invalid), "condition invalid examples:")
+        max_len = max(map(lambda x: len(x[0]), condition_invalid))
+        max_len = max(max_len, 6)
+        line_len = 0
+        for ex in condition_invalid:
+            s = f'{ex[0]}'.center(max_len)
+            line_len += len(s)
+            print(colored(s, "magenta"), end='  ')
+            if line_len > 70:
+                line_len = 0
+                print()
+        print()
+    else:
+        print("No condition invalid examples.")
+    print("Ground truth:")
+    print(colored(ground_truth, "green"))
 
 
 def parse_file(filename):
