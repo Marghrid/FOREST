@@ -170,6 +170,7 @@ class SketchSynthesizer(MultiTreeSynthesizer):
 
             if stats.first_regex_time == -1:
                 stats.first_regex_time = time.time() - self.start_time
+                self.first_regex = filled[0]
 
             return filled[0]
 
