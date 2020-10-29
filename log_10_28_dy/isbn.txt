@@ -1,0 +1,23 @@
+On spica on 2020-10-28 12:20:02.
+Enumerator: DynamicMT(n=2; d=3)
+Terminated: True
+Elapsed time: 3619.4
+Time per depth: {(3, 1): 2.6412525177001953, (3, 2): 3615.504995584488}
+
+Regex synthesis:
+  Regex time: 3617.91
+  First regex time: -1
+  Enumerated: 27435
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: [0-9]{9}([0-9]{3})?([0-9]|X) 

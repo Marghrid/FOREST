@@ -1,0 +1,23 @@
+On spica on 2020-10-28 13:20:47.
+Enumerator: DynamicMT(n=3; d=3)
+Terminated: True
+Elapsed time: 3624.38
+Time per depth: {(3, 1): 1.8836617469787598, (3, 2): 79.08242225646973, (4, 1): 132.69494366645813, (3, 3): 3392.527818441391}
+
+Regex synthesis:
+  Regex time: 3605.7
+  First regex time: -1
+  Enumerated: 4757
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: (PT50 00)([0-9]| )+ 

@@ -1,0 +1,23 @@
+On spica on 2020-10-28 14:21:15.
+Enumerator: DynamicMT(n=4; d=3)
+Terminated: True
+Elapsed time: 3621.44
+Time per depth: {(3, 1): 0.32323384284973145, (3, 2): 4.068459987640381, (4, 1): 9.254294395446777, (3, 3): 596.6200640201569, (3, 4): 3007.2526693344116}
+
+Regex synthesis:
+  Regex time: 3617.26
+  First regex time: -1
+  Enumerated: 18522
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: ([0-9]{2})\.([0-9]{2})\.[0-9]{4} $0 <= 31, $0 >= 1, $1 <= 12, $1 >= 1
