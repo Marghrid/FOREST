@@ -1,0 +1,27 @@
+On spica on 2020-10-23 16:14:45.
+Enumerator: StaticMT(n=5; d=4)
+Terminated: False
+Elapsed time: 30.31
+Time per depth: {3: 0.22954988479614258, 4: 29.447084665298462}
+
+Regex synthesis:
+  Regex time: 29.65
+  First regex time: 4.17
+  Enumerated: 889
+  Interactions: 4
+  Distinguish time: 2.62
+Capturing groups synthesis:
+  Cap. groups time: 0.01
+  Enumerated: 22
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: 1(?:00|[0-9]{3})-(?:[0-9]{3}|[0-9]|[0-9]) LISBOA
+Solution: 1[0-9]{3}-(?:[0-9]|[0-9]){3} LISBOA
+  Nodes: 12
+  Cap. groups: (1[0-9]{3})-(?:[0-9]|[0-9]){3} LISBOA
+  Num. cap. groups: 1
+  Ground truth: 1[0-9]{3}-[0-9]{3} LISBOA 
