@@ -1,0 +1,23 @@
+On spica on 2020-10-23 13:44:32.
+Enumerator: StaticMT(n=3; d=4)
+Terminated: True
+Elapsed time: 3629.53
+Time per depth: {3: 2.36606502532959, 4: 3625.611886739731}
+
+Regex synthesis:
+  Regex time: 3627.9
+  First regex time: -1
+  Enumerated: 9068
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: ([A-Za-z0-9]|\.)+@([A-Za-z0-9]|\.)+\.[A-Za-z][A-Za-z][A-Za-z]? 
