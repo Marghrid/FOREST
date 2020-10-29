@@ -4,14 +4,14 @@ import re
 from typing import List
 
 print_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex_synthesis_time",
-                 "first_regex_time", #"enumerated_regexes",
+                 "first_regex_time", "enumerated_regexes",
                  "regex_interactions",
                  "regex_distinguishing_time",
-                 # "cap_groups_synthesis_time", "enumerated_cap_groups",
+                 "cap_groups_synthesis_time", "enumerated_cap_groups",
                  "cap_conditions_synthesis_time", "enumerated_cap_conditions",
-                 "cap_conditions_interactions", "cap_conditions_distinguishing_time", "solution",
+                 "cap_conditions_interactions", "cap_conditions_distinguishing_time", "nodes", "solution",
                  # "first_regex",
-                 #"cap_groups",
+                 "cap_groups",
                  "ground_truth"]
 
 regel_columns = ["regel_time", "regel_timeout", "regel_sketch", "regel_solution"]
@@ -24,10 +24,12 @@ all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex
                "nodes", "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout",
                "regel_sketch", "regel_solution"]
 
-exclude_instances = ["datetime2.txt", "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
+exclude_instances = ["datetime2.txt"] #, "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
 
-logs = {"nopruning": "log_10_09_nopruning", "dynamic": "log_10_09_dyn", "multitree": "log_10_09",
-        "ktree": "log_10_11_ktree", "lines": "log_10_11_lines"}
+logs = {"nopruning": "log_10_22_mtnp", "dynamic": "log_10_28_dy",
+        "multitree": "log_10_22_mt",
+        "ktree": "log_10_22_kt", "lines": "log_10_22_li",
+        "multi-dist": "log_10_26_muti-dist"}
 
 class Instance:
     def __init__(self, name):
