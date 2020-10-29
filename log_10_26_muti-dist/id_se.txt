@@ -1,0 +1,26 @@
+On spica on 2020-10-26 05:17:48.
+Enumerator: StaticMT(n=3; d=3)
+Terminated: False
+Elapsed time: 0.95
+Time per depth: {3: 0.7422764301300049}
+
+Regex synthesis:
+  Regex time: 0.74
+  First regex time: 0.61
+  Enumerated: 94
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: [0-9]{6}-[0-9]{4}
+Solution: [0-9]{6}-[0-9]{4}
+  Nodes: 8
+  No capturing groups.
+  Ground truth: [0-9]{6}-[0-9]{4} 

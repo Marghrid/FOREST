@@ -1,0 +1,23 @@
+On spica on 2020-10-26 07:19:35.
+Enumerator: StaticMT(n=2; d=5)
+Terminated: True
+Elapsed time: 3611.73
+Time per depth: {3: 0.4058678150177002, 4: 49.62872052192688, 5: 3560.7339906692505}
+
+Regex synthesis:
+  Regex time: 3610.63
+  First regex time: -1
+  Enumerated: 15528
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: \$[0-9]+(\.[0-9][0-9])? 
