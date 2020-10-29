@@ -1,0 +1,23 @@
+On spica on 2020-10-24 02:39:33.
+Enumerator: Lines(loc=5)
+Terminated: True
+Elapsed time: 3621.36
+Time per depth: {2: 0.257859468460083, 3: 4.12432074546814, 4: 812.4429793357849, 5: 2804.018944501877}
+
+Regex synthesis:
+  Regex time: 3620.27
+  First regex time: -1
+  Enumerated: 104002
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: ([0-9]{1,2})/[0-9]{2}(?:[0-9]{2})? $0 >= 1, $0 <= 12

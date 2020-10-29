@@ -1,0 +1,23 @@
+On spica on 2020-10-24 02:39:31.
+Enumerator: Lines(loc=4)
+Terminated: True
+Elapsed time: 3619.34
+Time per depth: {2: 8.750121831893921, 3: 337.0554060935974, 4: 3272.7319786548615}
+
+Regex synthesis:
+  Regex time: 3617.98
+  First regex time: -1
+  Enumerated: 106192
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: [0-9]{4}/([0-9]{2})/([0-9]{2}) ([0-9]{2}):([0-9]{2}) (AM|PM) $0 >= 1, $0 <= 12, $1 >= 1, $1 <= 31, $2 <= 12, $3 <= 59
