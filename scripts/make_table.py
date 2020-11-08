@@ -10,7 +10,7 @@ print_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "reg
                  "cap_groups_synthesis_time", "enumerated_cap_groups",
                  "cap_conditions_synthesis_time", "enumerated_cap_conditions",
                  "cap_conditions_interactions", "cap_conditions_distinguishing_time", "nodes", "solution",
-                 # "first_regex",
+                 "first_regex",
                  "cap_groups",
                  "ground_truth"]
 
@@ -62,12 +62,12 @@ def print_table(instances: List, regel: bool):
 def print_rank(instances):
     """ Print execution time for each instance (sorted by time) """
     ranked = sorted(instances,
-                    key=lambda i: 4000 if i.values["regel_time"] == 'undefined' else
-                    i.values["regel_time"])
+                    key=lambda i: 4000 if i.values["total_synthesis_time"] == 'undefined' else
+                    i.values["total_synthesis_time"])
     print("instance, time, ranking")
     for idx, instance in enumerate(ranked):
-        time = 4000 if instance.values["regel_time"] == "undefined" else \
-            instance.values["regel_time"]
+        time = 4000 if instance.values["total_synthesis_time"] == "undefined" else \
+            instance.values["total_synthesis_time"]
         print(f'{instance.values["name"]}, {time}, {idx + 1}')
 
 
@@ -173,7 +173,7 @@ def read_regel_log(instance, regel_log_dir):
                         instance.values['regel_time'] = float(m[1])
                         instance.values['regel_timeout'] = False
     except IOError:
-        #try:
+        try:
             with open(regel_log_dir + "/" + instance.values['name'] + "-b") as f:
                 for line in f:
                     if "Learned program" in line:
@@ -187,8 +187,8 @@ def read_regel_log(instance, regel_log_dir):
                         if m is not None:
                             instance.values['regel_time'] = float(m[1])
                             instance.values['regel_timeout'] = False
-        #except IOError:
-            #print("could not open", regel_log_dir + "/" + instance.values['name'] + "-1")
+        except IOError:
+            print("could not open", regel_log_dir + "/" + instance.values['name'] + "-1")
 
 
 def read_log(log_file):

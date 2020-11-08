@@ -10,7 +10,8 @@ from termcolor import colored
 
 from forest.parse_examples import parse_resnax, parse_file
 
-exclude_instances = ["datetime2", "color", "date", "date7", "id1", "date3"]
+exclude_instances = ["datetime2"]  # , "color", "date", "date7", "id1", "date3"]
+
 
 @dataclass
 class InstanceStats:
@@ -19,6 +20,7 @@ class InstanceStats:
     num_valid: int
     num_invalid: int
     num_cond_invalid: int
+
 
 def show(valid, invalid, condition_invalid, ground_truth: str):
     print(len(valid), "valid examples:")
@@ -103,7 +105,9 @@ def main():
     all_num_invalid = list(map(lambda s: s.num_invalid, instance_stats))
     all_num_cond_invalid = list(map(lambda s: s.num_cond_invalid, instance_stats))
     all_num_exs = list(map(add, all_num_valid, map(add, all_num_invalid, all_num_cond_invalid)))
-    all_num_cond_invalid = list(filter(lambda x: x>0, all_num_cond_invalid))
+    print(list(enumerate(all_num_exs)))
+    print(list(enumerate(map(lambda i: i.name, instance_stats))))
+    all_num_cond_invalid = list(filter(lambda x: x > 0, all_num_cond_invalid))
 
     print("Total instances:", len(instance_stats))
     for i in list(filter(lambda s: s.num_cond_invalid > 0, instance_stats)):
@@ -111,7 +115,7 @@ def main():
 
     print("valid:\t", "\tmean", round(mean(all_num_valid), 1), ";\tmedian",
           round(median(all_num_valid), 1), ";\trange", min(all_num_valid), "to", max(all_num_valid))
-    print("invalid:", "\tmean", round(mean(all_num_invalid),1 ), ";\tmedian",
+    print("invalid:", "\tmean", round(mean(all_num_invalid), 1), ";\tmedian",
           round(median(all_num_invalid), 1), ";\trange", min(all_num_invalid), "to",
           max(all_num_invalid))
     print("cond inv:", "\tmean", round(mean(all_num_cond_invalid), 1), ";\tmedian",
