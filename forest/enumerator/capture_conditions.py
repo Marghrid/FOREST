@@ -4,11 +4,12 @@ from typing import Optional, List, Iterable
 import z3
 
 from forest import utils
-from forest.utils import make_z3_and, transpose
+from forest.utils import make_z3_and
 
 
 class CaptureConditionsEnumerator:
-    def __init__(self, regex_str, num_captures: int, valid: List[List[str]], condition_invalid: List[List[str]]):
+    def __init__(self, regex_str, num_captures: int, valid: List[List[str]],
+                 condition_invalid: List[List[str]]):
         self.solver = z3.Optimize()
         self.num_captures = num_captures
 
@@ -24,7 +25,6 @@ class CaptureConditionsEnumerator:
         self.model = None
 
         self._init_z3_variables(valid, condition_invalid)
-        self._init_max_min(valid, condition_invalid)
 
         self.solver.add(self._make_a_constraints(valid, valid=True))
         self.solver.add(self._make_a_constraints(condition_invalid, valid=False))
@@ -34,16 +34,6 @@ class CaptureConditionsEnumerator:
             self.solver.add_soft(z3.Not(u))
 
     def next(self) -> Optional[List[tuple]]:
-        # This was an attempt to simulate binary search, but it failed:
-        # for c in range(self.num_captures):
-        #     avg_max = (self.max_cap_valid[c] + self.max_cap_cond_invalid[c])//2
-        #     print(f"avg max ${c}", avg_max)
-        #     self.solver.minimize(z3_abs(self.bounds[(c, "<=")] - z3.IntVal(avg_max)))
-        #
-        #     avg_min = (self.min_cap_valid[c] + self.min_cap_cond_invalid[c]) // 2
-        #     print(f"avg min ${c}", avg_min)
-        #     self.solver.minimize(z3_abs(self.bounds[(c, "<=")] - z3.IntVal(avg_min)))
-
         if self.solver.check() == z3.sat:
             self.model = self.solver.model()
             return self._get_condition_from_model()
@@ -151,15 +141,9 @@ class CaptureConditionsEnumerator:
         """ Add a new valid example to Capturer. """
         self.as_valid[new_valid] = z3.Bool(self._get_a_var_name(new_valid, valid=True))
         for cap_idx in range(self.num_captures):
-            self.ss_valid[(cap_idx, new_valid)] = z3.Bool(self._get_s_var_name(cap_idx, new_valid, True))
+            self.ss_valid[(cap_idx, new_valid)] = \
+                z3.Bool(self._get_s_var_name(cap_idx, new_valid, True))
         self.solver.add(self._make_a_constraints([new_valid], valid=True))
-
-        new_captures = list(map(int, self.compiled_re.fullmatch(new_valid).groups()))
-        for i in range(len(new_captures)):
-            if new_captures[i] > self.max_cap_valid[i]:
-                self.max_cap_valid[i] = new_captures[i]
-            if new_captures[i] < self.min_cap_valid[i]:
-                self.min_cap_valid[i] = new_captures[i]
 
     def add_conditional_invalid(self, new_cond_invalid: str):
         self.as_invalid[new_cond_invalid] = z3.Bool(self._get_a_var_name(new_cond_invalid, valid=False))
@@ -168,19 +152,3 @@ class CaptureConditionsEnumerator:
                 self._get_s_var_name(cap_idx, new_cond_invalid, False))
         self.solver.add(self._make_a_constraints([new_cond_invalid], valid=False))
 
-        new_captures = list(map(int, self.compiled_re.fullmatch(new_cond_invalid).groups()))
-        for i in range(len(new_captures)):
-            if new_captures[i] > self.max_cap_cond_invalid[i]:
-                self.max_cap_cond_invalid[i] = new_captures[i]
-            if new_captures[i] < self.min_cap_cond_invalid[i]:
-                self.min_cap_cond_invalid[i] = new_captures[i]
-
-    def _init_max_min(self, valid, condition_invalid):
-        captured_valid = transpose(map(lambda ex: map(int, self.compiled_re.fullmatch(ex).groups()), valid))
-        self.max_cap_valid = list(map(max, captured_valid))
-        self.min_cap_valid = list(map(min, captured_valid))
-
-        captured_cond_invalid = transpose(
-            map(lambda ex: map(int, self.compiled_re.fullmatch(ex).groups()), condition_invalid))
-        self.max_cap_cond_invalid = list(map(max, captured_cond_invalid))
-        self.min_cap_cond_invalid = list(map(min, captured_cond_invalid))

@@ -28,7 +28,7 @@ class MultipleSynthesizer(ABC):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  dsl: TyrellSpec, ground_truth: str, configuration: Configuration):
 
-        self.max_before_distinguishing = 2
+        self.max_before_distinguishing = 2 # 2 for conversational clarification
         self.valid = valid_examples
         self.invalid = invalid_examples
         self.captured = captured
@@ -253,12 +253,13 @@ class MultipleSynthesizer(ABC):
 
             if len(self.solutions) >= self.max_before_distinguishing:
                 # if there are more than max_before_disambiguating solutions, disambiguate.
-                while len(self.solutions) > 1:
-                    self.distinguish()
-                assert len(self.solutions) == 1  # only one regex remains
+                self.distinguish()
 
             if self.indistinguishable >= self.max_indistinguishable:
                 break
+        while len(self.solutions) > 1:
+            self.distinguish()
+        assert len(self.solutions) == 1  # only one regex remains
 
     def try_capture_conditions(self, regex):
         cap_conditions_synthesis_start = time.time()

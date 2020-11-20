@@ -126,9 +126,11 @@ class RegexDistinguisher:
 
         # ro_z3[i] == true if dist matches regex[i].
 
-        z3_bs = []
+        big_or = []
         for ro_i, ro_j in combinations(ro_z3, 2):
+            big_or.append(z3.Xor(ro_i, ro_j))
             solver.add_soft(z3.Xor(ro_i, ro_j))
+        solver.add(z3.Or(big_or))  # at least one regex is distinguished
 
         if solver.check() == z3.sat:
             # print(solver.model())
@@ -141,16 +143,7 @@ class RegexDistinguisher:
                     keep_if_valid.append(selected_regexes[i])
                 else:
                     keep_if_invalid.append(selected_regexes[i])
-            if len(keep_if_valid) == 0 or len(keep_if_invalid) == 0:
-                if len(others) == 0:
-                    return None, None, None, None
-                else:  # selected_regexes are equivalent, but the regexes in others may
-                    # not be.
-                    smallest_regex = min(selected_regexes,
-                                         key=lambda r: len(self._printer.eval(r)))
-                    others.append(smallest_regex)
-                    return self.multi_distinguish(others)
+                smallest_regex = min(selected_regexes, key=lambda r: len(self._printer.eval(r)))
             return dist_input, keep_if_valid, keep_if_invalid, others
         else:
-            print("unsat")
             return None, None, None, None

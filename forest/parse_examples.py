@@ -67,7 +67,7 @@ def preprocess(valid, invalid, cond_invalid, sketch=False) \
         valid = list(map(lambda v: [v], valid))
     if isinstance(invalid[0], str):
         invalid = list(map(lambda v: [v], invalid))
-    if cond_invalid and len(cond_invalid) > 0 and isinstance(cond_invalid[0], str):
+    if cond_invalid and isinstance(cond_invalid[0], str):
         cond_invalid = list(map(lambda v: [v], cond_invalid))
     # logger.info("Assuming types: " + str(type_validation))
     captures = list(map(lambda x: x[1:], valid))

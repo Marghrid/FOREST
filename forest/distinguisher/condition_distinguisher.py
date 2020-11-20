@@ -1,22 +1,35 @@
 import re
 from copy import deepcopy
+from itertools import combinations
 from typing import List, Tuple
 
 import z3
 
 from forest import utils
 from forest.dsl import Node
+from forest.logger import get_logger
 from forest.visitor import RegexInterpreter
 
+logger = get_logger('forest')
 
-def keep_distinct(list1: List, list2: List):
-    list1_copy = deepcopy(list1)
-    list2_copy = deepcopy(list2)
-    for el in list1:
-        if el in list2_copy:
-            list1_copy.remove(el)
-            list2_copy.remove(el)
-    return list1_copy, list2_copy
+
+def keep_distinct(l: List[List]):
+    """
+    Given list of lists l, returns list of lists containing, for each list in l, only the elements
+    that are not present in every other list.
+    Example:
+        l = [[1, 2, 3, 4, 5, 6, 7],
+             [1, 2, 3, 5, 6, 7, 8],
+             [1, 3, 4, 5, 6, 7, 9]]
+        keep_distinct(l) = [[2, 4], [2, 8], [4, 9]]
+    """
+    l_copy = deepcopy(l)
+    base = l[0]
+    for el in base:
+        if all(map(lambda l: el in l, l_copy)):
+            for l_c in l_copy:
+                l_c.remove(el)
+    return l_copy
 
 
 class ConditionDistinguisher:
@@ -25,22 +38,28 @@ class ConditionDistinguisher:
         self._capture_groups = capture_groups
         self._valid_example = valid_example
         self._interpreter = RegexInterpreter()
-
         self.condition_operators = utils.condition_operators
 
-    def distinguish(self, model1: List[Tuple], model2: List[Tuple]):
-        solver = z3.Solver()
-        model1_copy, model2_copy = keep_distinct(model1, model2)
+    def distinguish(self, models: List[List[Tuple]]):
+        """ Find distinguishing input for sets of conditions in models """
+        solver = z3.Optimize()
+        distinct_models = keep_distinct(models)
         cs = []
+        logger.info(f"Distinguishing {distinct_models}")
         for cap_idx in range(len(self._capture_groups)):
             cs.append(z3.Int(f"c{cap_idx}"))
 
-        sat_m1 = z3.Bool("sat_m1")
-        sat_m2 = z3.Bool("sat_m2")
-        solver.add(self._get_sat_m_constraint(cs, model1_copy, sat_m1))
-        solver.add(self._get_sat_m_constraint(cs, model2_copy, sat_m2))
+        sat_ms = []
+        for m_idx, model in enumerate(distinct_models):
+            sat_ms.append(z3.Bool(f"sat_m{m_idx}"))
+            solver.add(self._get_sat_m_constraint(cs, model, sat_ms[m_idx]))
 
-        solver.add(z3.Xor(sat_m1, sat_m2))
+        # solver.add(z3.Xor(sat_m1, sat_m2)) # For conversational clarification
+        big_or = []
+        for m_i, m_j in combinations(sat_ms, 2):  # maximisation objective from multi-distinguish
+            big_or.append(z3.Xor(m_i, m_j))
+            solver.add_soft(z3.Xor(m_i, m_j))
+        solver.add(z3.Or(big_or))  # at least one set of conditions is distinguished from the rest
 
         if solver.check() == z3.sat:
             valid_ex = self._valid_example
@@ -52,14 +71,20 @@ class ConditionDistinguisher:
                                                    captures=[self._capture_groups[c_idx]])
                 compiled_re = re.compile(regex_str)
                 cap_substr = compiled_re.fullmatch(valid_ex).groups()[0]
-                c_val = c_val.rjust(len(cap_substr), '0')
+                # c_val = c_val.rjust(len(cap_substr), '0')
                 valid_ex = valid_ex.replace(cap_substr, c_val, 1)
-                if solver.model()[sat_m1]:
-                    return valid_ex, model1, model2
+            keep_if_valid = []
+            keep_if_invalid = []
+            for m_idx in range(len(distinct_models)):
+                if solver.model()[sat_ms[m_idx]]:
+                    keep_if_valid.append(models[m_idx])
                 else:
-                    return valid_ex, model2, model1
+                    keep_if_invalid.append(models[m_idx])
+            logger.info(f"Dist. input: {valid_ex}")
+            return valid_ex, keep_if_valid, keep_if_invalid
 
         else:
+            logger.info(f"Indistinguishable")
             return None, None, None
 
     def _get_sat_m_constraint(self, cs, model, sat_m):

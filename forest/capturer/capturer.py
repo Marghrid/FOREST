@@ -36,9 +36,10 @@ class Capturer:
         self.ground_truth_conditions = ground_truth_conditions
         self.configuration = configuration
         self.interpreter = RegexInterpreter()
+        self.max_before_distinguish = 6 #2 # for conversational clarification
 
     def synthesize_capturing_groups(self, regex: Node):
-        """ It finds capturing groups in regex which math self.captures """
+        """ Given regex, find capturing groups which match self.captures """
         if len(self.captures) == 0 or len(self.captures[0]) == 0:
             return []
         nodes = regex.get_leaves()
@@ -57,6 +58,7 @@ class Capturer:
         return None
 
     def synthesize_capture_conditions(self, regex: Node):
+        """ Given regex, synthesise capture conditions that validate self.condition_invalid """
         if len(self.condition_invalid) == 0:
             return [], []
         nodes = regex.get_leaves()
@@ -90,6 +92,7 @@ class Capturer:
         return None, None
 
     def _synthesize_conditions_for_captures(self, regex, capture_groups):
+        """ Given capturing groups, try to find conditions that satisfy examples. """
         assert len(self.condition_invalid) > 0
         self._cc_enumerator = CaptureConditionsEnumerator(self.interpreter.eval(regex, captures=capture_groups),
                                                           len(capture_groups), self.valid, self.condition_invalid)
@@ -101,20 +104,32 @@ class Capturer:
             if new_condition is not None:
                 self._cc_enumerator.update()
                 conditions.append(new_condition)
-                if len(conditions) > 1:
+                if len(conditions) >= self.max_before_distinguish:
                     start_distinguish_time = time.time()
                     dist_input, keep_if_valid, keep_if_invalid = \
-                        condition_distinguisher.distinguish(conditions[0], conditions[1])
+                        condition_distinguisher.distinguish(conditions)
                     stats.cap_conditions_distinguishing_time += time.time() - start_distinguish_time
                     stats.cap_conditions_interactions += 1
                     if not self.configuration.self_interact:
                         conditions = self._interact(dist_input, keep_if_valid, keep_if_invalid)
                     else:
                         conditions = self._auto_distinguish(dist_input, keep_if_valid, keep_if_invalid)
+                    pass
             else:
                 if len(conditions) == 0:
                     return None
                 else:
+                    while len(conditions) > 1:
+                        start_distinguish_time = time.time()
+                        dist_input, keep_if_valid, keep_if_invalid = \
+                            condition_distinguisher.distinguish(conditions)
+                        stats.cap_conditions_distinguishing_time += time.time() - start_distinguish_time
+                        stats.cap_conditions_interactions += 1
+                        if not self.configuration.self_interact:
+                            conditions = self._interact(dist_input, keep_if_valid, keep_if_invalid)
+                        else:
+                            conditions = self._auto_distinguish(dist_input, keep_if_valid,
+                                                                keep_if_invalid)
                     assert len(conditions) == 1
                     return conditions[0]
 
@@ -136,16 +151,16 @@ class Capturer:
                 logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
 
     def _auto_distinguish(self, dist_input: str, keep_if_valid: List, keep_if_invalid: List):
-        """ Simulate interaction """
+        """ Given distinguishing input, simulate user interaction based on ground truth """
         match = re.fullmatch(self.ground_truth_regex, dist_input)
         if match is not None and check_conditions(self.ground_truth_conditions, match):
             logger.info(f'Auto: "{dist_input}" is {colored("valid", "green")}.')
             self.valid.append([dist_input])
             self._cc_enumerator.add_valid(dist_input)
-            return [keep_if_valid]
+            return keep_if_valid
 
         logger.info(f'Auto: "{dist_input}" is {colored("conditional invalid", "red")}.')
         self.condition_invalid.append([dist_input])
         self._cc_enumerator.add_conditional_invalid(dist_input)
-        return [keep_if_invalid]
+        return keep_if_invalid
 
