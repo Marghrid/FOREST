@@ -71,7 +71,7 @@ class ConditionDistinguisher:
                                                    captures=[self._capture_groups[c_idx]])
                 compiled_re = re.compile(regex_str)
                 cap_substr = compiled_re.fullmatch(valid_ex).groups()[0]
-                # c_val = c_val.rjust(len(cap_substr), '0')
+                c_val = c_val.rjust(len(cap_substr), '0')
                 valid_ex = valid_ex.replace(cap_substr, c_val, 1)
             keep_if_valid = []
             keep_if_invalid = []

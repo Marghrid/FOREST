@@ -259,7 +259,7 @@ class MultipleSynthesizer(ABC):
                 break
         while len(self.solutions) > 1:
             self.distinguish()
-        assert len(self.solutions) == 1  # only one regex remains
+        assert len(self.solutions) <= 1  # only one regex remains
 
     def try_capture_conditions(self, regex):
         cap_conditions_synthesis_start = time.time()
