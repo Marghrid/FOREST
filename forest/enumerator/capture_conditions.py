@@ -121,10 +121,6 @@ class CaptureConditionsEnumerator:
 
     def _make_a_constraints(self, examples: List, valid: bool):
         for ex in examples:
-            if self.compiled_re.fullmatch(ex) is None:
-                print("ex:", ex)
-                print(self.compiled_re.pattern)
-
             captured = self.compiled_re.fullmatch(ex).groups()
             ss_of_this_x = []
             for cap_idx in range(len(captured)):
@@ -139,6 +135,10 @@ class CaptureConditionsEnumerator:
 
     def add_valid(self, new_valid: str):
         """ Add a new valid example to Capturer. """
+        match = self.compiled_re.fullmatch(new_valid)
+        if match is None:
+            logger.debug(f"Bad example: {new_valid}")
+            return
         self.as_valid[new_valid] = z3.Bool(self._get_a_var_name(new_valid, valid=True))
         for cap_idx in range(self.num_captures):
             self.ss_valid[(cap_idx, new_valid)] = \
@@ -146,6 +146,11 @@ class CaptureConditionsEnumerator:
         self.solver.add(self._make_a_constraints([new_valid], valid=True))
 
     def add_conditional_invalid(self, new_cond_invalid: str):
+        """ Add a new conditional invalid example to Capturer. """
+        match = self.compiled_re.fullmatch(new_cond_invalid)
+        if match is None:
+            logger.debug(f"Bad example: {new_cond_invalid}")
+            return
         self.as_invalid[new_cond_invalid] = z3.Bool(self._get_a_var_name(new_cond_invalid, valid=False))
         for cap_idx in range(self.num_captures):
             self.ss_invalid[(cap_idx, new_cond_invalid)] = z3.Bool(

@@ -7,10 +7,6 @@ from forest.utils import transpose, find_all_cs
 logger = get_logger('forest')
 
 
-# TODO: Because different input fields have different types, I must have a different
-#  DSL for each input field. To achieve this, I must find a way to return a "set" of
-#  DSLs. Perhaps one per field type? Idea: return a list of DSLs, where the position in
-#  the list corresponds to the position in the types list
 class DSLBuilder:
 
     def __init__(self, type_validations, valid, invalid, sketches=False):
@@ -104,10 +100,6 @@ class DSLBuilder:
         return sorted(values)
 
     def get_regexlits(self, valid):
-        # IDEA: add chars that occur in many examples. Counterargument: I needed to
-        # forcefully add a date that did not contain a 1, and yet a 1 is not a
-        # requirement for a date. IDEA: Add individual chars if not all (or almost all)
-        # chars occur.
         regexlits = set()
         substrings = set()
         char_classes = set()

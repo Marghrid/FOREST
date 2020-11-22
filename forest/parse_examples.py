@@ -74,8 +74,6 @@ def preprocess(valid, invalid, cond_invalid, sketch=False) \
     valid = list(map(lambda x: [x[0]], valid))
     builder = DSLBuilder(type_validation, valid, invalid, sketch)
     dsl = builder.build()[0]
-    # TODO: build() returns a list of DSLs for each different type of element. Now I'm
-    #  just using the first element
 
     return dsl, valid, invalid, cond_invalid, captures, type_validation
 

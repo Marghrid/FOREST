@@ -36,7 +36,7 @@ class Capturer:
         self.ground_truth_conditions = ground_truth_conditions
         self.configuration = configuration
         self.interpreter = RegexInterpreter()
-        self.max_before_distinguish = 6 #2 # for conversational clarification
+        self.max_before_distinguish = 2 # 2 for conversational clarification
 
     def synthesize_capturing_groups(self, regex: Node):
         """ Given regex, find capturing groups which match self.captures """
@@ -141,12 +141,12 @@ class Capturer:
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')
                 self.valid.append([dist_input])
                 self._cc_enumerator.add_valid(dist_input)
-                return [keep_if_valid]
+                return keep_if_valid
             elif x.lower().rstrip() in no_values:
                 logger.info(f'"{dist_input}" is {colored("conditional invalid", "red")}.')
                 self.condition_invalid.append([dist_input])
                 self._cc_enumerator.add_conditional_invalid(dist_input)
-                return [keep_if_invalid]
+                return keep_if_invalid
             else:
                 logger.info(f"Invalid answer {x}! Please answer 'yes' or 'no'.")
 

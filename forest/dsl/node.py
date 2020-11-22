@@ -195,11 +195,6 @@ class ApplyNode(Node):
         if not prod.is_function():
             raise ValueError(
                 'Cannot construct an AST internal node from a non-function production')
-        if len(prod.rhs) != len(args):
-            msg = 'Argument count mismatch: expected {} but found {}'.format(
-                len(prod.rhs), len(args))
-            # FIXME: I have n-ary operators, so I can't check number of arguments :/
-            # raise ValueError(msg)
         for index, (decl_ty, node) in enumerate(zip(prod.rhs, args)):
             actual_ty = node.type
             if decl_ty != actual_ty:

@@ -51,10 +51,8 @@ def main():
                              help='Disable synthesis of capture conditions.')
     synth_group.add_argument('--regex-only', '--regexonly', action='store_true',
                              help='read resnax i/o examples format.')
-    synth_group.add_argument('-v', '--max-valid', type=int, default=-1,
-                             help='Limit the number of valid examples. -1: unlimited.')
-    synth_group.add_argument('-i', '--max-invalid', type=int, default=-1,
-                             help='Limit the number of invalid examples. -1: unlimited.')
+    synth_group.add_argument('-m', '--max-examples', type=int, default=-1,
+                             help='Limit the number of examples. -1: unlimited.')
 
     synth_group.add_argument('-k', '--sketch', metavar='|'.join(sketching), type=str,
                              default='none', help='Enable sketching.')
@@ -68,7 +66,7 @@ def main():
 
     tester = TaskRunner(args.directories, args.encoding, args.no_pruning, args.no_captures,
                         args.no_conditions, args.sketch, args.processes, args.timeout, args.out,
-                        args.resnax, args.max_valid, args.max_invalid, args.solve_only, args.log)
+                        args.resnax, args.max_examples, args.solve_only, args.log)
     tester.run()
 
 

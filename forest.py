@@ -26,7 +26,7 @@ def sig_handler(received_signal, frame):
 def main():
     signal(SIGINT, sig_handler)
     signal(SIGTERM, sig_handler)
-    examples_file, resnax, max_valid, max_invalid, config = read_cmd_args()
+    examples_file, resnax, max_examples, config = read_cmd_args()
 
     if resnax:
         valid, invalid, ground_truth = parse_resnax(examples_file)
@@ -35,10 +35,10 @@ def main():
         valid, invalid, condition_invalid, ground_truth = parse_file(examples_file)
 
     random.seed("regex")
-    if 0 < max_valid < len(valid):
-        valid = random.sample(valid, max_valid)
-    if 0 < max_invalid < len(invalid):
-        invalid = random.sample(invalid, max_invalid)
+    if 0 < max_examples < len(valid):
+        valid = random.sample(valid, max_examples)
+    if 0 < max_examples < len(invalid):
+        invalid = random.sample(invalid, max_examples)
 
     show(valid, invalid, condition_invalid, ground_truth)
 
@@ -82,7 +82,8 @@ def synthesize(type_validation):
         regex, capturing_groups, capture_conditions = program
         conditions, condition_captures = capture_conditions
         solution_str = printer.eval(regex, captures=condition_captures)
-        solution_str += ', ' + conditions_to_str(conditions)
+        if len(conditions) > 0:
+            solution_str += ', ' + conditions_to_str(conditions)
         print(f'\nSolution:\n  {solution_str}')
         if len(capturing_groups) > 0:
             print(f'Captures:\n  {printer.eval(regex, captures=capturing_groups)}')
@@ -101,6 +102,7 @@ def read_cmd_args():
     parser.add_argument('-d', '--debug', action='store_true', help='Debug mode.')
     parser.add_argument('-e', '--encoding', metavar='|'.join(encodings), type=str,
                         default='multitree', help='SMT encoding.')
+    parser.add_argument('-v', '--verbose', action='count', default=0)
     parser.add_argument('-l', '--log', metavar='DIR', type=str, default='', help='Logs directory')
     parser.add_argument('-s', '--self-interact', action="store_true",
                         help="Self interaction mode.")
@@ -112,16 +114,14 @@ def read_cmd_args():
                              help='Disable synthesis of capture conditions.')
     parser.add_argument('--resnax', action='store_true',
                         help='Read resnax i/o examples format.')
-    parser.add_argument('-v', '--max-valid', type=int, default=-1,
-                        help='Limit the number of valid examples. -1: unlimited.')
-    parser.add_argument('-i', '--max-invalid', type=int, default=-1,
-                        help='Limit the number of invalid examples. -1: unlimited.')
+    parser.add_argument('-m', '--max-examples', type=int, default=-1,
+                        help='Limit the number of examples of each type. -1: unlimited.')
     parser.add_argument('-k', '--sketch', metavar='|'.join(sketching), type=str,
                         default='none', help='Enable sketching.')
     args = parser.parse_args()
-    if args.debug:
+    if args.debug or args.verbose > 1:
         logger.setLevel("DEBUG")
-    else:
+    elif args.verbose > 0:
         logger.setLevel("INFO")
     if args.encoding not in encodings:
         raise ValueError('Unknown encoding ' + args.encoding)
@@ -149,7 +149,7 @@ def read_cmd_args():
                            synth_conditions = not args.no_conditions, sketching=args.sketch)
     config.print_first_regex = True
 
-    return args.file, args.resnax, args.max_valid, args.max_invalid, config
+    return args.file, args.resnax, args.max_examples, config
 
 
 if __name__ == '__main__':

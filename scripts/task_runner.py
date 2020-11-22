@@ -105,7 +105,7 @@ class Task:
 class TaskRunner:
     def __init__(self, instance_dirs, method='multitree', no_pruning=False, no_captures=False,
                  no_conditions=False, sketching='none', num_processes=1, timeout=120,
-                 show_output=False, resnax=False, max_valid=-1, max_invalid=-1, solve_only=-1,
+                 show_output=False, resnax=False, max_examples=-1, solve_only=-1,
                  logs_dir=''):
         self.show_output = show_output
         self.timeout = timeout + 2
@@ -122,11 +122,9 @@ class TaskRunner:
         else:
             methods = [method]
 
-        command_base = ["python3", "-O", "forest.py", '-s']
-        if max_valid > 0:
-            command_base += ["-v", str(max_valid)]
-        if max_invalid > 0:
-            command_base += ["-i", str(max_invalid)]
+        command_base = ["python3", "-O", "forest.py", '-s', '-v']
+        if max_examples > 0:
+            command_base += ["-m", str(max_examples)]
         if no_pruning:
             command_base.append('--no-pruning')
         if no_captures:

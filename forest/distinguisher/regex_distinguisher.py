@@ -67,7 +67,7 @@ class RegexDistinguisher:
                 else:
                     return dist_input, [r2], [r1], []
 
-            #Find dist_input that respects conditions
+            # Find dist_input that respects conditions
             r1_str = self._printer.eval(r1[0], captures=r1[2][1])
             r1_conditions = list(map(lambda c: " ".join(map(str, c)), r1[2][0]))
             r2_str = self._printer.eval(r2[0], captures=r2[2][1])
