@@ -156,4 +156,3 @@ class CaptureConditionsEnumerator:
             self.ss_invalid[(cap_idx, new_cond_invalid)] = z3.Bool(
                 self._get_s_var_name(cap_idx, new_cond_invalid, False))
         self.solver.add(self._make_a_constraints([new_cond_invalid], valid=False))
-

@@ -168,7 +168,7 @@ def check_conditions(conditions, match):
         value = int(condition[2])
         try:
             string_value = int(match.groups()[group_idx])
-        except ValueError: # The text in the regex is not a valid integer
+        except ValueError:  # The text in the regex is not a valid integer
             return True
         if not op(string_value, value):
             return False

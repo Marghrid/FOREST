@@ -40,7 +40,7 @@ class Statistics:
     def __str__(self):
         return \
             f'Elapsed time: {self.total_synthesis_time}\n' \
-            f'Time per depth: {self.per_depth_times}\n\n'\
+            f'Time per depth: {self.per_depth_times}\n\n' \
             f'Regex synthesis:\n' \
             f'  Regex time: {round(self.regex_synthesis_time, 2)}\n' \
             f'  First regex time: {round(self.first_regex_time, 2)}\n' \
@@ -55,4 +55,3 @@ class Statistics:
             f'  Enumerated: {self.enumerated_cap_conditions}\n' \
             f'  Interactions: {self.cap_conditions_interactions}\n' \
             f'  Distinguish time: {round(self.cap_conditions_distinguishing_time, 2)}'
-

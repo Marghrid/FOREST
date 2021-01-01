@@ -3,6 +3,7 @@ import argparse
 import os
 import random
 from signal import signal, SIGINT, SIGTERM
+
 from forest.configuration import Configuration
 from forest.logger import get_logger
 from forest.parse_examples import parse_file, parse_resnax, show, preprocess
@@ -73,6 +74,7 @@ def main():
 
     return synthesize(type_validation)
 
+
 def synthesize(type_validation):
     global synthesizer
     assert synthesizer is not None
@@ -109,9 +111,11 @@ def read_cmd_args():
     parser.add_argument('--no-pruning', '--nopruning', action='store_true',
                         help='Disable pruning.')
     parser.add_argument('--no-captures', '--nocaptures', action='store_true',
-                             help='Disable synthesis of capturing groups.')
+                        help='Disable synthesis of capturing groups.')
     parser.add_argument('--no-conditions', '--noconditions', action='store_true',
-                             help='Disable synthesis of capture conditions.')
+                        help='Disable synthesis of capture conditions.')
+    parser.add_argument('--no-disambiguation', '--nodisambiguation', action='store_true',
+                        help='Disable disambiguation through interaction: return first regex.')
     parser.add_argument('--resnax', action='store_true',
                         help='Read resnax i/o examples format.')
     parser.add_argument('-m', '--max-examples', type=int, default=-1,
@@ -145,8 +149,10 @@ def read_cmd_args():
 
     config = Configuration(encoding=args.encoding, self_interact=args.self_interact,
                            log_path=log_path, pruning=not args.no_pruning,
-                           synth_captures = not args.no_captures,
-                           synth_conditions = not args.no_conditions, sketching=args.sketch)
+                           synth_captures=not args.no_captures,
+                           synth_conditions=not args.no_conditions,
+                           disambiguation=not args.no_disambiguation,
+                           sketching=args.sketch)
     config.print_first_regex = True
 
     return args.file, args.resnax, args.max_examples, config

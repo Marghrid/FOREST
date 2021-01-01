@@ -8,9 +8,9 @@ from forest.distinguisher import ConditionDistinguisher
 from forest.dsl import Node
 from forest.enumerator.capture_conditions import CaptureConditionsEnumerator
 from forest.logger import get_logger
+from forest.stats import Statistics
 from forest.utils import all_sublists_n, is_int, yes_values, no_values, check_conditions
 from forest.visitor import RegexInterpreter
-from forest.stats import Statistics
 
 logger = get_logger('forest')
 stats = Statistics.get_statistics()
@@ -36,7 +36,7 @@ class Capturer:
         self.ground_truth_conditions = ground_truth_conditions
         self.configuration = configuration
         self.interpreter = RegexInterpreter()
-        self.max_before_distinguish = 2 # 2 for conversational clarification
+        self.max_before_distinguish = 2  # 2 for conversational clarification
 
     def synthesize_capturing_groups(self, regex: Node):
         """ Given regex, find capturing groups which match self.captures """
@@ -83,8 +83,8 @@ class Capturer:
                 if not all(map(lambda ex: compiled_re.fullmatch(ex[0]) is not None,
                                self.valid)):
                     continue
-                if not all(map(lambda ex: all(map(lambda g: is_int(g), # or is_float(g),
-                                        compiled_re.fullmatch(ex[0]).groups())), self.valid)):
+                if not all(map(lambda ex: all(map(lambda g: is_int(g),  # or is_float(g),
+                                                  compiled_re.fullmatch(ex[0]).groups())), self.valid)):
                     continue
                 condition = self._synthesize_conditions_for_captures(regex, sub)
                 if condition is not None:
@@ -102,6 +102,8 @@ class Capturer:
         while True:
             new_condition = self._cc_enumerator.next()
             if new_condition is not None:
+                if not self.configuration.disambiguation:
+                    return new_condition
                 self._cc_enumerator.update()
                 conditions.append(new_condition)
                 if len(conditions) >= self.max_before_distinguish:
@@ -163,4 +165,3 @@ class Capturer:
         self.condition_invalid.append([dist_input])
         self._cc_enumerator.add_conditional_invalid(dist_input)
         return keep_if_invalid
-

@@ -24,12 +24,13 @@ all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex
                "nodes", "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout",
                "regel_sketch", "regel_solution"]
 
-exclude_instances = ["datetime2.txt"] #, "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
+exclude_instances = ["datetime2.txt"]  # , "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
 
 logs = {"nopruning": "log_10_22_mtnp", "dynamic": "log_10_28_dy",
         "multitree": "log_10_22_mt",
         "ktree": "log_10_22_kt", "lines": "log_10_22_li",
         "multi-dist": "log_10_26_muti-dist"}
+
 
 class Instance:
     def __init__(self, name):
@@ -77,7 +78,7 @@ def print_regel_rank(instances):
                     i.values["regel_time"])
     print("instance, time, ranking")
     for idx, instance in enumerate(ranked):
-        time = 4000 if instance.values["regel_time"] == "undefined" else instance.values["regel_time"]+60
+        time = 4000 if instance.values["regel_time"] == "undefined" else instance.values["regel_time"] + 60
         print(f'{instance.values["name"]}, {time}, {idx + 1}')
 
 
@@ -111,16 +112,40 @@ def print_compare_times():
         print(", ".join(map(str, row)))
 
 
+def print_count_solved(instances: List):
+    count = 0
+    for idx, instance in enumerate(instances):
+        solution = instance.values["solution"]
+        if solution != 'No solution':
+            count += 1
+
+    print(count)
+    print("instances returned a solution")
+
+
+def print_count_not_timeout(instances: List):
+    count = 0
+    for idx, instance in enumerate(instances):
+        if not instance.values['timed_out']:
+            count += 1
+    print(count)
+    print("instances did not timeout.")
+
+
 def main():
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('log_dir', metavar='DIR', type=str, help="Logs directory", default='')
     parser.add_argument('-r', '--regel-log-dir', metavar='DIR', type=str,
                         help="Regel logs directory", default='')
-    parser.add_argument('--rank', action="store_true", help="Make time ranking")
+    parser.add_argument('--rank', action="store_true", help="Rank instances according to synthesis time")
+    parser.add_argument('--count-solved', action="store_true",
+                        help="Count number of intances that returned a solution (time out or not).")
+    parser.add_argument('--count-not-timeout', action="store_true",
+                        help="Count number of intances that did not time out.")
     parser.add_argument('--rank-regel', action="store_true", help="Make REGEL time ranking")
     parser.add_argument('--compare-times', action="store_true",
-                        help="Make table comparing the synthesis time for different methods.")
+                        help="Make table comparing the synthesis time for different methods")
 
     args = parser.parse_args()
 
@@ -148,6 +173,10 @@ def main():
         print_regel_rank(instances)
     elif args.compare_times:
         print_compare_times()
+    elif args.count_solved:
+        print_count_solved(instances)
+    elif args.count_not_timeout:
+        print_count_not_timeout(instances)
     else:
         print_table(instances, len(regel_log_dir) > 0)
 

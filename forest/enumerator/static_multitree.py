@@ -277,9 +277,9 @@ class StaticMultiTreeEnumerator(RegexEnumerator):
 
         for x in commutative_op_nodes:
             tree_id, node_id = x.tree_id, x.id
-            subtree0, subtree1 = self.trees[tree_id - 1].nodes[node_id - 1]\
+            subtree0, subtree1 = self.trees[tree_id - 1].nodes[node_id - 1] \
                                      .children[0].get_subtree(), \
-                                 self.trees[tree_id - 1].nodes[node_id - 1]\
+                                 self.trees[tree_id - 1].nodes[node_id - 1] \
                                      .children[1].get_subtree()
 
             # block model with subtrees swapped:

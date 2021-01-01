@@ -322,9 +322,9 @@ class LinesEnumerator(RegexEnumerator):
                                 # if a previous line is used, then its flag must be true
                                 line_var = r.children[c].lines[l]
                                 self.z3_solver.add(z3.Implies(line_var == 1,
-                                                r.children[c].var == line_production.id))
+                                                              r.children[c].var == line_production.id))
                                 self.z3_solver.add(z3.Implies(r.children[c].var ==
-                                                    line_production.id, line_var == 1))
+                                                              line_production.id, line_var == 1))
                                 self.num_constraints += 2
 
                     self.num_constraints += 1

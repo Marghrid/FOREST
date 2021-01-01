@@ -52,8 +52,7 @@ class Task:
         self.encoding = self.command[enc_idx + 1]
 
     def run(self):
-        print(colored(f"Running {self.instance} {self.encoding}: "
-                      f"{' '.join(self.command)}", "blue"))
+        print(f"Running {self.instance} {self.encoding}: {' '.join(self.command)}")
         self.process = subprocess.Popen(self.command,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE)
@@ -81,7 +80,6 @@ class Task:
         return self.process.poll() is not None
 
     def wait(self):
-        print(colored(f"Waiting {self.timeout}s for {self.instance}.", "cyan"))
         try:
             self.process.wait(timeout=self.timeout)
         except subprocess.TimeoutExpired:
@@ -108,7 +106,7 @@ class TaskRunner:
                  show_output=False, resnax=False, max_examples=-1, solve_only=-1,
                  logs_dir=''):
         self.show_output = show_output
-        self.timeout = timeout + 2
+        self.timeout = timeout
         self.tasks = []
         self.instances = []
         self.num_processes = num_processes
@@ -122,7 +120,9 @@ class TaskRunner:
         else:
             methods = [method]
 
-        command_base = ["python3", "-O", "forest.py", '-s', '-v']
+        command_base = ["python3", "-O", "forest.py", '-s']
+        if self.show_output:
+            command_base.append('-v')
         if max_examples > 0:
             command_base += ["-m", str(max_examples)]
         if no_pruning:
@@ -155,13 +155,10 @@ class TaskRunner:
                 inst_name = inst_name.replace(".txt", "", 1)
                 self.instances.append(Instance(inst_name, inst_path))
 
-        # sort instances by name
-        print(colored(f"Found {len(self.instances)} instances.", "magenta"))
-
         if 0 < solve_only < len(self.instances):
             random.seed("regex" + str(solve_only))
             self.instances = random.sample(self.instances, solve_only)
-            print(colored(f"Selected {len(self.instances)} instances.", "magenta"))
+            print(f"Selected {len(self.instances)} instances.")
 
         self.instances = sorted(self.instances, key=lambda i: i.name)
 
@@ -172,8 +169,7 @@ class TaskRunner:
                 new_task = Task(command=command, instance=inst, timeout=self.timeout)
                 self.tasks.append(new_task)
 
-        print(colored(f"Created {len(self.tasks)} tasks.", "magenta"))
-        print(colored(f"Polling every {self.poll_time} seconds.", "magenta"))
+        print(f"Created {len(self.tasks)} tasks.")
 
         # tasks are ordered randomly
         self.to_run = self.tasks.copy()
@@ -205,10 +201,9 @@ class TaskRunner:
                 self.running.append(new_task)
                 new_task.run()
             if next(half_true_iter):
-                print(colored(
-                    f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
-                    f"{len(self.to_run) + len(self.running)} to go. "
-                    f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
+                print(f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
+                      f"{len(self.to_run) + len(self.running)} to go. "
+                      f"Elapsed {nice_time(time.time() - start_time)}.")
             time.sleep(self.poll_time)
 
     def run_sequentially(self):
@@ -220,10 +215,9 @@ class TaskRunner:
             new_task.wait()
             new_task.manage_output(self.show_output)
             self.running = []
-            print(colored(
-                f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
-                f"{len(self.to_run) + len(self.running)} to go. "
-                f"Elapsed {nice_time(time.time() - start_time)}.", "magenta"))
+            print(f"{len(self.tasks) - len(self.to_run) - len(self.running)} done, "
+                  f"{len(self.to_run) + len(self.running)} to go. "
+                  f"Elapsed {nice_time(time.time() - start_time)}.")
 
     def terminate_all(self):
         print(colored("Terminating all tasks", "red"))

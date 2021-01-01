@@ -1,2 +1,2 @@
-from .regex_distinguisher import RegexDistinguisher
 from .condition_distinguisher import ConditionDistinguisher
+from .regex_distinguisher import RegexDistinguisher

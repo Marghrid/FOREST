@@ -16,7 +16,7 @@ class RegexDecider(ExampleDecider):
     def __init__(self, interpreter: Interpreter, valid_examples: List[Example],
                  invalid_examples: List[Example], split_valid=None):
         super().__init__(interpreter, examples=[Example(x, True) for x in valid_examples] \
-                        + [Example(x, False) for x in invalid_examples])
+                                               + [Example(x, False) for x in invalid_examples])
         self.already_must_occur = set()
         self.valid_exs = valid_examples
         self.split_valid = split_valid

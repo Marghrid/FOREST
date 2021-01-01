@@ -23,6 +23,9 @@ class Configuration:
     # Activate/deactivate synthesis of capture conditions
     synth_conditions: bool = True
 
+    # Activate/deactivate disambiguation of the synthesised solutions.
+    disambiguation: bool = True
+
     # Sketching mode.
     sketching: str = 'none'
 

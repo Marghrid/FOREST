@@ -6,8 +6,8 @@ from itertools import combinations
 import z3
 
 from forest.logger import get_logger
-from forest.visitor import ToZ3, RegexInterpreter
 from forest.utils import check_conditions
+from forest.visitor import ToZ3, RegexInterpreter
 
 logger = get_logger('forest')
 

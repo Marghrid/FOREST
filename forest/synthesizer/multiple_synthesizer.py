@@ -7,8 +7,8 @@ from typing import List
 
 from termcolor import colored
 
-from forest.configuration import Configuration
 from forest.capturer import Capturer
+from forest.configuration import Configuration
 from forest.decider import RegexDecider
 from forest.distinguisher import RegexDistinguisher
 from forest.logger import get_logger
@@ -28,7 +28,7 @@ class MultipleSynthesizer(ABC):
     def __init__(self, valid_examples, invalid_examples, captured, condition_invalid,
                  dsl: TyrellSpec, ground_truth: str, configuration: Configuration):
 
-        self.max_before_distinguishing = 2 # 2 for conversational clarification
+        self.max_before_distinguishing = 2  # 2 for conversational clarification
         self.valid = valid_examples
         self.invalid = invalid_examples
         self.captured = captured
@@ -115,8 +115,8 @@ class MultipleSynthesizer(ABC):
             info_str += f'Solution: {solution_str}\n' \
                         f'  Nodes: {self._node_counter.eval(self.solutions[0][0])}\n'
             if len(capturing_groups) > 0:
-                info_str += f'  Cap. groups: '\
-                            f'{self._decider.interpreter.eval(regex, captures=capturing_groups)}\n'\
+                info_str += f'  Cap. groups: ' \
+                            f'{self._decider.interpreter.eval(regex, captures=capturing_groups)}\n' \
                             f'  Num. cap. groups: {len(capturing_groups)}'
             else:
                 info_str += "  No capturing groups."
@@ -228,7 +228,7 @@ class MultipleSynthesizer(ABC):
             if regex is None or self.configuration.die:  # enumerator is exhausted or user interrupted synthesizer
                 break
 
-            if regex == -1: # enumerated a regex that is not correct
+            if regex == -1:  # enumerated a regex that is not correct
                 continue
 
             if self.configuration.synth_captures:
@@ -250,6 +250,9 @@ class MultipleSynthesizer(ABC):
                 capture_conditions = []
 
             self.solutions.append((regex, capturing_groups, capture_conditions))
+
+            if len(self.solutions) > 0 and not self.configuration.disambiguation:
+                break
 
             if len(self.solutions) >= self.max_before_distinguishing:
                 # if there are more than max_before_disambiguating solutions, disambiguate.

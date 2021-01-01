@@ -1,10 +1,10 @@
 import time
 
 from forest.configuration import Configuration
-from forest.stats import Statistics
-from .multiple_synthesizer import MultipleSynthesizer
 from forest.enumerator import LinesEnumerator
 from forest.logger import get_logger
+from forest.stats import Statistics
+from .multiple_synthesizer import MultipleSynthesizer
 
 logger = get_logger('forest')
 stats = Statistics.get_statistics()

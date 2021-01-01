@@ -5,8 +5,8 @@ from termcolor import colored
 
 from forest.dsl.dsl_builder import DSLBuilder
 from forest.logger import get_logger
-from forest.utils import is_regex
 from forest.spec import TyrellSpec
+from forest.utils import is_regex
 
 logger = get_logger('forest')
 
