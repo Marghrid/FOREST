@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from operator import add
 from statistics import median, mean
 
-import numpy
 from termcolor import colored
 
 from forest.parse_examples import parse_resnax, parse_file
@@ -79,8 +78,8 @@ def main():
 
     instances = []
 
-    for dir in args.directories:
-        instance_paths = glob.glob(dir + "/*.txt")
+    for d in args.directories:
+        instance_paths = glob.glob(d + "/*.txt")
         instances.extend(instance_paths)
 
     instance_stats = []
