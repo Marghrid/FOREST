@@ -1,6 +1,6 @@
 #!/bin/bash
 timeout=$1
-log_prefix=${2-log}
+log_prefix=${2-log_${timeout}}
 
 if [ $# -eq 0 ]; then
     echo "Usage: ${0} TIMEOUT_IN_SECONDS [LOG_PREFIX]".  
