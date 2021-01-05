@@ -41,8 +41,6 @@ class Type(ABC):
 class EnumType(Type):
     '''A special kind of type whose domain is finite and specified up-front'''
 
-    _domain: List[Any]
-
     def __init__(self, name: str, domain: List[Any] = []):
         super().__init__(name)
         self._domain = domain

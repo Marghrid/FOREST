@@ -120,7 +120,6 @@ def print_count_solved(instances: List):
             count += 1
 
     print(count)
-    print("instances returned a solution")
 
 
 def print_count_not_timeout(instances: List):
@@ -129,7 +128,6 @@ def print_count_not_timeout(instances: List):
         if not instance.values['timed_out']:
             count += 1
     print(count)
-    print("instances did not timeout.")
 
 
 def main():
