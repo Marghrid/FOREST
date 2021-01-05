@@ -1,0 +1,23 @@
+On pegasus on 2020-10-04 12:03:16.
+Enumerator: StaticMT(n=15; d=3)
+Terminated: True
+Elapsed time: 3613.59
+Time per depth: {3: 3612.868996858597}
+
+Regex synthesis:
+  Regex time: 3612.43
+  First regex time: -1
+  Enumerated: 19589
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: [A-F0-9]{4}(:[A-F0-9]{4}){7} 

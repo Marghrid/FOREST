@@ -1,0 +1,26 @@
+On pegasus on 2020-10-04 12:47:57.
+Enumerator: StaticMT(n=2; d=4)
+Terminated: True
+Elapsed time: 3622.24
+Time per depth: {3: 7.581486940383911, 4: 3612.1443376541138}
+
+Regex synthesis:
+  Regex time: 3619.58
+  First regex time: 243.99
+  Enumerated: 6138
+  Interactions: 5
+  Distinguish time: 0.65
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: PT50 00(?: |[0-9]){8,24}
+Solution: PT50 00(?: |[0-9]){1,24}
+  Nodes: 7
+  No capturing groups.
+  Ground truth: (PT50 00)([0-9]| )+ 

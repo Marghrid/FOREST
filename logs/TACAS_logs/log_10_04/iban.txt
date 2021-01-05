@@ -1,0 +1,23 @@
+On pegasus on 2020-10-04 12:49:01.
+Enumerator: DynamicMT(n=3; d=3)
+Terminated: True
+Elapsed time: 3625.84
+Time per depth: {(3, 1): 11.603382587432861, (3, 2): 256.12873005867004, (4, 1): 1520.6514792442322, (3, 3): 1803.7279193401337}
+
+Regex synthesis:
+  Regex time: 3591.24
+  First regex time: -1
+  Enumerated: 6231
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: [A-Z]{2}[0-9]{2} ([A-Z0-9]| )+ 

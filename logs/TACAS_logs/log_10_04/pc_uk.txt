@@ -1,0 +1,23 @@
+On pegasus on 2020-10-04 12:02:40.
+Enumerator: StaticMT(n=3; d=4)
+Terminated: True
+Elapsed time: 3607.72
+Time per depth: {3: 1.494565486907959, 4: 3605.7765254974365}
+
+Regex synthesis:
+  Regex time: 3607.08
+  First regex time: -1
+  Enumerated: 14977
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: [A-Z]+[0-9]+[A-Z]? [0-9][A-Z][A-Z] 

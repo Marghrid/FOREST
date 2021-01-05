@@ -1,0 +1,26 @@
+On pegasus on 2020-10-04 12:10:06.
+Enumerator: StaticMT(n=7; d=3)
+Terminated: False
+Elapsed time: 41.0
+Time per depth: {3: 40.679885387420654}
+
+Regex synthesis:
+  Regex time: 40.65
+  First regex time: 31.34
+  Enumerated: 2438
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: [0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}
+Solution: [0-9]{4}-[0-9]{4}-[0-9]{4}-[0-9]{4}
+  Nodes: 16
+  No capturing groups.
+  Ground truth: ([0-9]{4}-){3}[0-9]{4} 

@@ -1,0 +1,26 @@
+On pegasus on 2020-10-04 12:08:40.
+Enumerator: StaticMT(n=5; d=3)
+Terminated: False
+Elapsed time: 15.36
+Time per depth: {3: 15.147719860076904}
+
+Regex synthesis:
+  Regex time: 13.68
+  First regex time: 0.31
+  Enumerated: 104
+  Interactions: 5
+  Distinguish time: 12.61
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 1.46
+  Enumerated: 496
+  Interactions: 1
+  Distinguish time: 0.01
+
+First regex: [0-9]{2}/[0-9][0-9]/[0-9]*
+Solution: ([0-9]{2})/([0-9]{2})/[0-9]{2}, $0 <= 31, $0 >= 1, $1 <= 12, $1 >= 1
+  Nodes: 12
+  No capturing groups.
+  Ground truth: ([0-9][0-9])/([0-9][0-9])/[0-9][0-9] $0 <= 31, $0 >= 1, $1 <= 12, $1 >= 1
