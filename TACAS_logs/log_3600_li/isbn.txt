@@ -1,0 +1,23 @@
+On spica on 2020-10-11 23:37:23.
+Enumerator: Lines(loc=4)
+Terminated: True
+Elapsed time: 3619.36
+Time per depth: {2: 1.376652717590332, 3: 27.979260206222534, 4: 3589.5168743133545}
+
+Regex synthesis:
+  Regex time: 3618.4
+  First regex time: -1
+  Enumerated: 85873
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: [0-9]{9}([0-9]{3})?([0-9]|X) 

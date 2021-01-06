@@ -1,0 +1,23 @@
+On spica on 2020-10-11 20:46:00.
+Enumerator: KTree(d=5)
+Terminated: True
+Elapsed time: 3611.53
+Time per depth: {3: 0.5424864292144775, 4: 8.145990371704102, 5: 3600.99676322937}
+
+Regex synthesis:
+  Regex time: 3609.55
+  First regex time: -1
+  Enumerated: 11977
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: \$[0-9]+(\.[0-9][0-9])? 

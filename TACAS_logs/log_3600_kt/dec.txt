@@ -1,0 +1,26 @@
+On spica on 2020-10-11 21:22:35.
+Enumerator: KTree(d=5)
+Terminated: True
+Elapsed time: 3613.31
+Time per depth: {3: 0.257688045501709, 4: 8.034759759902954, 5: 3603.4684245586395}
+
+Regex synthesis:
+  Regex time: 3611.63
+  First regex time: 46.13
+  Enumerated: 13644
+  Interactions: 3
+  Distinguish time: 0.68
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+First regex: [0-9]*(?:\.|[0-9])\.[0-9]{2}
+Solution: (?:[0-9]|[0-9]+)\.[0-9]{2}
+  Nodes: 10
+  No capturing groups.
+  Ground truth: [0-9]+\.[0-9]{2} 

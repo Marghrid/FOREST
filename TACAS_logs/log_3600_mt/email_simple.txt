@@ -1,0 +1,23 @@
+On serpens on 2020-10-09 09:31:25.
+Enumerator: StaticMT(n=3; d=4)
+Terminated: True
+Elapsed time: 3607.83
+Time per depth: {3: 2.379642963409424, 4: 3603.876291513443}
+
+Regex synthesis:
+  Regex time: 3606.18
+  First regex time: -1
+  Enumerated: 8883
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: ([A-Za-z0-9]|\.)+@([A-Za-z0-9]|\.)+\.[A-Za-z][A-Za-z][A-Za-z]? 

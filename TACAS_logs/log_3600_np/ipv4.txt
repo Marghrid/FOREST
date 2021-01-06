@@ -1,0 +1,26 @@
+On serpens on 2020-10-09 10:38:28.
+Enumerator: StaticMT(n=7; d=3) (no pruning)
+Terminated: False
+Elapsed time: 2725.46
+Time per depth: {3: 2725.1898584365845}
+
+Regex synthesis:
+  Regex time: 2672.86
+  First regex time: 1720.21
+  Enumerated: 26365
+  Interactions: 5
+  Distinguish time: 1.04
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 51.99
+  Enumerated: 29190
+  Interactions: 4
+  Distinguish time: 0.1
+
+First regex: [0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{0,3}
+Solution: ([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}), $0 <= 255, $1 <= 255, $2 <= 255, $3 <= 255
+  Nodes: 16
+  No capturing groups.
+  Ground truth: ([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3}) $0 <= 255, $1 <= 255, $2 <= 255, $3 <= 255

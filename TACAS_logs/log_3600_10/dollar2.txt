@@ -1,0 +1,23 @@
+On serpens on 2020-10-10 00:17:56.
+Enumerator: StaticMT(n=2; d=5)
+Terminated: True
+Elapsed time: 3635.46
+Time per depth: {3: 0.4611527919769287, 4: 56.0567741394043, 5: 3577.8537714481354}
+
+Regex synthesis:
+  Regex time: 3634.23
+  First regex time: -1
+  Enumerated: 15425
+  Interactions: 0
+  Distinguish time: 0.0
+Capturing groups synthesis:
+  Cap. groups time: 0.0
+  Enumerated: 0
+Capturing conditions synthesis:
+  Cap. conditions time: 0.0
+  Enumerated: 0
+  Interactions: 0
+  Distinguish time: 0.0
+
+  No solution.
+  Ground truth: \$[0-9]+(\.[0-9][0-9])? 
