@@ -19,22 +19,23 @@ done
 
 
 # default setting:
-python scripts/run_benchmarks.py -t ${timeout} -p 1            --log ${log_prefix}_mt  benchmarks/
+python3 scripts/run_benchmarks.py -t ${timeout} -p 1            --log ${log_prefix}_mt  benchmarks/
 
 # Multi-tree encoding without pruning:
-python scripts/run_benchmarks.py -t ${timeout} -p 1 -e multitree --nopruning --log ${log_prefix}_np  benchmarks/
+python3 scripts/run_benchmarks.py -t ${timeout} -p 1 -e multitree --nopruning --log ${log_prefix}_np  benchmarks/
 
 # Dynamic-only muti-tree encoding:
-python scripts/run_benchmarks.py -t ${timeout} -p 1 -e dynamic --log ${log_prefix}_dy  benchmarks/
+python3 scripts/run_benchmarks.py -t ${timeout} -p 1 -e dynamic --log ${log_prefix}_dy  benchmarks/
 
 # k-tree encoding:
-python scripts/run_benchmarks.py -t ${timeout} -p 1 -e ktree   --log ${log_prefix}_kt  benchmarks/
+python3 scripts/run_benchmarks.py -t ${timeout} -p 1 -e ktree   --log ${log_prefix}_kt  benchmarks/
 
 # Line-based encoding
-python scripts/run_benchmarks.py -t ${timeout} -p 1 -e lines   --log ${log_prefix}_li  benchmarks/
+python3 scripts/run_benchmarks.py -t ${timeout} -p 1 -e lines   --log ${log_prefix}_li  benchmarks/
 
 # 5 examples of each kind only
-python scripts/run_benchmarks.py -t ${timeout} -p 1 -m 5       --log ${log_prefix}_05  benchmarks/
+python3 scripts/run_benchmarks.py -t ${timeout} -p 1 -m 5       --log ${log_prefix}_05  benchmarks/
 
 # 10 examples of each kind only
-python scripts/run_benchmarks.py -t ${timeout} -p 1 -m 10      --log ${log_prefix}_10  benchmarks/
+python3 scripts/run_benchmarks.py -t ${timeout} -p 1 -m 10      --log ${log_prefix}_10  benchmarks/
+

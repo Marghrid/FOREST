@@ -24,7 +24,7 @@ all_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex
                "nodes", "first_regex", "cap_groups", "ground_truth", "regel_time", "regel_timeout",
                "regel_sketch", "regel_solution"]
 
-exclude_instances = ["datetime2.txt"]  # , "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
+exclude_instances = ["datetime2.txt", "date3.txt"]  # , "color.txt", "date.txt", "date7.txt", "id1.txt", "date3.txt"]
 
 logs = {"nopruning": "log_10_22_mtnp", "dynamic": "log_10_28_dy",
         "multitree": "log_10_22_mt",
