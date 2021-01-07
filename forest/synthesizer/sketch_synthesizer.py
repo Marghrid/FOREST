@@ -55,7 +55,6 @@ class SketchSynthesizer(MultiTreeSynthesizer):
         self.time_unsat_encoding = 0
         self.count_smt_unknown_sat = 0
         self.count_smt_unknown_unsat = 0
-        self.warned = False
 
     def synthesize(self):
         self.start_time = time.time()
@@ -230,9 +229,7 @@ class SketchSynthesizer(MultiTreeSynthesizer):
             z3_solver.set('smt.seq.use_derivatives', True)
             z3_solver.check()
         except:
-            if not self.warned:
-                logger.warning("'use_derivatives' option not available.")
-                self.warned = True
+            pass
 
         start = time.time()
 
@@ -304,9 +301,7 @@ class SketchSynthesizer(MultiTreeSynthesizer):
             z3_solver.set('smt.seq.use_derivatives', True)
             z3_solver.check()
         except:
-            if not self.warned:
-                logger.warning("'use_derivatives' option not available.")
-                self.warned = True
+            pass
 
         start = time.time()
 

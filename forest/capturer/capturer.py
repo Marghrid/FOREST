@@ -138,7 +138,7 @@ class Capturer:
     def _interact(self, dist_input, keep_if_valid, keep_if_invalid):
         """ Interact with user to ascertain whether the distinguishing input is valid """
         while not self.configuration.die:
-            x = input(f'Is "{dist_input}" valid?\n')
+            x = input(f'Is "{dist_input}" valid? (y/n)\n')
             if x.lower().rstrip() in yes_values:
                 logger.info(f'"{dist_input}" is {colored("valid", "green")}.')
                 self.valid.append([dist_input])

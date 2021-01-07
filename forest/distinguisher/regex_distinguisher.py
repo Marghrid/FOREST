@@ -44,8 +44,7 @@ class RegexDistinguisher:
                 solver.set('smt.seq.use_derivatives', True)
                 solver.check()
             except:
-                logger.warning("'use_derivatives' option not available.")
-                use_derivatives = False  # prevents additional calls to check
+                pass
 
         z3_r1 = self._toz3.eval(r1[0])
         z3_r2 = self._toz3.eval(r2[0])
