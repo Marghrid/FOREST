@@ -32,29 +32,29 @@
     $ pip install click termcolor z3-solver
 ```
 
-## Run benchmarks:
-
-- Using default parameters:
-```
-    $ python scripts/run_all.py benchmarks
-```
-
-- To view options for parameters:
-```
-    $ python scripts/run_all.py --help
-```
-
 ## Run single instance:
 
 - Using default parameters:
 
 ```
-    $ python synth_regex.py benchmarks/cc.txt
+    $ python forest.py benchmarks/cc.txt
 ```
 
 - To view options for parameters:
 ```
-    $ python synth_regex.py --help
+    $ python forest.py --help
+```
+
+## Run benchmarks:
+
+- Using default parameters:
+```
+    $ python scripts/run_benchmarks.py benchmarks
+```
+
+- To view options for parameters:
+```
+    $ python scripts/run_benchmarks.py --help
 ```
 
 ## Run a new instance:
