@@ -1,6 +1,7 @@
 import argparse
 import glob
 import re
+import sys
 from typing import List
 
 print_columns = ["name", "total_synthesis_time"]
@@ -50,6 +51,13 @@ def print_table(instances: List, regel: bool):
                 row.append(str(instance.values[col_name]))
         print(', '.join(row))
 
+
+def print_only_synthesis_times(instances):
+    for instance in instances:
+        time = instance.values["total_synthesis_time"]
+        if time == "undefined":
+            time = 4000
+        print(time)
 
 def print_rank(instances):
     """ Print execution time for each instance (sorted by time) """
@@ -165,8 +173,6 @@ def print_regel_count_not_timeout_all(instances):
     print(count_10, count_60, count_3600)
 
 
-
-
 def main():
     parser = argparse.ArgumentParser(description='Validations Synthesizer tester',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -176,6 +182,8 @@ def main():
     parser.add_argument('--rank', action="store_true", help="Rank instances according to synthesis time")
     parser.add_argument('--count-solved', action="store_true",
                         help="Count number of instances that returned a solution (time out or not).")
+    parser.add_argument('--only-synthesis-times', action="store_true",
+                        help="Print only the synthesis time for each instance.")
     parser.add_argument('--count-solved-all', action="store_true",
                         help="Count number of instances that returned a solution (time out or not) in 10, 60 and 3600 "
                              "seconds.")
@@ -215,6 +223,8 @@ def main():
         print_regel_rank(instances)
     elif args.compare_times:
         print_compare_times()
+    elif args.only_synthesis_times:
+        print_only_synthesis_times(instances)
     elif args.count_solved:
         print_count_solved(instances)
     elif args.count_solved_all:
@@ -266,7 +276,7 @@ def read_regel_log(instance, regel_log_dir):
                             instance.values['regel_time'] = float(m[1])
                             instance.values['regel_timeout'] = False
         except IOError:
-            print("could not open", regel_log_dir + "/" + instance.values['name'] + "-1")
+            print("could not open", regel_log_dir + "/" + instance.values['name'] + "-1", file=sys.stderr)
 
 
 def read_log(log_file):
