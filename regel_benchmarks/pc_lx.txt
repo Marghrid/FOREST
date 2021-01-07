@@ -1,0 +1,22 @@
+// natural language
+4 digits, a dash, and 3 digits.
+
+
+// example
+"1000-029 LISBOA",+
+"1300-596 LISBOA",+
+"1049-001 LISBOA",+
+"1900-312 LISBOA",+
+"1050-083 LISBOA",+
+"2415-367",-
+"850-448 PORTIMAO",-
+"80-448 PORTIMAO",-
+"12-1245 LISBOA",-
+"LISBOA",-
+"1223231",-
+"123-2345",-
+"6243-4659 CANIDELO",-
+
+// gt
+
+

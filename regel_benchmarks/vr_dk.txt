@@ -1,0 +1,27 @@
+// natural language
+2 capital letters, 2 digits and 3 more digits, separated by spaces.
+
+// example
+"GW 53 959",+
+"UP 69 424",+
+"GW 76 478",+
+"QB 60 976",+
+"ZV 81 726",+
+"RK 80 165",+
+"PR 04 709",+
+"EC 28 012",+
+"DF 57 113",+
+"OH 12 246",+
+"G4 53 959",-
+"UP369 424",-
+"GWD76 478",-
+"QB60 976",-
+"ZV A1 726",-
+"RK 80165",-
+"PR 04A709",-
+"EC 289012",-
+"DF 57 A13",-
+
+// gt
+
+

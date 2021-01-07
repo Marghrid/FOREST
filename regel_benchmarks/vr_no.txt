@@ -1,0 +1,25 @@
+// natural language
+2 capital letters, followed by a space and 4 or 5 digits.
+
+// example
+"JQ 37212",+
+"SW 9719",+
+"HY 7138",+
+"FE 1781",+
+"EV 92470",+
+"WS 94754",+
+"ER 1259",+
+"ME 28742",+
+"MM 24301",+
+"IL 3371",+
+"J 37212",-
+"SW9719",-
+"HYA7138",-
+"FE 781",-
+"EV 952470",-
+"WS594754",-
+"ERA 1259",-
+
+// gt
+
+

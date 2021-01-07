@@ -1,0 +1,23 @@
+// natural language
+email addresses. Words separated by dots, a "@" and more words separated by dots. The last word must be 2 or 3 digits long.
+
+// example
+"W10Yv.e1IDN@kz.B20.ef",+
+"tc6hg.igl1i@NEf7k.uhw",+
+"cM5Vz.WM5Ju@EQ11P.lqu",+
+"fK6K2nC0PL@YMwbk.lok",+
+"4q3ng.IvWZ3@scydJ.oq",+
+"pg7.Ro.17Wia@ZP5.dP.ph",+
+"yaH.lpuPB@sJz8e.gpn",+
+"s2JHwRlDkY@b.sn6D.ldd",+
+"tG0qz.Zcili@G7LDi.ka",+
+"8nBmi.nfgUi@mf4y4.hmg",+
+"8nBmi.nf@gUi@mf4y4.hmg",-
+"fK6K2nC0PLYMwbk.lok",-
+"fK6K2nC0PL@YMwbk",-
+"b.sn6D.ldd",-
+"@",-
+
+// gt
+
+

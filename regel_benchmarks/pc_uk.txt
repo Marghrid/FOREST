@@ -1,0 +1,25 @@
+// natural language
+1 or 2 capital latters, 1 or 2 digits, followed by an optional letter. After a space, a digit and 2 capital letters.
+
+// example
+"EC1A 1BB",+
+"W1A 0AX",+
+"M1 1AE",+
+"B33 8TH",+
+"CR2 6XH",+
+"DN55 1PT",+
+"M4 1PD",+
+"LS1 3AD",+
+"HU8 7AZ",+
+"SO15 2NR",+
+"1 1AE",-
+"HUT 7A1",-
+"HU8 BA1",-
+"HU8  7AG",-
+"33 8TH",-
+"33A 8TH",-
+"M1 BAE",-
+
+// gt
+
+

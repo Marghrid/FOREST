@@ -1,0 +1,42 @@
+// natural language
+5 groups of hexadecimals separated by dashes. the number of character per group is 8, 4, 4, 4, and 12.
+
+// example
+"a2c80522-e57a-4ec6-78aa-76a2f3116f5e",+
+"6ba6d732-4b6d-4120-a2a2-934978e51f61",+
+"ad506a16-e3af-8614-a3ca-19e05aef6c24",+
+"78379234-f7a2-b416-7fcf-7996b49ca4a5",+
+"54c3a0cf-09ff-0686-7c8c-b84b47c77726",+
+"8cf4ec62-0159-a284-9076-dc55730f4e1b",+
+"11ecf8e4-9d91-7b09-1b44-a2d6bcc51adb",+
+"be3bca07-9596-c48d-81bd-282503986da4",+
+"5e2524da-523a-2d4e-ad47-d62cf09b8159",+
+"69dd3958-10cf-54ee-f102-632d0e49c621",+
+"9d39a696-e93d-ca76-39a2-def81789d26c",+
+"8bd19a46-e5fc-ac56-c5c9-dbbca9a7f6c0",+
+"a2817927-c4e3-9690-2db4-20b84f5be741",+
+"d1c411d8-0c5a-0ece-c2e5-60fcb8627f0c",+
+"ab875d8a-d827-dc6c-de84-6912e84cf670",+
+"720d9b7a-4597-a419-5198-1b78af199883",+
+"a2c8022-e57a-4ec6-78aa-76a2f3116f5e",-
+"9d39a696-e93ddca76-39a2-def81789d26c",-
+"6ba36d732-4b6d-4120-a2a2-934978e51f61",-
+"ad506a16e3af-8614-a3ca-19e05aef6c24",-
+"78379234--f7a2-b416-7fcf-7996b49ca4a5",-
+"54c3a0cf-09f-0686-7c8c-b84b47c77726",-
+"8cf4ec62-0159--a284-9076-dc55730f4e1b",-
+"11ecf8e4-9d891-7b09-1b44-a2d6bcc51adb",-
+"be3bca07-9596-c4d-81bd-282503986da4",-
+"5e2524da-523a-2d4ee-ad47-d62cf09b8159",-
+"5e2524da-523a-2d4ee-ad47--2cf09b8159",-
+"69dd3958-10cf-54ee--f102-632d0e49c621",-
+"9d39a696-e93d-ca76-344a2-def81789d26c",-
+"8bd19a46-e5fc-ac56-c59-dbbca9a7f6c0",-
+"a2817927-c4e3-9690-2db4--20b84f5be741",-
+"d1c411d8-0c5a-0ece-c2e5-609fcb8627f0c",-
+"ab875d8a-d827-dc6c-de84-62e84cf670",-
+"720d9b7a-4597-a419-5198-1b78ah199883",-
+
+// gt
+
+

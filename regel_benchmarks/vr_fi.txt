@@ -1,0 +1,25 @@
+// natural language
+3 capital letters, a dash, and 3 digits.
+
+// example
+"QAU-221",+
+"JAL-988",+
+"FGB-741",+
+"DOC-896",+
+"MZS-216",+
+"TVX-159",+
+"BAG-459",+
+"OSJ-977",+
+"MKL-574",+
+"AXP-642",+
+"1AU-221",-
+"JAL988",-
+"FGBA741",-
+"DOC6896",-
+"MZS-2A6",-
+"AXPA-642",-
+"MKL-5374",-
+
+// gt
+
+

@@ -1,0 +1,26 @@
+// natural language
+2 capital letters, a space, 3 digits, a space and 2 more capital letters.
+
+// example
+"AK 362 US",+
+"QN 801 KO",+
+"AI 383 KI",+
+"XU 495 KX",+
+"BB 549 MW",+
+"QI 183 XW",+
+"ZW 210 IV",+
+"MH 222 AO",+
+"IJ 778 IG",+
+"QAN 801 KO",-
+"I 383 KI",-
+"XUS495 KX",-
+"BB6549 MW",-
+"QI 1A3 XW",-
+"ZW 210IV",-
+"MH 2224AO",-
+"IJ 778SIG",-
+"QN 801 KOA",-
+
+// gt
+
+

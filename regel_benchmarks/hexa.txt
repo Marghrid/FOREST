@@ -1,0 +1,41 @@
+// natural language
+"0x" followed by one or more hexadecimal characters.
+
+// example
+"0x922531cc2f5",+
+"0x69",+
+"0xcd740a81c4ee4691",+
+"0x8",+
+"0x380cc7dbd38715",+
+"0xd2b3cc16b420b",+
+"0xb682a8cdc65e8",+
+"0x3154",+
+"0x6d480280700444",+
+"0x1ad7469d",+
+"0x35",+
+"0xd",+
+"0x1a2677bb7ca",+
+"0xe5d6e5c",+
+"0x283132ade2",+
+"0x8108b34a6",+
+"0x06c176ec6e",+
+"0x03c31ecfee65f3f",+
+"0x3e01d6e74ae7a",+
+"0xbd6a6d9ae4e89a84",+
+"0x7288b630ead50ab",+
+"0x755c",+
+"0x4ecc9846731b92",+
+"0x40f2",+
+"0x7770871",+
+"0x740a157",+
+"0xf6da6fbdd765",+
+"0922531cc2f5",-
+"x69",-
+"4xcd740a81c4ee4691",-
+"0M8",-
+"0x380Mc7dbd38715",-
+"0xd2bYcc16b420b",-
+
+// gt
+
+
