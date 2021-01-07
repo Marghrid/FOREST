@@ -20,8 +20,8 @@ python3 scripts/make_table.py --count-not-timeout-all ${log_prefix}_kt
 printf "line-based (w/o pruning): "
 python3 scripts/make_table.py --count-not-timeout-all ${log_prefix}_li
 
-printf "Regel"
-python scripts/make_table.py -r ${log_prefix}_rg  --regel-count-not-timeout-all ${log_prefix}_mt
+printf "Regel: "
+python scripts/make_table.py -r ${log_prefix}_rg  --regel-count-not-timeout-all ${log_prefix}_mt 2>/dev/null
 
-printf "Regel PBE"
+printf "Regel PBE: "
 python scripts/make_table.py -r ${log_prefix}_rgp --regel-count-not-timeout-all ${log_prefix}_mt 
