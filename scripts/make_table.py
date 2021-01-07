@@ -3,16 +3,7 @@ import glob
 import re
 from typing import List
 
-print_columns = ["name", "enumerator", "timed_out", "total_synthesis_time", "regex_synthesis_time",
-                 "first_regex_time", "enumerated_regexes",
-                 "regex_interactions",
-                 "regex_distinguishing_time",
-                 "cap_groups_synthesis_time", "enumerated_cap_groups",
-                 "cap_conditions_synthesis_time", "enumerated_cap_conditions",
-                 "cap_conditions_interactions", "cap_conditions_distinguishing_time", "nodes", "solution",
-                 "first_regex",
-                 "cap_groups",
-                 "ground_truth"]
+print_columns = ["name", "total_synthesis_time"]
 
 regel_columns = ["regel_time", "regel_timeout", "regel_sketch", "regel_solution"]
 
@@ -78,7 +69,7 @@ def print_regel_rank(instances):
                     i.values["regel_time"])
     print("instance, time, ranking")
     for idx, instance in enumerate(ranked):
-        time = 4000 if instance.values["regel_time"] == "undefined" else instance.values["regel_time"] + 60
+        time = 4000 if instance.values["regel_time"] == "undefined" else instance.values["regel_time"]
         print(f'{instance.values["name"]}, {time}, {idx + 1}')
 
 
@@ -114,20 +105,66 @@ def print_compare_times():
 
 def print_count_solved(instances: List):
     count = 0
-    for idx, instance in enumerate(instances):
-        solution = instance.values["solution"]
-        if solution != 'No solution':
+    for instance in instances:
+        if instance.values["solution"] != 'No solution' and instance.values["solution"] != 'undefined':
             count += 1
-
     print(count)
+
+
+def print_count_solved_all(instances: List):
+    instances = list(filter(lambda i: i.values["solution"] != 'No solution'
+                                      and i.values["solution"] != 'undefined', instances))
+    count_3600 = 0
+    count_60 = 0
+    count_10 = 0
+    for instance in instances:
+        if instance.values["first_regex_time"] < 3600:
+            count_3600 += 1
+        if instance.values["first_regex_time"] < 60:
+            count_60 += 1
+        if instance.values["first_regex_time"] < 10:
+            count_10 += 1
+    print(count_10, count_60, count_3600)
 
 
 def print_count_not_timeout(instances: List):
     count = 0
-    for idx, instance in enumerate(instances):
+    for instance in instances:
         if not instance.values['timed_out']:
             count += 1
     print(count)
+
+
+def print_count_not_timeout_all(instances: List):
+    instances = list(filter(lambda i: not i.values['timed_out'], instances))
+    count_3600 = 0
+    count_60 = 0
+    count_10 = 0
+    for instance in instances:
+        if instance.values["total_synthesis_time"] < 3600:
+            count_3600 += 1
+        if instance.values["total_synthesis_time"] < 60:
+            count_60 += 1
+        if instance.values["total_synthesis_time"] < 10:
+            count_10 += 1
+    print(count_10, count_60, count_3600)
+
+
+def print_regel_count_not_timeout_all(instances):
+    instances = list(filter(lambda i: not i.values['regel_timeout'], instances))
+    count_3600 = 0
+    count_60 = 0
+    count_10 = 0
+    for instance in instances:
+        if instance.values["regel_time"] < 3600:
+            count_3600 += 1
+        if instance.values["regel_time"] < 60:
+            count_60 += 1
+        if instance.values["regel_time"] < 10:
+            count_10 += 1
+    print(count_10, count_60, count_3600)
+
+
 
 
 def main():
@@ -138,9 +175,16 @@ def main():
                         help="Regel logs directory", default='')
     parser.add_argument('--rank', action="store_true", help="Rank instances according to synthesis time")
     parser.add_argument('--count-solved', action="store_true",
-                        help="Count number of intances that returned a solution (time out or not).")
+                        help="Count number of instances that returned a solution (time out or not).")
+    parser.add_argument('--count-solved-all', action="store_true",
+                        help="Count number of instances that returned a solution (time out or not) in 10, 60 and 3600 "
+                             "seconds.")
     parser.add_argument('--count-not-timeout', action="store_true",
-                        help="Count number of intances that did not time out.")
+                        help="Count number of instances that did not time out.")
+    parser.add_argument('--count-not-timeout-all', action="store_true",
+                        help="Count number of instances that did not time out in 10, 60 and 3600 seconds.")
+    parser.add_argument('--regel-count-not-timeout-all', action="store_true",
+                        help="Count number of instances that did not time out with REGEL in 10, 60 and 3600 seconds.")
     parser.add_argument('--rank-regel', action="store_true", help="Make REGEL time ranking")
     parser.add_argument('--compare-times', action="store_true",
                         help="Make table comparing the synthesis time for different methods")
@@ -173,8 +217,15 @@ def main():
         print_compare_times()
     elif args.count_solved:
         print_count_solved(instances)
+    elif args.count_solved_all:
+        print_count_solved_all(instances)
     elif args.count_not_timeout:
         print_count_not_timeout(instances)
+    elif args.count_not_timeout_all:
+        print_count_not_timeout_all(instances)
+    elif args.regel_count_not_timeout_all:
+        assert len(regel_log_dir) > 0, "please indicate REGEL logs directory"
+        print_regel_count_not_timeout_all(instances)
     else:
         print_table(instances, len(regel_log_dir) > 0)
 
