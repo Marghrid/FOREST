@@ -1,0 +1,32 @@
+PRUNED_SUBSUMPTION_ENABLED = 1,NOT_PRUNED_SUBSUMPTION_ENABLED = 1
+K_MIN = 1, K_MAX = 10
+PRUNING_ENABLED = 1
+PRUNING_ENABLED = 1,SYMBOLIC_ENABLED = 1
+USE_PATTERN_LIB = 0,ATOMATON_MINIMIZE = false,REPEATATLEAST_1_CONSTRAIN = true,DEPTH_LIMIT = 100
+
+Sketch: ?
+false
+Total number of examples: 13
+=================================
+true
+Sketch: ?
+Learned program: concat(repeat(<num>,8),concat(<->,repeat(<let>,1))): 306.32000000000005
+GT program: null
+Match gt: false
+Total time: 415.498
+Pruning construction time: 0.21500000000000016
+Pruning evaluate time: 9.751999999999272
+Subsume generate time: 0.09700000000000007
+Subsume checking time: 0.06600000000000004
+Linear solving time: 365.55600000000084
+Non linear solving time: 28.209999999999997
+Number of linear formula: 27718
+Number of non-linear formula: 359
+Number of total states: 718883
+Number of pruned states: 278390
+Number of Skipped pruning: 348552
+Number of evaluated states: 25178
+Number of polled states: 34816
+Number of subsume pruned program hit: 65084
+Number of subsume not pruned program hit: 20605
+Number of approximated eval called: 284648

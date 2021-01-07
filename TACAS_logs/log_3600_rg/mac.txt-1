@@ -1,0 +1,32 @@
+PRUNED_SUBSUMPTION_ENABLED = 1,NOT_PRUNED_SUBSUMPTION_ENABLED = 1
+K_MIN = 1, K_MAX = 18
+PRUNING_ENABLED = 1
+PRUNING_ENABLED = 1,SYMBOLIC_ENABLED = 1
+USE_PATTERN_LIB = 0,ATOMATON_MINIMIZE = false,REPEATATLEAST_1_CONSTRAIN = true,DEPTH_LIMIT = 100
+
+Sketch: sep(?{repeat(<hex>,2)},<num>)
+false
+Total number of examples: 20
+=================================
+true
+Sketch: sep(?{repeat(<hex>,2)},<num>)
+Learned program: concat(repeat(or(<->,repeat(<hex>,2)),11),star(concat(<num>,repeat(<hex>,2)))): 153.4
+GT program: null
+Match gt: false
+Total time: 42.318
+Pruning construction time: 0.03200000000000002
+Pruning evaluate time: 0.8210000000000005
+Subsume generate time: 0.058000000000000045
+Subsume checking time: 0.002
+Linear solving time: 6.724999999999957
+Non linear solving time: 33.52799999999999
+Number of linear formula: 550
+Number of non-linear formula: 520
+Number of total states: 43205
+Number of pruned states: 5736
+Number of Skipped pruning: 36781
+Number of evaluated states: 1579
+Number of polled states: 11420
+Number of subsume pruned program hit: 502
+Number of subsume not pruned program hit: 20
+Number of approximated eval called: 5902
