@@ -12,6 +12,7 @@ from forest.visitor import ToZ3, RegexInterpreter
 logger = get_logger('forest')
 
 use_derivatives = True
+# z3.set_param('smt.string_solver', 'z3str3')
 
 
 class RegexDistinguisher:
